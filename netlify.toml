@@ -1,0 +1,12 @@
+[build]
+  base = "/"
+  command = "cd startuphunt && npm install && npm run build"
+  publish = "startuphunt/dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "20" 
