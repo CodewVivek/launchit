@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-    Home, Scissors, Monitor, Clock, Download, Clipboard, History, PlaySquare, User, ChevronRight
+    Home, Scissors, Monitor, Clock, Download, Clipboard, History, PlaySquare, User, ChevronRight, Search
 } from "lucide-react";
 import { Rocket, Bookmark, ThumbsUp, Trophy, MessageSquare, Users } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -73,7 +73,7 @@ const Sidebar = ({ isOpen }) => {
 
     if (!isOpen) {
         return (
-            <aside className={`fixed left-0 top-16 w-16 h-[calc(100vh-64px)] bg-white overflow-y-auto ${isProjectDetails ? 'z-50' : 'z-40'}`}>
+            <aside className={`fixed left-0 top-14 w-16 h-[calc(100vh-64px)] bg-white overflow-y-auto shadow-lg ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
                 <div className="p-2">
                     <div className="space-y-2">
                         {mainItems.map((item) => (
@@ -96,8 +96,35 @@ const Sidebar = ({ isOpen }) => {
     }
 
     return (
-        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white overflow-y-auto ${isProjectDetails ? 'z-50' : 'z-40'}`}>
+        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white overflow-y-auto shadow-xl ${isProjectDetails ? 'z-50' : 'z-40'}`}>
             <div className="">
+                {/* Mobile Search Bar - Only visible when sidebar is open */}
+                <div className="block lg:hidden p-4 border-b border-gray-200">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Search startups, users, categories, tags..."
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            onChange={(e) => {
+                                // Add AI search suggestions here
+                                const query = e.target.value;
+                                if (query.length >= 2) {
+                                    // Generate AI suggestions
+                                    const suggestions = [
+                                        `Find ${query} alternatives`,
+                                        `Best ${query} tools`,
+                                        `${query} for startups`,
+                                        `${query} solutions`
+                                    ];
+                                    // You can display these suggestions without changing existing logic
+                                    console.log('AI suggestions:', suggestions);
+                                }
+                            }}
+                        />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    </div>
+                </div>
+
                 {/* Main Navigation */}
                 <div className="space-y-1 p-2">
                     {mainItems.map((item) => (

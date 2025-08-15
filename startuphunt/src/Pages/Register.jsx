@@ -461,25 +461,17 @@ const Register = () => {
             const gptData = await res.json();
             if (gptData.err || gptData.error) throw new Error(gptData.message);
 
-            // Debug: Log what we received from AI
-            console.log("🤖 AI Response received:", gptData);
-            console.log("🎨 Logo URL:", gptData.logo_url);
-            console.log("🖼️ Thumbnail URL:", gptData.thumbnail_url);
-            console.log("📂 Category:", gptData.category);
-            console.log("🏷️ Features/Tags:", gptData.features);
+            // Process AI response
+            // AI Response processed successfully
 
             // Check how many fields are already filled
             const filledCount = getFilledFieldsCount();
-            console.log("📊 Fields filled count:", filledCount);
-
             if (filledCount < 4) {
                 // If less than 4 fields filled, directly apply AI data
-                console.log("🚀 Auto-filling: Less than 4 fields filled");
                 applyAIData(gptData, false); // Fill all fields
                 setSnackbar({ open: true, message: "🤖 All fields auto-filled with AI data!", severity: 'success' });
             } else {
                 // If 4+ fields filled, show dialog for user choice
-                console.log("❓ Showing dialog: 4+ fields already filled");
                 setPendingAIData(gptData);
                 setShowSmartFillDialog(true);
             }
@@ -505,8 +497,8 @@ const Register = () => {
     // Smart Fill Functions
     const applyAIData = (gptData, onlyEmptyFields = false) => {
         // Update form data with AI-generated content
-            setFormData((prev) => ({
-                ...prev,
+        setFormData((prev) => ({
+            ...prev,
             name: onlyEmptyFields ? (prev.name || gptData.name || "") : (gptData.name || prev.name),
             websiteUrl: onlyEmptyFields ? (prev.websiteUrl || gptData.website_url || "") : (gptData.website_url || prev.websiteUrl),
             tagline: onlyEmptyFields ? (prev.tagline || gptData.tagline || "") : (gptData.tagline || prev.tagline),
@@ -520,13 +512,11 @@ const Register = () => {
 
         // Set AI-extracted logo URL (only if user doesn't have logo or onlyEmptyFields is false)
         if (gptData.logo_url && (!onlyEmptyFields || !logoFile)) {
-            console.log("🎨 Setting logo URL:", gptData.logo_url);
             setLogoFile(gptData.logo_url);
         }
 
         // Set AI-generated website screenshot as thumbnail (only if user doesn't have thumbnail or onlyEmptyFields is false)
         if (gptData.thumbnail_url && (!onlyEmptyFields || !thumbnailFile)) {
-            console.log("🖼️ Setting thumbnail URL:", gptData.thumbnail_url);
             setThumbnailFile(gptData.thumbnail_url);
         }
 
@@ -546,7 +536,6 @@ const Register = () => {
 
             // If no existing category found, create a new one and add it to options
             if (!categoryOption) {
-                console.log(`Creating new category: ${gptData.category}`);
                 categoryOption = {
                     value: gptData.category.toLowerCase().replace(/\s+/g, '-'),
                     label: gptData.category,
@@ -627,8 +616,7 @@ const Register = () => {
 
         // Don't immediately reset - let user decide
         // The image will show broken icon, but URL is preserved
-        console.log(`💡 ${type} URL preserved:`, e.target.src);
-        console.log(`💡 User can still upload their own ${type} or the URL will be saved`);
+        // URL preserved for user decision
     };
 
     const handleSaveDraft = async () => {
@@ -877,31 +865,31 @@ const Register = () => {
                         {step === 1 && (
                             <div className="form-tab-panel active">
                                 <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="name">Name of the launch</label>
-                                        <input
+                                            <input
                                                 id="name"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleInputChange}
+                                                name="name"
+                                                value={formData.name}
+                                                onChange={handleInputChange}
                                                 className="form-input"
-                                            maxLength={30}
+                                                maxLength={30}
                                                 disabled={editingLaunched}
                                                 placeholder='e.g LaunchIT'
-                                        />
+                                            />
                                             <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
-                                    </div>
+                                        </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="websiteUrl">Website URL</label>
-                                        <input
+                                            <input
                                                 id="websiteUrl"
-                                            name="websiteUrl"
-                                            value={formData.websiteUrl}
-                                            onChange={handleInputChange}
+                                                name="websiteUrl"
+                                                value={formData.websiteUrl}
+                                                onChange={handleInputChange}
                                                 onBlur={handleUrlBlur}
                                                 className={`form-input ${urlError ? 'border-red-500' : ''}`}
-                                            placeholder="https://yourproject.com"
+                                                placeholder="https://yourproject.com"
                                                 disabled={editingLaunched}
                                             />
                                             {urlError && <p className="text-red-500 text-sm mt-1">{urlError}</p>}
@@ -923,52 +911,52 @@ const Register = () => {
                                                     </>
                                                 )}
                                             </button>
-                                    </div>
+                                        </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="tagline">Tagline</label>
-                                        <input
+                                            <input
                                                 id="tagline"
-                                            name="tagline"
-                                            value={formData.tagline}
-                                            onChange={handleTaglineChange}
+                                                name="tagline"
+                                                value={formData.tagline}
+                                                onChange={handleTaglineChange}
                                                 className="form-input"
-                                            maxLength={60}
+                                                maxLength={60}
                                                 placeholder="catchy tagline of what the launch does."
-                                        />
+                                            />
                                             <div className="text-xs text-gray-400 text-right mt-1">{taglineCharCount} / 60</div>
-                                    </div>
+                                        </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="category">Category(ies)</label>
-                                        <Select
+                                            <Select
                                                 options={dynamicCategoryOptions}
                                                 isClearable={true}
                                                 isSearchable={true}
-                                            value={selectedCategory}
-                                            onChange={setSelectedCategory}
+                                                value={selectedCategory}
+                                                onChange={setSelectedCategory}
                                                 styles={customSelectStyles}
                                                 placeholder="Select a category"
-                                        />
-                                    </div>
+                                            />
+                                        </div>
                                         <div className="form-field-group md:col-span-2">
                                             <label className="form-label" htmlFor="description">Description</label>
-                                        <textarea
+                                            <textarea
                                                 id="description"
-                                            name="description"
-                                            value={formData.description}
-                                            onChange={handleDescriptionChange}
-                                            rows={4}
+                                                name="description"
+                                                value={formData.description}
+                                                onChange={handleDescriptionChange}
+                                                rows={4}
                                                 className="form-input"
                                                 placeholder="Describe your launch in detail. What problem does it solve? What makes it unique?"
-                                        />
+                                            />
                                             <div className="text-xs text-gray-400 text-right mt-1">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
                         )}
                         {step === 2 && (
                             <div className="form-tab-panel active">
-                            <div className="space-y-8">
+                                <div className="space-y-8">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-2xl font-bold">Media</h3>
                                         <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
@@ -976,15 +964,15 @@ const Register = () => {
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                <div>
+                                        <div>
                                             <label className="form-label">Logo</label>
                                             <div className="flex items-center gap-6 mt-2">
                                                 <div className="relative">
                                                     <label className="w-24 h-24 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
                                                         <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
                                                         {logoFile ? (
-                                                <img
-                                                    src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)}
+                                                            <img
+                                                                src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)}
                                                                 alt="Logo Preview"
                                                                 className="w-full h-full object-cover rounded-2xl"
                                                                 onError={(e) => typeof logoFile === 'string' ? handleImageError(e, 'logo') : null}
@@ -993,11 +981,11 @@ const Register = () => {
                                                             <div className="flex flex-col items-center justify-center text-blue-600">
                                                                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
                                                                 <span className="text-xs">AI generating...</span>
-                                            </div>
+                                                            </div>
                                                         ) : (
                                                             <Plus className="w-6 h-6 text-gray-400" />
-                                        )}
-                                            </label>
+                                                        )}
+                                                    </label>
                                                     {logoFile && typeof logoFile === 'string' && (
                                                         <button
                                                             type="button"
@@ -1010,30 +998,30 @@ const Register = () => {
                                                     )}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                            Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
+                                                    Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
                                                     {logoFile && (
                                                         <div className="mt-2 space-y-1">
                                                             <button type="button" onClick={removeLogo} className="block text-red-600 hover:text-red-800">Remove</button>
                                                             {typeof logoFile === 'string' && (
                                                                 <div className="text-xs text-blue-600">🤖 AI-generated logo</div>
                                                             )}
-                                        </div>
+                                                        </div>
                                                     )}
                                                     {isAILoading && !logoFile && (
                                                         <div className="mt-2 text-xs text-blue-600">🔄 AI is generating logo...</div>
                                                     )}
-                                    </div>
-                                </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                <div>
+                                        <div>
                                             <label className="form-label">Thumbnail (Dashboard)</label>
                                             <div className="flex items-center gap-6 mt-2">
                                                 <div className="relative">
                                                     <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
                                                         <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
                                                         {thumbnailFile ? (
-                                                <img
-                                                    src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)}
+                                                            <img
+                                                                src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)}
                                                                 alt="Thumbnail Preview"
                                                                 className="w-full h-full object-cover rounded-lg"
                                                                 onError={(e) => typeof thumbnailFile === 'string' ? handleImageError(e, 'thumbnail') : null}
@@ -1042,11 +1030,11 @@ const Register = () => {
                                                             <div className="flex flex-col items-center justify-center text-blue-600">
                                                                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
                                                                 <span className="text-xs">AI generating...</span>
-                                            </div>
+                                                            </div>
                                                         ) : (
                                                             <Plus className="w-6 h-6 text-gray-400" />
-                                        )}
-                                            </label>
+                                                        )}
+                                                    </label>
                                                     {thumbnailFile && typeof thumbnailFile === 'string' && (
                                                         <button
                                                             type="button"
@@ -1059,22 +1047,22 @@ const Register = () => {
                                                     )}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                            Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
+                                                    Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
                                                     {thumbnailFile && (
                                                         <div className="mt-2 space-y-1">
                                                             <button type="button" onClick={removeThumbnail} className="block text-red-600 hover:text-red-800">Remove</button>
                                                             {typeof thumbnailFile === 'string' && (
                                                                 <div className="text-xs text-blue-600">🤖 AI-generated screenshot</div>
                                                             )}
-                                        </div>
+                                                        </div>
                                                     )}
                                                     {isAILoading && !thumbnailFile && (
                                                         <div className="mt-2 text-xs text-blue-600">🔄 AI is generating thumbnail...</div>
                                                     )}
-                                    </div>
-                                </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                <div>
+                                        <div>
                                             <label className="form-label">Cover image(s)</label>
                                             <div className="flex flex-wrap gap-4 mt-2">
                                                 {coverFiles.map((file, idx) => (
@@ -1088,19 +1076,19 @@ const Register = () => {
                                                             )}
                                                         </label>
                                                         {file && (
-                                                    <button
+                                                            <button
                                                                 type="button"
                                                                 onClick={(e) => { e.preventDefault(); removeCover(idx); }}
-                                                        className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
+                                                                className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
                                                             >
                                                                 <X className="w-3 h-3 text-red-600" />
                                                             </button>
                                                         )}
-                                                </div>
-                                        ))}
-                                    </div>
-                                    <div className="text-sm text-gray-500 mt-2">
-                                        Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="text-sm text-gray-500 mt-2">
+                                                Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
                                             </div>
                                         </div>
                                     </div>
@@ -1111,16 +1099,16 @@ const Register = () => {
                             <div className="form-tab-panel active">
                                 <div className="space-y-6">
                                     <div className="space-y-4">
-                                <div>
+                                        <div>
                                             <label className="form-label">Links</label>
                                             <div className="space-y-4 mt-2">
-                                    {links.map((link, index) => {
-                                        const { label, icon } = getLinkType(link);
-                                        return (
+                                                {links.map((link, index) => {
+                                                    const { label, icon } = getLinkType(link);
+                                                    return (
                                                         <div key={index} className="flex items-center gap-4">
                                                             <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-xl">
                                                                 {icon}
-                                                </span>
+                                                            </span>
                                                             <input
                                                                 type="url"
                                                                 value={link}
@@ -1128,14 +1116,14 @@ const Register = () => {
                                                                 placeholder={`Enter ${label} URL`}
                                                                 className="form-input flex-1"
                                                             />
-                                                {links.length > 1 && (
+                                                            {links.length > 1 && (
                                                                 <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600 hover:bg-gray-100 rounded-full">
                                                                     <X className="w-5 h-5" />
                                                                 </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                                 <button
                                                     type="button"
                                                     onClick={addLink}
@@ -1144,11 +1132,11 @@ const Register = () => {
                                                     <Plus className="w-4 h-4" />
                                                     <span>Add another link</span>
                                                 </button>
-                                </div>
+                                            </div>
                                         </div>
-                                <div>
+                                        <div>
                                             <BuiltWithSelect value={builtWith} onChange={setBuiltWith} styles={customSelectStyles} className="mt-2" />
-                                </div>
+                                        </div>
                                         <div>
                                             <label className="form-label">Tags</label>
                                             <div className="space-y-2 mt-2">
@@ -1162,7 +1150,7 @@ const Register = () => {
                                                                 className="text-blue-600 hover:text-blue-800"
                                                             >
                                                                 <X className="w-3 h-3" />
-                                    </button>
+                                                            </button>
                                                         </span>
                                                     ))}
                                                 </div>
@@ -1192,31 +1180,31 @@ const Register = () => {
                         )}
                     </form>
                     <div className="form-actions-bar">
-                                {step > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(step - 1)}
+                        {step > 1 && (
+                            <button
+                                type="button"
+                                onClick={() => setStep(step - 1)}
                                 className="btn-secondary"
-                                    >
-                                        Previous
-                                    </button>
-                                )}
+                            >
+                                Previous
+                            </button>
+                        )}
                         <div className="ml-auto flex gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={handleSaveDraft}
+                            <button
+                                type="button"
+                                onClick={handleSaveDraft}
                                 className="btn-tertiary"
-                                    >
+                            >
                                 Save as Draft
-                                    </button>
+                            </button>
                             {step < 3 ? (
-                                    <button
-                                        type="button"
+                                <button
+                                    type="button"
                                     onClick={() => setStep(step + 1)}
                                     className="btn-primary"
-                                    >
-                                        Next
-                                    </button>
+                                >
+                                    Next
+                                </button>
                             ) : (
                                 <button
                                     type="button"
@@ -1226,8 +1214,8 @@ const Register = () => {
                                     Submit Launch
                                 </button>
                             )}
-                                </div>
-                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1251,18 +1239,18 @@ const Register = () => {
                                 )}
                                 {pendingAIData.logo_url && <p><strong>Logo:</strong> Found ✅</p>}
                                 {pendingAIData.thumbnail_url && <p><strong>Screenshot:</strong> Generated ✅</p>}
-                    </div>
+                            </div>
                         )}
 
                         <div className="space-y-3">
                             <div className="p-3 border border-blue-200 rounded-lg bg-blue-50">
                                 <h5 className="font-medium text-blue-800">Fill All Fields</h5>
                                 <p className="text-sm text-blue-600">Replace existing data with AI-generated content</p>
-                </div>
+                            </div>
                             <div className="p-3 border border-green-200 rounded-lg bg-green-50">
                                 <h5 className="font-medium text-green-800">Fill Empty Fields Only</h5>
                                 <p className="text-sm text-green-600">Keep your existing data, only fill empty fields</p>
-            </div>
+                            </div>
                         </div>
                     </div>
                 </DialogContent>

@@ -25,6 +25,10 @@ import {
   Check,
   X,
   HelpCircle,
+  DollarSign,
+  Mail,
+  Phone,
+  Calendar,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -60,6 +64,12 @@ const AdminDashboard = () => {
   const [sortOrder, setSortOrder] = useState("newest");
   const [pitches, setPitches] = useState([]);
   const [loadingPitches, setLoadingPitches] = useState(true);
+
+  // New state for advertising interests
+  const [advertisingInterests, setAdvertisingInterests] = useState([]);
+  const [loadingAdvertisingInterests, setLoadingAdvertisingInterests] = useState(true);
+  const [selectedInterest, setSelectedInterest] = useState(null);
+  const [showInterestModal, setShowInterestModal] = useState(false);
 
   const [rejectionModal, setRejectionModal] = useState({
     open: false,
@@ -116,6 +126,7 @@ const AdminDashboard = () => {
           fetchProjects();
           fetchReports();
           fetchPitches();
+          fetchAdvertisingInterests();
         }
       } catch (error) {
         console.error("Error in checkAccess:", error);
@@ -173,6 +184,72 @@ const AdminDashboard = () => {
 
     fetchCounts();
   }, []);
+
+  // New function to fetch advertising interests
+  const fetchAdvertisingInterests = async () => {
+    setLoadingAdvertisingInterests(true);
+    try {
+      const { data, error } = await supabase
+        .from("advertising_interests")
+        .select(`
+          *,
+          projects:project_id (id, name, tagline, website_url, slug),
+          profiles:user_id (id, full_name, email)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching advertising interests:", error);
+        setAdvertisingInterests([]);
+      } else {
+        setAdvertisingInterests(data || []);
+      }
+    } catch (error) {
+      console.error("Error in fetchAdvertisingInterests:", error);
+      setAdvertisingInterests([]);
+    } finally {
+      setLoadingAdvertisingInterests(false);
+    }
+  };
+
+  // Function to update interest status
+  const updateInterestStatus = async (interestId, status, adminNotes = "") => {
+    try {
+      const { error } = await supabase
+        .from("advertising_interests")
+        .update({
+          status: status,
+          admin_notes: adminNotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", interestId);
+
+      if (error) {
+        throw error;
+      }
+
+      setSnackbar({
+        open: true,
+        message: "Interest status updated successfully",
+        severity: "success",
+      });
+
+      fetchAdvertisingInterests();
+    } catch (error) {
+      console.error("Error updating interest status:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to update interest status",
+        severity: "error",
+      });
+    }
+  };
+
+  // Function to view interest details
+  const viewInterestDetails = (interest) => {
+    setSelectedInterest(interest);
+    setShowInterestModal(true);
+  };
 
   const fetchProjects = async () => {
     try {
@@ -768,6 +845,22 @@ const AdminDashboard = () => {
               <Package className="w-4 h-4" /> Pitches ( {pitches.length})
             </div>
           </button>
+          <button
+            onClick={() => setActiveTab("advertising")}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
+                activeTab==='advertising'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }
+
+            `}
+          >
+
+            <div className="flex items-center gap-2">
+
+              <DollarSign className="w-4 h-4" /> Advertising ( {advertisingInterests.length})
+            </div>
+          </button>
         </div>
         {/* Projects Tab */}
         {activeTab === "projects" && (
@@ -1240,7 +1333,357 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+        {/* Advertising Interests Tab */}
+        {activeTab === "advertising" && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Advertising Interests ({advertisingInterests.length})
+              </h2>
+            </div>
+            {loadingAdvertisingInterests ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading advertising interests...</p>
+              </div>
+            ) : advertisingInterests.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <DollarSign className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No advertising interests found.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Project
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Plan
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {advertisingInterests.map((interest) => (
+                      <tr key={interest.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {interest.projects?.name || "Project Deleted"}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {interest.projects?.tagline || "No tagline"}
+                            </p>
+                            {interest.projects?.website_url && (
+                              <a
+                                href={interest.projects.website_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1"
+                              >
+                                {interest.projects.website_url}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            {interest.profiles?.full_name || "Anonymous"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {interest.profiles?.email || interest.user_email}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            {interest.plan_name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {interest.plan_price}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Mail className="w-3 h-3 text-gray-500" />
+                              {interest.user_email}
+                            </div>
+                            {interest.user_phone && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="w-3 h-3 text-gray-500" />
+                                {interest.user_phone}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${interest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                interest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
+                                  interest.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                    interest.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                              }`}
+                          >
+                            {interest.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-gray-500" />
+                            {new Date(interest.created_at).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => viewInterestDetails(interest)}
+                              className="text-blue-600 hover:text-blue-800"
+                              title="View details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {interest.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => updateInterestStatus(interest.id, 'contacted')}
+                                  className="text-blue-600 hover:text-blue-800"
+                                  title="Mark as contacted"
+                                >
+                                  <Mail className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => updateInterestStatus(interest.id, 'approved')}
+                                  className="text-green-600 hover:text-green-800"
+                                  title="Approve"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => updateInterestStatus(interest.id, 'rejected')}
+                                  className="text-red-600 hover:text-red-800"
+                                  title="Reject"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+      {/* Interest Details Modal */}
+      <Dialog
+        open={showInterestModal}
+        onClose={() => setShowInterestModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle className="bg-blue-50 border-b border-blue-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-full">
+              <DollarSign className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-blue-800">
+                Advertising Interest Details
+              </h3>
+              <p className="text-sm text-blue-600 mt-1">
+                Review the complete submission details
+              </p>
+            </div>
+          </div>
+        </DialogTitle>
+        <DialogContent className="pt-6">
+          {selectedInterest && (
+            <div className="space-y-6">
+              {/* Project Information */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Project Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Project Name:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.projects?.name || "Project Deleted"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Tagline:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.projects?.tagline || "No tagline"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Website:</p>
+                    <p className="font-medium text-gray-800">
+                      {selectedInterest.projects?.website_url ? (
+                        <a
+                          href={selectedInterest.projects.website_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          {selectedInterest.projects.website_url}
+                        </a>
+                      ) : (
+                        "No website"
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Project ID:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.project_id}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* User Information */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">User Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Full Name:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.user_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Email:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.user_email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Phone:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.user_phone || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">User ID:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.user_id}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Plan Information */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Plan Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Selected Plan:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.plan_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Price:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.plan_price}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Plan ID:</p>
+                    <p className="font-medium text-gray-800">{selectedInterest.plan_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Status:</p>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedInterest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          selectedInterest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
+                            selectedInterest.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              selectedInterest.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                        }`}
+                    >
+                      {selectedInterest.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              {selectedInterest.additional_info && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-800 mb-3">Additional Information</h4>
+                  <p className="text-gray-700">{selectedInterest.additional_info}</p>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Timestamps</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Submitted:</p>
+                    <p className="font-medium text-gray-800">
+                      {new Date(selectedInterest.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  {selectedInterest.updated_at && (
+                    <div>
+                      <p className="text-sm text-gray-600">Last Updated:</p>
+                      <p className="font-medium text-gray-800">
+                        {new Date(selectedInterest.updated_at).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Admin Notes */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Admin Notes</h4>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={selectedInterest.admin_notes || ""}
+                  onChange={(e) => {
+                    setSelectedInterest(prev => ({
+                      ...prev,
+                      admin_notes: e.target.value
+                    }));
+                  }}
+                  placeholder="Add admin notes..."
+                  variant="outlined"
+                />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions className="p-6 pt-0">
+          <Button
+            onClick={() => setShowInterestModal(false)}
+            variant="outlined"
+            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            Close
+          </Button>
+          {selectedInterest && (
+            <Button
+              onClick={() => {
+                updateInterestStatus(selectedInterest.id, selectedInterest.status, selectedInterest.admin_notes);
+                setShowInterestModal(false);
+              }}
+              variant="contained"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Update Notes
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
       {/* Rejection Modal */}
       <Dialog
         open={rejectionModal.open}
