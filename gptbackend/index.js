@@ -218,7 +218,7 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
 app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
   try {
     const { content, contentType, userId } = req.body;
-    
+
     if (!content || !contentType) {
       return res.status(400).json({
         error: true,
@@ -228,14 +228,14 @@ app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
 
     // Moderate the content
     const moderationResult = await moderateContent(content);
-    
+
     // Determine action based on moderation level
     let action = 'approve';
     let message = 'Content approved';
-    
+
     if (moderationResult.moderationLevel === 'flagged') {
-      if (moderationResult.issues.some(issue => 
-        issue.includes('Hate speech') || 
+      if (moderationResult.issues.some(issue =>
+        issue.includes('Hate speech') ||
         issue.includes('Self-harm') ||
         issue.includes('Violent content')
       )) {
@@ -285,7 +285,7 @@ app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
 app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
   try {
     const { query, limit = 10, filters = {} } = req.body;
-    
+
     if (!query || query.trim().length < 2) {
       return res.status(400).json({
         error: true,
@@ -323,16 +323,16 @@ app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
               project.category || '',
               project.tags ? project.tags.join(' ') : ''
             ].join(' ').trim();
-            
+
             if (projectText) {
               const embedding = await generateEmbedding(projectText);
-              
+
               // Store embedding in database
               await supabase
                 .from('projects')
                 .update({ embedding: embedding })
                 .eq('id', project.id);
-              
+
               return { ...project, embedding };
             }
           } catch (error) {
@@ -345,18 +345,18 @@ app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
 
     // Perform semantic search
     const searchResults = await semanticSearch(query, projectsWithEmbeddings, limit);
-    
+
     // Apply additional filters if provided
     let filteredResults = searchResults;
-    
+
     if (filters.category) {
-      filteredResults = filteredResults.filter(project => 
+      filteredResults = filteredResults.filter(project =>
         project.category === filters.category
       );
     }
-    
+
     if (filters.tags && filters.tags.length > 0) {
-      filteredResults = filteredResults.filter(project => 
+      filteredResults = filteredResults.filter(project =>
         project.tags && filters.tags.some(tag => project.tags.includes(tag))
       );
     }
@@ -382,7 +382,7 @@ app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
 app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
   try {
     const { projectId } = req.body;
-    
+
     if (!projectId) {
       return res.status(400).json({
         error: true,
@@ -420,7 +420,7 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
     }
 
     const embedding = await generateEmbedding(projectText);
-    
+
     // Update project with embedding
     const { error: updateError } = await supabase
       .from('projects')
@@ -450,10 +450,10 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
 app.get('/api/moderation/queue', rateLimitMiddleware, async (req, res) => {
   try {
     const { status = 'pending_review', limit = 50 } = req.query;
-    
+
     // TODO: Add admin authentication check
     // For now, allow access to moderation queue
-    
+
     const { data: moderationRecords, error } = await supabase
       .from('content_moderation')
       .select('*')
@@ -485,7 +485,7 @@ app.get('/api/moderation/queue', rateLimitMiddleware, async (req, res) => {
 app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => {
   try {
     const { recordId, action, adminNotes } = req.body;
-    
+
     if (!recordId || !action) {
       return res.status(400).json({
         error: true,
@@ -494,7 +494,7 @@ app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => {
     }
 
     // TODO: Add admin authentication check
-    
+
     const { error } = await supabase
       .from('content_moderation')
       .update({
