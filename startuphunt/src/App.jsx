@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Header from "./Components/Header";
@@ -26,6 +26,22 @@ import FollowersFollowing from "./Pages/userinfoyou/FollowersFollowing.jsx";
 import CategoryProjects from "./Pages/CategoryProjects.jsx";
 import Community from "./Pages/Community.jsx";
 import ScrollToTop from "./Components/ScrollToTop";
+import ErrorBoundary from "./Components/ErrorBoundary";
+
+// Lazy load heavy components
+const LazyAdminDashboard = lazy(() => import("./Pages/AdminDashboard"));
+const LazyPitchUpload = lazy(() => import("./Pages/PitchUpload"));
+const LazyApprovedPitches = lazy(() => import("./Pages/ApprovedPitchesGallery.jsx"));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 
 function AppRoutes() {
   const location = useLocation();
@@ -49,7 +65,13 @@ function AppRoutes() {
         <main className="flex-grow pt-16" style={{ minHeight: "100%" }}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-              <Route path="/admin" element={<PageFade><AdminDashboard /></PageFade>} />
+              <Route path="/admin" element={
+                <PageFade>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyAdminDashboard />
+                  </Suspense>
+                </PageFade>
+              } />
               <Route path="/" element={<PageFade><DashBoard /></PageFade>} />
               <Route path="/UserRegister" element={<PageFade><UserRegister /></PageFade>} />
               <Route path="/submit" element={<PageFade><Register /></PageFade>} />
@@ -61,7 +83,13 @@ function AppRoutes() {
               <Route path="/aboutus" element={<PageFade><Aboutus /></PageFade>} />
               <Route path="/suggestions" element={<PageFade><Suggestions /></PageFade>} />
               <Route path="/launchitguide" element={<PageFade><LaunchItGuide /></PageFade>} />
-              <Route path="/upload-pitch" element={<PageFade><PitchUpload /></PageFade>} />
+              <Route path="/upload-pitch" element={
+                <PageFade>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyPitchUpload />
+                  </Suspense>
+                </PageFade>
+              } />
               <Route path="/coming-soon" element={<PageFade><ComingSoon /></PageFade>} />
               <Route path="/my-launches" element={<PageFade><MyLaunches /></PageFade>} />
               <Route path="/saved-projects" element={<PageFade><SavedProjects /></PageFade>} />
@@ -71,7 +99,13 @@ function AppRoutes() {
               <Route path="/my-comments" element={<PageFade><MyComments /></PageFade>} />
               <Route path="/downloads" element={<PageFade><ComingSoon /></PageFade>} />
               <Route path="/followers-following" element={<PageFade><FollowersFollowing /></PageFade>} />
-              <Route path="/approved-pitches" element={<PageFade><ApprovedPitches /></PageFade>} />
+              <Route path="/approved-pitches" element={
+                <PageFade>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <LazyApprovedPitches />
+                  </Suspense>
+                </PageFade>
+              } />
               <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
               <Route path="/launchit-community" element={<PageFade><Community /></PageFade>} />
             </Routes>
@@ -100,7 +134,9 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <AppRoutes />
+      <ErrorBoundary>
+        <AppRoutes />
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

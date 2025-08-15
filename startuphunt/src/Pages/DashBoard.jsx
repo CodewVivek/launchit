@@ -99,13 +99,13 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-4">
       {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
         <div key={dateLabel}>
           <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-800">
             {dateLabel}
           </h3>
-          <div className="p-6">
+          <div className="p-6 pl-8 lg:pl-12">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 gap-4">
               {projects.map((project) => (
                 <ProjectCard
@@ -195,9 +195,6 @@ const ProjectCard = ({ project, onProjectClick }) => {
         <div className="group-hover:scale-110 transition-transform duration-200">
           <Like projectId={project.id} iconOnly={true} />
         </div>
-
-        {/* External Link */}
-
       </div>
     </div >
   );

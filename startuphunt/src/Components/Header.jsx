@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-    Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User, Menu, X, Video, Search, ChevronDown
+    Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User, Menu, X, Video, Search, ChevronDown, Monitor, Tag
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import NotificationBell from "./NotificationBell";
+import { semanticSearch } from "../utils/aiApi";
 
 const Header = ({ onMenuClick }) => {
     const [user, setUser] = useState(null);
@@ -15,9 +16,10 @@ const Header = ({ onMenuClick }) => {
     const [launchDropdownOpen, setLaunchDropdownOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
-    const [searchSuggestions, setSearchSuggestions] = useState({ projects: [], users: [], categories: [] });
+    const [searchSuggestions, setSearchSuggestions] = useState({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
     const [isSearching, setIsSearching] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const getUser = async () => {
@@ -84,7 +86,7 @@ const Header = ({ onMenuClick }) => {
     // Universal search functionality
     const performSearch = useCallback(async (query) => {
         if (!query.trim()) {
-            setSearchSuggestions({ projects: [], users: [], categories: [], tags: [] });
+            setSearchSuggestions({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
             return;
         }
 
@@ -126,11 +128,30 @@ const Header = ({ onMenuClick }) => {
                 )
             ).slice(0, 3) || [];
 
+            // Generate AI suggestions
+            let aiSuggestions = [];
+            try {
+                const aiResults = await semanticSearch(query, 3, {});
+                if (aiResults.success && aiResults.results.length > 0) {
+                    aiSuggestions = aiResults.results.slice(0, 3).map(project => ({
+                        id: project.id,
+                        name: project.name,
+                        tagline: project.tagline || `AI-suggested ${query} alternative`,
+                        category_type: project.category_type || 'AI Suggested',
+                        slug: project.slug,
+                        logo_url: project.logo_url
+                    }));
+                }
+            } catch (error) {
+                console.log('AI suggestions not available, using basic search');
+            }
+
             setSearchSuggestions({
                 projects: projects || [],
                 users: users || [],
                 categories: [...new Set(categories?.map(c => c.category_type) || [])],
-                tags: tagMatches
+                tags: tagMatches,
+                aiSuggestions: aiSuggestions
             });
         } catch (error) {
             console.error('Search error:', error);
@@ -192,10 +213,11 @@ const Header = ({ onMenuClick }) => {
     const totalSuggestions = (searchSuggestions.projects?.length || 0) +
         (searchSuggestions.users?.length || 0) +
         (searchSuggestions.categories?.length || 0) +
-        (searchSuggestions.tags?.length || 0);
+        (searchSuggestions.tags?.length || 0) +
+        (searchSuggestions.aiSuggestions?.length || 0);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
+        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 bg-white ">
 
             {/* Left side with menu button and logo */}
             <div className="flex items-center space-x-4">
@@ -210,13 +232,13 @@ const Header = ({ onMenuClick }) => {
                     <div className="rounded flex items-center justify-center">
                         <img className="w-8 h-8 text-white" src="/images/r6_circle.png" alt="L" />
                     </div>
-                    <span className="text-xl font-bold tracking-wide">
+                    <span className="text-xl font-bold tracking-wide hidden sm:block">
                         <span className="text-gray-800">LaunchIT</span>
                     </span>
                 </Link>
             </div>
 
-            {/* Universal Search Bar */}
+            {/* Universal Search Bar - Hidden on mobile */}
             <div className="hidden md:block flex-1 mx-8">
                 <div className="relative w-full max-w-lg mx-auto">
                     <input
@@ -288,6 +310,34 @@ const Header = ({ onMenuClick }) => {
                                         </div>
                                     )}
 
+                                    {/* AI Suggestions */}
+                                    {searchSuggestions.aiSuggestions?.length > 0 && (
+                                        <div className="mb-2">
+                                            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                                                🤖 AI Suggestions
+                                            </div>
+                                            {searchSuggestions.aiSuggestions.map((project) => (
+                                                <button
+                                                    key={project.id}
+                                                    onClick={() => handleSuggestionClick('project', project)}
+                                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                >
+                                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                        {project.logo_url ? (
+                                                            <img src={project.logo_url} alt={project.name} className="w-6 h-6 rounded object-cover" />
+                                                        ) : (
+                                                            <Rocket className="w-4 h-4 text-white" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-medium text-gray-900 truncate">{project.name}</div>
+                                                        <div className="text-sm text-gray-500 truncate">{project.tagline}</div>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     {/* Users */}
                                     {searchSuggestions.users?.length > 0 && (
                                         <div className="mb-2">
@@ -300,17 +350,15 @@ const Header = ({ onMenuClick }) => {
                                                     onClick={() => handleSuggestionClick('user', user)}
                                                     className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
                                                 >
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                         {user.avatar_url ? (
-                                                            <img src={user.avatar_url} alt={user.username} className="w-6 h-6 rounded-full object-cover" />
+                                                            <img src={user.avatar_url} alt={user.username} className="w-6 h-6 rounded object-cover" />
                                                         ) : (
-                                                            <span className="text-white text-xs font-medium">
-                                                                {user.username?.charAt(0).toUpperCase()}
-                                                            </span>
+                                                            <User className="w-4 h-4 text-gray-500" />
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">@{user.username}</div>
+                                                        <div className="font-medium text-gray-900 truncate">{user.username}</div>
                                                         <div className="text-sm text-gray-500 truncate">{user.full_name}</div>
                                                     </div>
                                                 </button>
@@ -320,22 +368,22 @@ const Header = ({ onMenuClick }) => {
 
                                     {/* Categories */}
                                     {searchSuggestions.categories?.length > 0 && (
-                                        <div>
+                                        <div className="mb-2">
                                             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                                 Categories
                                             </div>
-                                            {searchSuggestions.categories.map((category, index) => (
+                                            {searchSuggestions.categories.map((category) => (
                                                 <button
-                                                    key={index}
-                                                    onClick={() => handleSuggestionClick('category', category)}
+                                                    key={category}
+                                                    onClick={() => handleSuggestionClick('category', { category_type: category })}
                                                     className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
                                                 >
                                                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        <Rocket className="w-4 h-4 text-blue-600" />
+                                                        <Monitor className="w-4 h-4 text-blue-600" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 capitalize">{category}</div>
-                                                        <div className="text-sm text-gray-500">Browse projects</div>
+                                                        <div className="font-medium text-gray-900 truncate">{category}</div>
+                                                        <div className="text-sm text-gray-500">Category</div>
                                                     </div>
                                                 </button>
                                             ))}
@@ -344,30 +392,22 @@ const Header = ({ onMenuClick }) => {
 
                                     {/* Tags */}
                                     {searchSuggestions.tags?.length > 0 && (
-                                        <div>
+                                        <div className="mb-2">
                                             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                                 Tags
                                             </div>
-                                            {searchSuggestions.tags.map((project) => (
+                                            {searchSuggestions.tags.map((tag) => (
                                                 <button
-                                                    key={project.id}
-                                                    onClick={() => handleSuggestionClick('project', project)}
+                                                    key={tag}
+                                                    onClick={() => handleSuggestionClick('tag', { tag })}
                                                     className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
                                                 >
-                                                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        {project.logo_url ? (
-                                                            <img src={project.logo_url} alt={project.name} className="w-6 h-6 rounded object-cover" />
-                                                        ) : (
-                                                            <Rocket className="w-4 h-4 text-gray-500" />
-                                                        )}
+                                                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                        <Tag className="w-4 h-4 text-green-600" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">{project.name}</div>
-                                                        <div className="text-sm text-gray-500 truncate">
-                                                            {project.tags?.filter(tag =>
-                                                                tag.toLowerCase().includes(search.toLowerCase())
-                                                            ).join(', ')}
-                                                        </div>
+                                                        <div className="font-medium text-gray-900 truncate">{tag}</div>
+                                                        <div className="text-sm text-gray-500">Tag</div>
                                                     </div>
                                                 </button>
                                             ))}

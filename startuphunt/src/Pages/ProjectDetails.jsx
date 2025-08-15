@@ -430,7 +430,7 @@ const ProjectDetails = () => {
             <h2 className="text-lg font-bold mb-4">Comments</h2>
             <Comments projectId={project.id} className="mt-10" />
           </div>
-          <RelatedProjects categoryType={project.category_type} excludeProjectId={project.id} />          
+          <RelatedProjects categoryType={project.category_type} excludeProjectId={project.id} />
           <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} projectId={project.id} projectName={project.name} />
         </div>
         {/* Right/Sidebar Section */}
@@ -457,51 +457,6 @@ const ProjectDetails = () => {
               <div className="mb-4">
                 <Share projectSlug={project.slug} projectName={project.name} />
               </div>
-              {/* Built With */}
-              {project.built_with && project.built_with.length > 0 && (
-                <div className="mb-4">
-                  <span className="font-semibold text-sm">Built With:</span>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {project.built_with.map((tech, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{tech}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Tags */}
-              {project.tags && project.tags.length > 0 && (
-                <div className="mb-4">
-                  <span className="font-semibold text-sm">Tags:</span>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {project.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Links */}
-              {project.links && project.links.length > 0 && (
-                <div className="mb-4">
-                  <span className="font-semibold text-sm">Links:</span>
-                  <div className="mt-1 gap-3 flex flex-wrap">
-                    {project.links.map((link, idx) => (
-                      <div key={idx} className=" flex  items-center gap-1 ">
-                        <ExternalLink className="w-3 h-3 text-gray-500" />
-                        <a
-                          href={link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-700 hover:underline text-xs truncate max-w-[150px]"
-                        >
-                          {getLinkLabel(link)}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Launcher */}
               <div className="mb-4">
                 <h3 className="font-semibold text-gray-700 mb-2">Launcher</h3>
                 {creator && (
@@ -561,6 +516,49 @@ const ProjectDetails = () => {
                   </button>
                 )}
               </div>
+              {/* Built With */}
+              {project.built_with && project.built_with.length > 0 && (
+                <div className="mb-4">
+                  <span className="font-semibold text-sm">Built With:</span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {project.built_with.map((tech, idx) => (
+                      <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{tech}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Tags */}
+              {project.tags && project.tags.length > 0 && (
+                <div className="mb-4">
+                  <span className="font-semibold text-sm">Tags:</span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {project.tags.map((tag, idx) => (
+                      <span key={idx} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Links */}
+              {project.links && project.links.length > 0 && (
+                <div className="mb-4">
+                  <span className="font-semibold text-sm">Links:</span>
+                  <div className="mt-1 gap-3 flex flex-wrap">
+                    {project.links.map((link, idx) => (
+                      <div key={idx} className=" flex  items-center gap-1 ">
+                        <ExternalLink className="w-3 h-3 text-gray-500" />
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-700 hover:underline text-xs truncate max-w-[150px]"
+                        >
+                          {getLinkLabel(link)}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <TrendingProjects limit={5} by="trending" />
