@@ -14,7 +14,7 @@ import Button from '@mui/material/Button';
 import categoryOptions from '../Components/categoryOptions';
 import BuiltWithSelect from '../Components/BuiltWithSelect';
 import { config } from '../config';
-import ContentModeration from '../Components/ContentModeration';
+import { moderateContent } from '../utils/aiApi';
 
 // Custom styles for the react-select component to match the new UI
 const customSelectStyles = {
@@ -93,6 +93,9 @@ const Register = () => {
     const [showSmartFillDialog, setShowSmartFillDialog] = useState(false);
     const [pendingAIData, setPendingAIData] = useState(null);
     const [isAILoading, setIsAILoading] = useState(false);
+    
+    // Content Moderation State
+    const [isModerating, setIsModerating] = useState(false);
 
     const handleUrlBlur = (e) => {
         const { value } = e.target;
@@ -338,6 +341,17 @@ const Register = () => {
         return true;
     };
 
+    // Content Moderation Function
+    const checkContentModeration = async (content, contentType) => {
+        try {
+            const result = await moderateContent(content, contentType, user?.id);
+            return result;
+        } catch (error) {
+            console.error('Moderation error:', error);
+            return { action: 'approve', message: 'Moderation failed, allowing submission' };
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -347,6 +361,50 @@ const Register = () => {
             setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'error' });
             navigate('/UserRegister');
             return;
+        }
+
+        // Content Moderation Check
+        setIsModerating(true);
+        try {
+            const nameModeration = await checkContentModeration(formData.name, 'project_name');
+            const taglineModeration = await checkContentModeration(formData.tagline, 'project_tagline');
+            const descriptionModeration = await checkContentModeration(formData.description, 'project_description');
+
+            // Check for high severity content (70-100%)
+            const highSeverityContent = [];
+            if (nameModeration.action === 'reject') highSeverityContent.push('Project Name');
+            if (taglineModeration.action === 'reject') highSeverityContent.push('Tagline');
+            if (descriptionModeration.action === 'reject') highSeverityContent.push('Description');
+
+            if (highSeverityContent.length > 0) {
+                setSnackbar({ 
+                    open: true, 
+                    message: `🚫 Submission blocked: ${highSeverityContent.join(', ')} contain inappropriate content. Please review and try again.`, 
+                    severity: 'error' 
+                });
+                setIsModerating(false);
+                return;
+            }
+
+            // Show warnings for medium severity content (below 70% but flagged)
+            const mediumSeverityContent = [];
+            if (nameModeration.action === 'review') mediumSeverityContent.push('Project Name');
+            if (taglineModeration.action === 'review') mediumSeverityContent.push('Tagline');
+            if (descriptionModeration.action === 'review') mediumSeverityContent.push('Description');
+
+            if (mediumSeverityContent.length > 0) {
+                setSnackbar({ 
+                    open: true, 
+                    message: `⚠️ Warning: ${mediumSeverityContent.join(', ')} flagged for review. Your submission will be monitored by moderators.`, 
+                    severity: 'warning' 
+                });
+                // Continue with submission (content will be auto-reported to admin)
+            }
+        } catch (error) {
+            console.error('Moderation check failed:', error);
+            // Continue with submission if moderation fails
+        } finally {
+            setIsModerating(false);
         }
 
         const submissionData = {
@@ -881,15 +939,7 @@ const Register = () => {
                                         />
                                             <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
                                             
-                                            {/* Content Moderation for Project Name */}
-                                            {formData.name && (
-                                                <ContentModeration
-                                                    content={formData.name}
-                                                    contentType="project_name"
-                                                    userId={user?.id}
-                                                    showAlert={true}
-                                                />
-                                            )}
+                                            {/* Content Moderation will be checked on submit */}
                                     </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="websiteUrl">Website URL</label>
@@ -936,15 +986,7 @@ const Register = () => {
                                         />
                                             <div className="text-xs text-gray-400 text-right mt-1">{taglineCharCount} / 60</div>
                                             
-                                            {/* Content Moderation for Tagline */}
-                                            {formData.tagline && (
-                                                <ContentModeration
-                                                    content={formData.tagline}
-                                                    contentType="project_tagline"
-                                                    userId={user?.id}
-                                                    showAlert={true}
-                                                />
-                                            )}
+                                            {/* Content Moderation will be checked on submit */}
                                     </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="category">Category(ies)</label>
@@ -971,15 +1013,7 @@ const Register = () => {
                                         />
                                             <div className="text-xs text-gray-400 text-right mt-1">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
                                             
-                                            {/* Content Moderation */}
-                                            {formData.description && (
-                                                <ContentModeration
-                                                    content={formData.description}
-                                                    contentType="project_description"
-                                                    userId={user?.id}
-                                                    showAlert={true}
-                                                />
-                                            )}
+                                            {/* Content Moderation will be checked on submit */}
                                     </div>
                                 </div>
                                 </div>
@@ -1240,9 +1274,17 @@ const Register = () => {
                                 <button
                                     type="button"
                                     onClick={handleSubmit}
-                                    className="btn-primary"
+                                    disabled={isModerating}
+                                    className={`btn-primary ${isModerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
-                                    Submit Launch
+                                    {isModerating ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                            Checking Content...
+                                        </>
+                                    ) : (
+                                        'Submit Launch'
+                                    )}
                                 </button>
                             )}
                                 </div>

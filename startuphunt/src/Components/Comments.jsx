@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import ReportModal from "./ReportModal";
-import ContentModeration from "./ContentModeration";
 import { toast } from "react-hot-toast";
+import { moderateContent } from "../utils/aiApi";
+
+// Content moderation will be checked on post/reply
 
 // Helper to show relative time (e.g., '1h ago', '2d ago', 'just now')
 function getRelativeTime(dateString) {
@@ -31,9 +33,7 @@ const Comments = ({ projectId }) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportCommentId, setReportCommentId] = useState(null);
 
-  // Content moderation states
-  const [commentModerationResult, setCommentModerationResult] = useState(null);
-  const [replyModerationResult, setReplyModerationResult] = useState(null);
+  // Content moderation will be checked on post/reply
 
   useEffect(() => {
     fetchComments();
@@ -72,17 +72,24 @@ const Comments = ({ projectId }) => {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
     
-    // Check moderation result and handle accordingly
-    if (commentModerationResult) {
-      if (commentModerationResult.action === 'reject') {
-        // Really dangerous content - block completely
+    // Content Moderation Check on Post
+    try {
+      const moderationResult = await moderateContent(newComment, 'comment', user.id);
+      
+      if (moderationResult.action === 'reject') {
+        // High severity content (70-100%) - block completely
         toast.error('🚫 Comment blocked: Contains inappropriate content that violates community guidelines.');
         return; // Don't allow posting
-      } else if (commentModerationResult.action === 'review') {
-        // Medium-level issues - allow posting but warn and auto-report
-        toast.warning('⚠️ Warning: Your comment has been flagged for review. You can post, but it will be reviewed by moderators.');
-        // Auto-report to admin (backend handles this)
+      } else if (moderationResult.action === 'review') {
+        // Medium severity content (below 70%) - allow posting but warn and auto-report
+        toast.warning('⚠️ Warning: Your comment has been flagged for review. You can post, but it will be monitored by moderators.');
+        // Content will be auto-reported to admin for monitoring
       }
+      // Clean content (below 70%) - allow posting normally
+    } catch (error) {
+      console.error('Moderation failed:', error);
+      toast.error('⚠️ Content moderation failed. Please try again.');
+      return;
     }
     
     // Post the comment (either clean or medium-level flagged)
@@ -94,7 +101,6 @@ const Comments = ({ projectId }) => {
       deleted: false,
     });
     setNewComment("");
-    setCommentModerationResult(null); // Reset moderation result
     fetchComments();
   };
 
@@ -129,17 +135,24 @@ const Comments = ({ projectId }) => {
     const handleReply = async (parentId) => {
     if (!user || !replyContent.trim()) return;
     
-    // Check moderation result and handle accordingly
-    if (replyModerationResult) {
-      if (replyModerationResult.action === 'reject') {
-        // Really dangerous content - block completely
+    // Content Moderation Check on Reply
+    try {
+      const moderationResult = await moderateContent(replyContent, 'comment_reply', user.id);
+      
+      if (moderationResult.action === 'reject') {
+        // High severity content (70-100%) - block completely
         toast.error('🚫 Reply blocked: Contains inappropriate content that violates community guidelines.');
         return; // Don't allow posting
-      } else if (replyModerationResult.action === 'review') {
-        // Medium-level issues - allow posting but warn and auto-report
-        toast.warning('⚠️ Warning: Your reply has been flagged for review. You can post, but it will be reviewed by moderators.');
-        // Auto-report to admin (backend handles this)
+      } else if (moderationResult.action === 'review') {
+        // Medium severity content (below 70%) - allow posting but warn and auto-report
+        toast.warning('⚠️ Warning: Your reply has been flagged for review. You can post, but it will be monitored by moderators.');
+        // Content will be auto-reported to admin for monitoring
       }
+      // Clean content (below 70%) - allow posting normally
+    } catch (error) {
+      console.error('Moderation failed:', error);
+      toast.error('⚠️ Content moderation failed. Please try again.');
+      return;
     }
     
     // Post the reply (either clean or medium-level flagged)
@@ -152,7 +165,6 @@ const Comments = ({ projectId }) => {
     });
     setReplyTo(null);
     setReplyContent("");
-    setReplyModerationResult(null); // Reset moderation result
     fetchComments();
   };
 
@@ -279,25 +291,9 @@ const Comments = ({ projectId }) => {
                   />
                   <button
                     type="submit"
-                    disabled={replyModerationResult?.action === 'reject' || !replyModerationResult}
-                    className={`text-xs px-4 py-2 rounded-lg transition ${
-                      replyModerationResult?.action === 'reject'
-                        ? 'bg-red-500 cursor-not-allowed opacity-50 text-white'
-                        : replyModerationResult?.action === 'review'
-                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                        : !replyModerationResult
-                        ? 'bg-gray-400 cursor-not-allowed opacity-50 text-white'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
+                    className="text-xs px-4 py-2 rounded-lg transition bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    {replyModerationResult?.action === 'reject'
-                      ? 'Blocked'
-                      : replyModerationResult?.action === 'review'
-                      ? 'Reply (Flagged)'
-                      : !replyModerationResult
-                      ? 'Checking...'
-                      : 'Reply'
-                    }
+                    Reply
                   </button>
                   <button
                     type="button"
@@ -309,18 +305,7 @@ const Comments = ({ projectId }) => {
                 </form>
               )}
 
-              {/* Content Moderation for Reply */}
-              {replyContent && (
-                <div className="mt-2">
-                  <ContentModeration
-                    content={replyContent}
-                    contentType="comment_reply"
-                    userId={user?.id}
-                    showAlert={true}
-                    onModerationComplete={setReplyModerationResult}
-                  />
-                </div>
-              )}
+              {/* Content Moderation will be checked on reply */}
 
               {hasReplies && repliesOpen && (
                 <div className="mt-3">
@@ -351,42 +336,15 @@ const Comments = ({ projectId }) => {
               placeholder="💡 Share your thoughts, they might spark something big!"
               className="flex-1 bg-transparent text-base placeholder-gray-500 focus:outline-none pr-3 text-gray-900"
             />
-            <button
-              type="submit"
-              disabled={commentModerationResult?.action === 'reject' || !commentModerationResult}
-              className={`font-semibold px-4 py-2 rounded-xl transition-all text-sm ${
-                commentModerationResult?.action === 'reject'
-                  ? 'bg-red-500 cursor-not-allowed opacity-50'
-                  : commentModerationResult?.action === 'review'
-                  ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                  : !commentModerationResult
-                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
-            >
-              {commentModerationResult?.action === 'reject'
-                ? 'Blocked'
-                : commentModerationResult?.action === 'review'
-                ? 'Post (Flagged)'
-                : !commentModerationResult
-                ? 'Checking...'
-                : 'Post'
-              }
-            </button>
+                              <button
+                    type="submit"
+                    className="font-semibold px-4 py-2 rounded-xl transition-all text-sm bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Post
+                  </button>
           </div>
 
-          {/* Content Moderation for Main Comment */}
-          {newComment && (
-            <div className="mt-2">
-              <ContentModeration
-                content={newComment}
-                contentType="comment"
-                userId={user?.id}
-                showAlert={true}
-                onModerationComplete={setCommentModerationResult}
-              />
-            </div>
-          )}
+          {/* Content Moderation will be checked on post */}
         </form>
       ) : (
         <p className="text-sm text-gray-500 mb-6">
