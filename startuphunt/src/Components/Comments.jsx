@@ -292,19 +292,19 @@ const Comments = ({ projectId }) => {
                     Cancel
                   </button>
                 </form>
-                
-                {/* Content Moderation for Reply */}
-                {replyContent && (
-                  <div className="mt-2">
-                    <ContentModeration
-                      content={replyContent}
-                      contentType="comment_reply"
-                      userId={user?.id}
-                      showAlert={true}
-                      onModerationComplete={setReplyModerationResult}
-                    />
-                  </div>
-                )}
+              )}
+              
+              {/* Content Moderation for Reply */}
+              {replyContent && (
+                <div className="mt-2">
+                  <ContentModeration
+                    content={replyContent}
+                    contentType="comment_reply"
+                    userId={user?.id}
+                    showAlert={true}
+                    onModerationComplete={setReplyModerationResult}
+                  />
+                </div>
               )}
 
               {hasReplies && repliesOpen && (
