@@ -296,18 +296,12 @@ const Comments = ({ projectId }) => {
                 {/* Content Moderation for Reply */}
                 {replyContent && (
                   <div className="mt-2">
-                    <div style={{fontSize: '12px', color: '#666', marginBottom: '5px'}}>
-                      Debug: User ID: {user?.id || 'No user ID'}
-                    </div>
                     <ContentModeration
                       content={replyContent}
                       contentType="comment_reply"
                       userId={user?.id}
                       showAlert={true}
-                      onModerationComplete={(result) => {
-                        console.log('Reply moderation result:', result);
-                        setReplyModerationResult(result);
-                      }}
+                      onModerationComplete={setReplyModerationResult}
                     />
                   </div>
                 )}
@@ -335,12 +329,6 @@ const Comments = ({ projectId }) => {
           className="mb-6 flex gap-2 items-center"
         >
           <div className="flex items-center w-full bg-white border border-gray-200 rounded-2xl shadow-sm px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-300 hover:shadow-md h-20">
-            {/* Debug Info */}
-            {commentModerationResult && (
-              <div style={{position: 'absolute', top: '-30px', left: '0', fontSize: '12px', color: '#666'}}>
-                Moderation: {commentModerationResult.action} - {commentModerationResult.message}
-              </div>
-            )}
             <input
               type="text"
               value={newComment}
@@ -364,18 +352,12 @@ const Comments = ({ projectId }) => {
           {/* Content Moderation for Main Comment */}
           {newComment && (
             <div className="mt-2">
-              <div style={{fontSize: '12px', color: '#666', marginBottom: '5px'}}>
-                Debug: User ID: {user?.id || 'No user ID'}
-              </div>
               <ContentModeration
                 content={newComment}
                 contentType="comment"
                 userId={user?.id}
                 showAlert={true}
-                onModerationComplete={(result) => {
-                  console.log('Comment moderation result:', result);
-                  setCommentModerationResult(result);
-                }}
+                onModerationComplete={setCommentModerationResult}
               />
             </div>
           )}
