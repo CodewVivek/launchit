@@ -1,6 +1,8 @@
 // AI API utility functions
-import { config } from '../config.js';
-const API_BASE_URL = config.getBackendUrl();
+// Temporarily hardcode production backend for dev site
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3001' 
+  : 'https://launchit-ai-backend.onrender.com';
 
 // Content Moderation API
 export const moderateContent = async (content, contentType, userId) => {
