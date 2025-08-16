@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import ReportModal from "./ReportModal";
+import ContentModeration from "./ContentModeration";
 
 // Helper to show relative time (e.g., '1h ago', '2d ago', 'just now')
 function getRelativeTime(dateString) {
@@ -253,6 +254,18 @@ const Comments = ({ projectId }) => {
                     Cancel
                   </button>
                 </form>
+                
+                {/* Content Moderation for Reply */}
+                {replyContent && (
+                  <div className="mt-2">
+                    <ContentModeration
+                      content={replyContent}
+                      contentType="comment_reply"
+                      userId={user?.id}
+                      showAlert={true}
+                    />
+                  </div>
+                )}
               )}
 
               {hasReplies && repliesOpen && (
@@ -291,6 +304,18 @@ const Comments = ({ projectId }) => {
               Post
             </button>
           </div>
+          
+          {/* Content Moderation for Main Comment */}
+          {newComment && (
+            <div className="mt-2">
+              <ContentModeration
+                content={newComment}
+                contentType="comment"
+                userId={user?.id}
+                showAlert={true}
+              />
+            </div>
+          )}
         </form>
       ) : (
         <p className="text-sm text-gray-500 mb-6">
