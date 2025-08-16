@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import ReportModal from "./ReportModal";
 import ContentModeration from "./ContentModeration";
+import { toast } from "react-hot-toast";
 
 // Helper to show relative time (e.g., '1h ago', '2d ago', 'just now')
 function getRelativeTime(dateString) {
@@ -29,6 +30,10 @@ const Comments = ({ projectId }) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportCommentId, setReportCommentId] = useState(null);
+  
+  // Content moderation states
+  const [commentModerationResult, setCommentModerationResult] = useState(null);
+  const [replyModerationResult, setReplyModerationResult] = useState(null);
 
   useEffect(() => {
     fetchComments();
@@ -66,6 +71,19 @@ const Comments = ({ projectId }) => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
+    
+    // Check if comment is approved by moderation
+    if (commentModerationResult && commentModerationResult.action === 'reject') {
+      toast.error('Comment rejected - violates community guidelines');
+      return;
+    }
+    
+    // If moderation is still pending, wait
+    if (!commentModerationResult || commentModerationResult.action === 'review') {
+      toast.warning('Please wait for content moderation to complete');
+      return;
+    }
+    
     await supabase.from("comments").insert({
       project_id: projectId,
       user_id: user.id,
@@ -74,6 +92,7 @@ const Comments = ({ projectId }) => {
       deleted: false,
     });
     setNewComment("");
+    setCommentModerationResult(null); // Reset moderation result
     fetchComments();
   };
 
@@ -107,6 +126,19 @@ const Comments = ({ projectId }) => {
 
   const handleReply = async (parentId) => {
     if (!user || !replyContent.trim()) return;
+    
+    // Check if reply is approved by moderation
+    if (replyModerationResult && replyModerationResult.action === 'reject') {
+      toast.error('Reply rejected - violates community guidelines');
+      return;
+    }
+    
+    // If moderation is still pending, wait
+    if (!replyModerationResult || replyModerationResult.action === 'review') {
+      toast.warning('Please wait for content moderation to complete');
+      return;
+    }
+    
     await supabase.from("comments").insert({
       project_id: projectId,
       user_id: user.id,
@@ -116,6 +148,7 @@ const Comments = ({ projectId }) => {
     });
     setReplyTo(null);
     setReplyContent("");
+    setReplyModerationResult(null); // Reset moderation result
     fetchComments();
   };
 
@@ -242,9 +275,14 @@ const Comments = ({ projectId }) => {
                   />
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg transition"
+                    disabled={replyModerationResult?.action === 'reject'}
+                    className={`text-xs px-4 py-2 rounded-lg transition ${
+                      replyModerationResult?.action === 'reject'
+                        ? 'bg-red-500 cursor-not-allowed opacity-50 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
                   >
-                    Reply
+                    {replyModerationResult?.action === 'reject' ? 'Blocked' : 'Reply'}
                   </button>
                   <button
                     type="button"
@@ -263,6 +301,7 @@ const Comments = ({ projectId }) => {
                       contentType="comment_reply"
                       userId={user?.id}
                       showAlert={true}
+                      onModerationComplete={setReplyModerationResult}
                     />
                   </div>
                 )}
@@ -299,9 +338,14 @@ const Comments = ({ projectId }) => {
             />
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl transition-all text-sm"
+              disabled={commentModerationResult?.action === 'reject'}
+              className={`font-semibold px-4 py-2 rounded-xl transition-all text-sm ${
+                commentModerationResult?.action === 'reject'
+                  ? 'bg-red-500 cursor-not-allowed opacity-50'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
             >
-              Post
+              {commentModerationResult?.action === 'reject' ? 'Blocked' : 'Post'}
             </button>
           </div>
           
@@ -313,6 +357,7 @@ const Comments = ({ projectId }) => {
                 contentType="comment"
                 userId={user?.id}
                 showAlert={true}
+                onModerationComplete={setCommentModerationResult}
               />
             </div>
           )}
