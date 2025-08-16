@@ -123,6 +123,9 @@ async function moderateContent(content) {
                 analysis.issues.push('Self-harm content detected');
                 analysis.recommendations.push('Immediate rejection recommended');
             }
+        } else {
+            // Content is clean
+            analysis.moderationLevel = 'clean';
         }
 
         // Additional custom checks

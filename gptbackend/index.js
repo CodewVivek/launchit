@@ -229,11 +229,12 @@ app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
     // Moderate the content
     const moderationResult = await moderateContent(content);
 
-    // Determine action based on moderation level
+    // Determine action based on moderation level and issues
     let action = 'approve';
     let message = 'Content approved';
 
     if (moderationResult.moderationLevel === 'flagged') {
+      // Check for severe violations that should be rejected
       if (moderationResult.issues.some(issue =>
         issue.includes('Hate speech') ||
         issue.includes('Self-harm') ||
@@ -242,9 +243,16 @@ app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
         action = 'reject';
         message = 'Content rejected - violates community guidelines';
       } else {
+        // Other flagged content goes to review
         action = 'review';
         message = 'Content flagged for admin review';
       }
+    }
+
+    // Additional check for custom issues that might require review
+    if (moderationResult.issues.length > 0 && action === 'approve') {
+      action = 'review';
+      message = 'Content flagged for review due to potential issues';
     }
 
     // Store moderation record in database
