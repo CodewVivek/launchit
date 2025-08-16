@@ -6,7 +6,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
 import NotificationBell from "./NotificationBell";
-import { semanticSearch } from "../utils/aiApi";
+
 
 const Header = ({ onMenuClick }) => {
     const [user, setUser] = useState(null);
@@ -128,30 +128,13 @@ const Header = ({ onMenuClick }) => {
                 )
             ).slice(0, 3) || [];
 
-            // Generate AI suggestions
-            let aiSuggestions = [];
-            try {
-                const aiResults = await semanticSearch(query, 3, {});
-                if (aiResults.success && aiResults.results.length > 0) {
-                    aiSuggestions = aiResults.results.slice(0, 3).map(project => ({
-                        id: project.id,
-                        name: project.name,
-                        tagline: project.tagline || `AI-suggested ${query} alternative`,
-                        category_type: project.category_type || 'AI Suggested',
-                        slug: project.slug,
-                        logo_url: project.logo_url
-                    }));
-                }
-            } catch (error) {
-                console.log('AI suggestions not available, using basic search');
-            }
+            // AI suggestions removed - using basic search only
 
             setSearchSuggestions({
                 projects: projects || [],
                 users: users || [],
                 categories: [...new Set(categories?.map(c => c.category_type) || [])],
-                tags: tagMatches,
-                aiSuggestions: aiSuggestions
+                tags: tagMatches
             });
         } catch (error) {
             console.error('Search error:', error);
@@ -213,8 +196,7 @@ const Header = ({ onMenuClick }) => {
     const totalSuggestions = (searchSuggestions.projects?.length || 0) +
         (searchSuggestions.users?.length || 0) +
         (searchSuggestions.categories?.length || 0) +
-        (searchSuggestions.tags?.length || 0) +
-        (searchSuggestions.aiSuggestions?.length || 0);
+        (searchSuggestions.tags?.length || 0);
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 bg-white ">
@@ -310,33 +292,7 @@ const Header = ({ onMenuClick }) => {
                                         </div>
                                     )}
 
-                                    {/* AI Suggestions */}
-                                    {searchSuggestions.aiSuggestions?.length > 0 && (
-                                        <div className="mb-2">
-                                            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                                                🤖 AI Suggestions
-                                            </div>
-                                            {searchSuggestions.aiSuggestions.map((project) => (
-                                                <button
-                                                    key={project.id}
-                                                    onClick={() => handleSuggestionClick('project', project)}
-                                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
-                                                >
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        {project.logo_url ? (
-                                                            <img src={project.logo_url} alt={project.name} className="w-6 h-6 rounded object-cover" />
-                                                        ) : (
-                                                            <Rocket className="w-4 h-4 text-white" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">{project.name}</div>
-                                                        <div className="text-sm text-gray-500 truncate">{project.tagline}</div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
+
 
                                     {/* Users */}
                                     {searchSuggestions.users?.length > 0 && (
