@@ -14,6 +14,7 @@ import Button from '@mui/material/Button';
 import categoryOptions from '../Components/categoryOptions';
 import BuiltWithSelect from '../Components/BuiltWithSelect';
 import { config } from '../config';
+import ContentModeration from '../Components/ContentModeration';
 
 // Custom styles for the react-select component to match the new UI
 const customSelectStyles = {
@@ -879,6 +880,16 @@ const Register = () => {
                                                 placeholder='e.g LaunchIT'
                                         />
                                             <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
+                                            
+                                            {/* Content Moderation for Project Name */}
+                                            {formData.name && (
+                                                <ContentModeration
+                                                    content={formData.name}
+                                                    contentType="project_name"
+                                                    userId={user?.id}
+                                                    showAlert={true}
+                                                />
+                                            )}
                                     </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="websiteUrl">Website URL</label>
@@ -924,6 +935,16 @@ const Register = () => {
                                                 placeholder="catchy tagline of what the launch does."
                                         />
                                             <div className="text-xs text-gray-400 text-right mt-1">{taglineCharCount} / 60</div>
+                                            
+                                            {/* Content Moderation for Tagline */}
+                                            {formData.tagline && (
+                                                <ContentModeration
+                                                    content={formData.tagline}
+                                                    contentType="project_tagline"
+                                                    userId={user?.id}
+                                                    showAlert={true}
+                                                />
+                                            )}
                                     </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="category">Category(ies)</label>
@@ -949,6 +970,16 @@ const Register = () => {
                                                 placeholder="Describe your launch in detail. What problem does it solve? What makes it unique?"
                                         />
                                             <div className="text-xs text-gray-400 text-right mt-1">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
+                                            
+                                            {/* Content Moderation */}
+                                            {formData.description && (
+                                                <ContentModeration
+                                                    content={formData.description}
+                                                    contentType="project_description"
+                                                    userId={user?.id}
+                                                    showAlert={true}
+                                                />
+                                            )}
                                     </div>
                                 </div>
                                 </div>
