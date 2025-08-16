@@ -1,5 +1,6 @@
 // AI API utility functions
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+import { config } from '../config.js';
+const API_BASE_URL = config.getBackendUrl();
 
 // Content Moderation API
 export const moderateContent = async (content, contentType, userId) => {
@@ -132,11 +133,11 @@ export const updateModerationStatus = async (recordId, action, adminNotes = '') 
 // Content moderation helper functions
 export const getModerationLevel = (moderationResult) => {
   if (!moderationResult) return 'unknown';
-  
+
   if (moderationResult.moderationLevel === 'flagged') {
     // Check for severe violations
-    if (moderationResult.issues.some(issue => 
-      issue.includes('Hate speech') || 
+    if (moderationResult.issues.some(issue =>
+      issue.includes('Hate speech') ||
       issue.includes('Self-harm') ||
       issue.includes('Violent content')
     )) {
@@ -144,7 +145,7 @@ export const getModerationLevel = (moderationResult) => {
     }
     return 'review';
   }
-  
+
   return 'approved';
 };
 
