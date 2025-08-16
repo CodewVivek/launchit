@@ -450,7 +450,7 @@ const Register = () => {
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
-            const res = await fetch(config.API_URL + "/generatelaunchdata", {
+            const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
