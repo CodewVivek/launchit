@@ -163,9 +163,22 @@ function checkCustomIssues(content) {
         recommendations.push('Use normal case formatting');
     }
 
+    // Check for explicit inappropriate words
+    const inappropriateWords = [
+        'fuck', 'shit', 'bitch', 'ass', 'damn', 'hell',
+        'piss', 'cock', 'dick', 'pussy', 'cunt', 'whore',
+        'slut', 'bastard', 'motherfucker', 'fucker', 'fucking'
+    ];
+    const lowerContent = content.toLowerCase();
+    const foundInappropriateWords = inappropriateWords.filter(word => lowerContent.includes(word));
+
+    if (foundInappropriateWords.length > 0) {
+        issues.push(`Inappropriate language detected: ${foundInappropriateWords.join(', ')}`);
+        recommendations.push('Remove inappropriate language to comply with community guidelines');
+    }
+
     // Check for spam indicators
     const spamWords = ['buy now', 'limited time', 'act fast', 'click here', 'amazing results', 'guaranteed success'];
-    const lowerContent = content.toLowerCase();
     const foundSpamWords = spamWords.filter(word => lowerContent.includes(word));
 
     if (foundSpamWords.length > 0) {

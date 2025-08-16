@@ -249,8 +249,15 @@ app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
       }
     }
 
+    // Check for inappropriate language that should be rejected
+    if (moderationResult.issues.some(issue =>
+      issue.includes('Inappropriate language detected')
+    )) {
+      action = 'reject';
+      message = 'Content rejected - contains inappropriate language';
+    }
     // Additional check for custom issues that might require review
-    if (moderationResult.issues.length > 0 && action === 'approve') {
+    else if (moderationResult.issues.length > 0 && action === 'approve') {
       action = 'review';
       message = 'Content flagged for review due to potential issues';
     }
