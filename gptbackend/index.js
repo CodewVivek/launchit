@@ -381,7 +381,7 @@ app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
 // 3. GENERATE EMBEDDINGS FOR EXISTING PROJECTS
 app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
   try {
-    const { projectId } = req.body;
+    const { projectId, projectText } = req.body;
 
     if (!projectId) {
       return res.status(400).json({
@@ -404,22 +404,29 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
       });
     }
 
-    // Generate embedding
-    const projectText = [
-      project.title || '',
-      project.description || '',
-      project.category || '',
-      project.tags ? project.tags.join(' ') : ''
-    ].join(' ').trim();
+    // Use provided projectText or generate from project data
+    let textForEmbedding = projectText;
+    if (!textForEmbedding) {
+      textForEmbedding = [
+        project.name || '',
+        project.description || '',
+        project.tagline || '',
+        project.category_type || '',
+        project.tags ? project.tags.join(' ') : ''
+      ].filter(text => text.trim()).join(' ').trim();
+    }
 
-    if (!projectText) {
+    if (!textForEmbedding) {
       return res.status(400).json({
         error: true,
         message: 'Project has no text content for embedding'
       });
     }
 
-    const embedding = await generateEmbedding(projectText);
+    console.log(`🔍 Generating embedding for project: ${project.name}`);
+    console.log(`📝 Text content: ${textForEmbedding.substring(0, 100)}...`);
+
+    const embedding = await generateEmbedding(textForEmbedding);
 
     // Update project with embedding
     const { error: updateError } = await supabase
@@ -431,10 +438,13 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
       throw new Error('Failed to update project: ' + updateError.message);
     }
 
+    console.log(`✅ Successfully generated embedding for project: ${project.name}`);
+
     res.json({
       success: true,
       message: 'Embedding generated successfully',
-      projectId: projectId
+      projectId: projectId,
+      projectName: project.name
     });
 
   } catch (error) {
