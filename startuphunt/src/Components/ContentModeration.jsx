@@ -43,7 +43,7 @@ const ContentModeration = ({
             } else if (result.action === 'review') {
                 // Content flagged for review
                 if (showAlert) {
-                    toast.warning('Content flagged for review - will be checked shortly');
+                    toast('Content flagged for review - will be checked shortly', { icon: '⚠️' });
                 }
 
             } else if (result.action === 'approve') {

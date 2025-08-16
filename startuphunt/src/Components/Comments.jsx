@@ -80,7 +80,7 @@ const Comments = ({ projectId }) => {
     
     // If moderation is still pending, wait
     if (!commentModerationResult || commentModerationResult.action === 'review') {
-      toast.warning('Please wait for content moderation to complete');
+      toast('Please wait for content moderation to complete', { icon: '⏳' });
       return;
     }
     
@@ -135,7 +135,7 @@ const Comments = ({ projectId }) => {
     
     // If moderation is still pending, wait
     if (!replyModerationResult || replyModerationResult.action === 'review') {
-      toast.warning('Please wait for content moderation to complete');
+      toast('Please wait for content moderation to complete', { icon: '⏳' });
       return;
     }
     
@@ -338,14 +338,21 @@ const Comments = ({ projectId }) => {
             />
             <button
               type="submit"
-              disabled={commentModerationResult?.action === 'reject'}
+              disabled={commentModerationResult?.action === 'reject' || !commentModerationResult}
               className={`font-semibold px-4 py-2 rounded-xl transition-all text-sm ${
                 commentModerationResult?.action === 'reject'
                   ? 'bg-red-500 cursor-not-allowed opacity-50'
+                  : !commentModerationResult
+                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
             >
-              {commentModerationResult?.action === 'reject' ? 'Blocked' : 'Post'}
+              {commentModerationResult?.action === 'reject' 
+                ? 'Blocked' 
+                : !commentModerationResult 
+                ? 'Checking...' 
+                : 'Post'
+              }
             </button>
           </div>
           
