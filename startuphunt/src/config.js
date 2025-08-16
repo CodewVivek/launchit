@@ -19,11 +19,11 @@ export const config = {
         }
 
         // Fallback based on domain
-        if (window.location.hostname === 'launchit.site') {
-            return 'https://launchit-ai-backend.onrender.com';
+        if (window.location.hostname === 'localhost') {
+            return 'http://localhost:3001';
         }
 
-        return 'http://localhost:3001';
+        return 'https://launchit-ai-backend.onrender.com';
     }
 };
 
