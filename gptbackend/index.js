@@ -20,9 +20,12 @@ if (missingEnvVars.length > 0) {
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://launchit.site', 'https://launchitsite.netlify.app']
-    : true,
+  origin: [
+    'https://launchit.site',
+    'https://launchitsite.netlify.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
   credentials: true
 }));
 
