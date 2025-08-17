@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import Share from "../Components/Share";
 import {
   ExternalLink,
   Calendar,
@@ -457,6 +458,10 @@ const UserProfile = () => {
                 Edit Profile
               </button>
             )}
+            {/* Share Profile Button */}
+            <div className="mt-4 md:mt-0 md:ml-2">
+              <Share projectSlug={profile.username} projectName={`${profile.full_name || profile.username}'s Profile`} isProfile={true} />
+            </div>
           </div>
         </div>
         {/* Tab Navigation */}

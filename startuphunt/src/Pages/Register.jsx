@@ -1160,34 +1160,6 @@ const Register = () => {
                     <p className="text-gray-500 mt-2">
                         Get your product in front of the right audience. Be seen, gain traction, and grow with confidence!
                     </p>
-
-                    {/* Requirements Explanation */}
-                    <div className="mt-6 max-w-3xl mx-auto bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <h3 className="font-semibold text-gray-800 mb-3">📋 Submission Requirements:</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div className="text-center">
-                                <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2 font-bold">1</div>
-                                <p className="font-medium text-red-700">Step 1: Basic Info</p>
-                                <p className="text-gray-600">Name, URL, Description, Tagline, Category</p>
-                                <span className="inline-block bg-red-100 text-red-600 px-2 py-1 rounded text-xs mt-1">Required</span>
-                            </div>
-                            <div className="text-center">
-                                <div className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-2 font-bold">2</div>
-                                <p className="font-medium text-orange-700">Step 2: Media & Images</p>
-                                <p className="text-gray-600">2 Cover Images + Logo/Thumbnail</p>
-                                <span className="inline-block bg-orange-100 text-orange-600 px-2 py-1 rounded text-xs mt-1">Required</span>
-                            </div>
-                            <div className="text-center">
-                                <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2 font-bold">3</div>
-                                <p className="font-medium text-green-700">Step 3: Additional Details</p>
-                                <p className="text-gray-600">Tags, Technologies, Links</p>
-                                <span className="inline-block bg-green-100 text-green-600 px-2 py-1 rounded text-xs mt-1">Optional</span>
-                            </div>
-                        </div>
-                        <div className="mt-3 text-xs text-gray-600 text-center">
-                            💡 <strong>Pro Tip:</strong> Use "Auto-generate from URL" in Step 1 to automatically get logo and thumbnail!
-                        </div>
-                    </div>
                 </header>
                 <div className="form-container">
                     {/* Tabs for Navigation */}
@@ -1197,10 +1169,7 @@ const Register = () => {
                             onClick={() => setStep(1)}
                             className={`tab-button ${step === 1 ? 'active' : ''}`}
                         >
-                            <span className="flex items-center gap-2">
-                                <span>Step 1: Basic Info</span>
-                                <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">Required</span>
-                            </span>
+                            Basic Info
                         </button>
                         <button
                             type="button"
@@ -1208,10 +1177,7 @@ const Register = () => {
                             className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 2 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                         >
-                            <span className="flex items-center gap-2">
-                                <span>Step 2: Media & Images</span>
-                                <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">Required</span>
-                            </span>
+                            Media & Images
                         </button>
                         <button
                             type="button"
@@ -1219,10 +1185,7 @@ const Register = () => {
                             className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 3 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                         >
-                            <span className="flex items-center gap-2">
-                                <span>Step 3: Additional Details</span>
-                                <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">Optional</span>
-                            </span>
+                            Additional Details
                         </button>
                     </nav>
 

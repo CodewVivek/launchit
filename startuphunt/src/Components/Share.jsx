@@ -13,7 +13,7 @@ import {
 } from "react-share";
 import { Copy, Check, Share2, X, ExternalLink } from "lucide-react";
 
-const Share = ({ projectSlug, projectName = "this project" }) => {
+const Share = ({ projectSlug, projectName = "this project", isProfile = false }) => {
   const [copied, setCopied] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -32,8 +32,9 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
   };
 
   const baseUrl = getBaseUrl();
-  const shareUrl = `${baseUrl}/launches/${projectSlug}`;
-  const title = `Check out ${projectName} on LaunchIt!`;
+  // Use profile URL if it's a profile, otherwise use project URL
+  const shareUrl = isProfile ? `${baseUrl}/profile/${projectSlug}` : `${baseUrl}/launches/${projectSlug}`;
+  const title = isProfile ? `Check out ${projectName} on LaunchIt!` : `Check out ${projectName} on LaunchIt!`;
 
   // Debug logging for development
   useEffect(() => {

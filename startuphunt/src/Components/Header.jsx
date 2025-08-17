@@ -165,6 +165,20 @@ const Header = ({ onMenuClick }) => {
         }, 200);
     };
 
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (launchDropdownOpen && !event.target.closest('.launch-dropdown')) {
+                setLaunchDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [launchDropdownOpen]);
+
     const handleSuggestionClick = (type, item) => {
         if (type === 'project') {
             navigate(`/launches/${item.slug}`);
@@ -376,13 +390,14 @@ const Header = ({ onMenuClick }) => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
                 {/* + Launch Dropdown */}
-                <div className="relative">
+                <div className="relative launch-dropdown">
                     <button
                         onClick={handleLaunchDropdownToggle}
                         className="flex items-center gap-2 px-4 py-2  text-black rounded-full hover:bg-gray-300 transition-colors"
                     >
                         <CirclePlus className="w-4 h-4" />
                         Launch
+                        <ChevronDown className={`w-4 h-4 transition-transform ${launchDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {launchDropdownOpen && (
@@ -485,7 +500,7 @@ const Header = ({ onMenuClick }) => {
             {/* Mobile Navigation - Right Side */}
             <div className="md:hidden flex items-center space-x-2">
                 {/* + Launch Dropdown Mobile */}
-                <div className="relative">
+                <div className="relative launch-dropdown">
                     <button
                         onClick={handleLaunchDropdownToggle}
                         className="flex items-center gap-1 px-3 py-2 text-black rounded-full hover:bg-gray-100 transition-colors"
