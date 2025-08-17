@@ -70,3 +70,9 @@
     <priority>0.4</priority>
   </url>
 </urlset>
+
+{/*
+while merging dev to main make sure we dont have any conlsoge.log or any security related 
+make the share url to have only launch.site not window thinkin 
+*/}
+

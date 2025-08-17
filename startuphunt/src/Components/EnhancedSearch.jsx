@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { semanticSearch } from '../utils/aiApi';
 import { Search, Filter, X, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../supabaseClient';
 
 const EnhancedSearch = ({
     onSearchResults,
@@ -92,6 +93,7 @@ const EnhancedSearch = ({
 
         setIsSearching(true);
         try {
+            // Try AI search first
             const result = await semanticSearch(searchQuery, 20, filters);
 
             if (result && result.success) {
@@ -108,37 +110,72 @@ const EnhancedSearch = ({
                     toast.success(`Found ${(result.results || []).length} results for "${searchQuery}"`);
                 }
             } else {
-                // Handle case where result is undefined or doesn't have success property
-                console.warn('Search returned unexpected result format:', result);
+                // Fallback to basic search if AI search fails
+                console.warn('AI search failed, trying fallback search:', result);
+                await performFallbackSearch(searchQuery);
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            
+            // Try fallback search if AI search throws an error
+            try {
+                await performFallbackSearch(searchQuery);
+            } catch (fallbackError) {
+                console.error('Fallback search also failed:', fallbackError);
+                
+                // Provide user-friendly error message
+                let errorMessage = 'Search failed. Please try again.';
+                
+                if (error.message) {
+                    if (error.message.includes('fetch')) {
+                        errorMessage = 'Network error. Please check your connection.';
+                    } else if (error.message.includes('HTTP')) {
+                        errorMessage = 'Service temporarily unavailable. Please try again later.';
+                    }
+                }
+                
+                toast.error(errorMessage);
+                
+                // Set empty results and notify parent component
                 setSearchResults([]);
                 if (onSearchResults) {
                     onSearchResults([], searchQuery);
                 }
-                toast.info('Search completed. No results found.');
-            }
-        } catch (error) {
-            console.error('Search error:', error);
-
-            // Provide more specific error messages
-            let errorMessage = 'Search failed. Please try again.';
-
-            if (error.message) {
-                if (error.message.includes('fetch')) {
-                    errorMessage = 'Network error. Please check your connection.';
-                } else if (error.message.includes('HTTP')) {
-                    errorMessage = 'Service temporarily unavailable. Please try again later.';
-                }
-            }
-
-            toast.error(errorMessage);
-
-            // Set empty results and notify parent component
-            setSearchResults([]);
-            if (onSearchResults) {
-                onSearchResults([], searchQuery);
             }
         } finally {
             setIsSearching(false);
+        }
+    };
+
+    // Fallback search using Supabase directly
+    const performFallbackSearch = async (searchQuery) => {
+        try {
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*')
+                .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,tagline.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`)
+                .limit(20);
+
+            if (error) {
+                throw error;
+            }
+
+            const results = data || [];
+            setSearchResults(results);
+            saveSearchHistory(searchQuery);
+
+            if (onSearchResults) {
+                onSearchResults(results, searchQuery);
+            }
+
+            if (results.length === 0) {
+                toast.info('No results found. Try different keywords or filters.');
+            } else {
+                toast.success(`Found ${results.length} results for "${searchQuery}" (using fallback search)`);
+            }
+        } catch (error) {
+            console.error('Fallback search error:', error);
+            throw error;
         }
     };
 

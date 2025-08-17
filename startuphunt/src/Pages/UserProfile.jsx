@@ -195,6 +195,11 @@ const UserProfile = () => {
         const isProfileOwner = loggedInUser && loggedInUser.id === profileData.id;
         setIsOwner(isProfileOwner);
 
+        // If user is viewing comments tab but they're not the owner, reset to projects
+        if (!isProfileOwner && activeTab === "comments") {
+          setActiveTab("projects");
+        }
+
         let userProjects = [];
         if (isProfileOwner) {
           const { data: allProjects } = await supabase.from("projects").select("*").eq("user_id", profileData.id);
@@ -455,25 +460,28 @@ const UserProfile = () => {
           </div>
         </div>
         {/* Tab Navigation */}
-        <div className="flex space-x-8 border-b border-gray-200 mb-6">
+        <div className="flex space-x-8 border-b border-gray-200">
           <button
             onClick={() => setActiveTab("projects")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "projects" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            Projects
+            Projects ({projects.length})
           </button>
           <button
             onClick={() => setActiveTab("pitches")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            Pitches
+            Pitches ({userPitches.length})
           </button>
-          <button
-            onClick={() => setActiveTab("comments")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "comments" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
-          >
-            Comments
-          </button>
+          {/* Only show comments tab to profile owner */}
+          {isOwner && (
+            <button
+              onClick={() => setActiveTab("comments")}
+              className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "comments" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Comments ({comments.length})
+            </button>
+          )}
         </div>
         {activeTab === "projects" && (
           <>
@@ -575,9 +583,28 @@ const UserProfile = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
-                <h4 className="text-lg font-semibold text-gray-800">No Projects Found</h4>
-                <p className="text-gray-500 mt-1">There are no projects matching the selected filter.</p>
+              <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Rocket className="w-8 h-8 text-gray-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-gray-800 mb-2">
+                  {isOwner ? "No Launches Yet" : "No Launches Found"}
+                </h4>
+                <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                  {isOwner 
+                    ? "You haven't launched any projects yet. Start building and share your ideas with the world!"
+                    : "This user hasn't launched any projects yet."
+                  }
+                </p>
+                {isOwner && (
+                  <button
+                    onClick={() => navigate('/submit')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <Rocket className="w-4 h-4" />
+                    Launch Your First Project
+                  </button>
+                )}
               </div>
             )}
           </>
@@ -593,8 +620,21 @@ const UserProfile = () => {
                 <p className="mt-2 text-gray-600">Loading pitches...</p>
               </div>
             ) : userPitches.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>No pitches submitted yet.</p>
+              <div className="p-12 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-8 h-8 text-gray-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-gray-800 mb-2">No Pitches Submitted Yet</h4>
+                <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                  You haven't submitted any pitch videos yet. Share your startup story and get feedback from the community!
+                </p>
+                <button
+                  onClick={() => navigate('/pitch-upload')}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Submit Your First Pitch
+                </button>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -682,9 +722,21 @@ const UserProfile = () => {
                   ))}
                 </ul>
               ) : (
-                <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
-                  <h4 className="text-lg font-semibold text-gray-800">No Comments Yet</h4>
-                  <p className="text-gray-500 mt-1">You haven't made any comments yet.</p>
+                <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageCircle className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-gray-800 mb-2">No Comments Yet</h4>
+                  <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                    You haven't made any comments yet. Start engaging with the community by commenting on projects you find interesting!
+                  </p>
+                  <button
+                    onClick={() => navigate('/projects')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Explore Projects
+                  </button>
                 </div>
               )}
             </div>
