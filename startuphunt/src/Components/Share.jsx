@@ -17,9 +17,36 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
   const [copied, setCopied] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const baseUrl = "https://launchit.site"; 
+  // Auto-detect the current environment and use appropriate base URL
+  const getBaseUrl = () => {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    
+    if (hostname.includes('localhost')) {
+      return `${protocol}//localhost:5173`; // Local dev
+    } else if (hostname.includes('netlify.app')) {
+      return `${protocol}//${hostname}`; // Netlify dev/preview
+    } else {
+      return 'https://launchit.site'; // Production
+    }
+  };
+
+  const baseUrl = getBaseUrl();
   const shareUrl = `${baseUrl}/launches/${projectSlug}`;
   const title = `Check out ${projectName} on LaunchIt!`;
+
+  // Debug logging for development
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('Share component debug:', {
+        hostname: window.location.hostname,
+        protocol: window.location.protocol,
+        baseUrl,
+        shareUrl,
+        projectSlug
+      });
+    }
+  }, [baseUrl, shareUrl, projectSlug]);
 
   useEffect(() => {
     const handleEscape = (e) => {
