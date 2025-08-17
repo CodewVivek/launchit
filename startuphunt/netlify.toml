@@ -1,7 +1,6 @@
 [build]
-  base = "startuphunt"
   command = "npm install && npm run build"
-  publish = "startuphunt/dist"
+  publish = "dist"
 
 [[redirects]]
   from = "/*"
