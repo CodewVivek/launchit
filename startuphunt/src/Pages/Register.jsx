@@ -513,26 +513,112 @@ const Register = () => {
             }
 
             if (logoFile && typeof logoFile !== 'string') {
-                const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
-                const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, logoFile);
-                if (logoErrorUpload) {
-                    console.error('Logo upload error:', logoErrorUpload);
-                    throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
+                // User uploaded file - preserve quality and upload
+                try {
+                    const qualityFile = await preserveImageQuality(logoFile);
+                    const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
+                    const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
+                    if (logoErrorUpload) {
+                        console.error('Logo upload error:', logoErrorUpload);
+                        throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
+                    }
+                    const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
+                    logoUrl = logoUrlData.publicUrl;
+                } catch (error) {
+                    console.error('Logo quality preservation failed, uploading original:', error);
+                    // Fallback to original file if quality preservation fails
+                    const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
+                    const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, logoFile);
+                    if (logoErrorUpload) {
+                        console.error('Logo upload error:', logoErrorUpload);
+                        throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
+                    }
+                    const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
+                    logoUrl = logoUrlData.publicUrl;
                 }
-                const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
-                logoUrl = logoUrlData.publicUrl;
+            } else if (logoFile && typeof logoFile === 'string') {
+                // AI-generated logo URL - download and upload to our storage
+                try {
+                    console.log('Processing AI-generated logo:', logoFile);
+                    const response = await fetch(logoFile);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch AI logo: ${response.status}`);
+                    }
+                    
+                    const blob = await response.blob();
+                    const logoFile = new File([blob], 'ai-generated-logo.png', { type: blob.type || 'image/png' });
+                    
+                    // Preserve quality and upload
+                    const qualityFile = await preserveImageQuality(logoFile);
+                    const logoPath = `${Date.now()}-ai-logo-${nanoid(6)}.png`;
+                    const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
+                    if (logoErrorUpload) {
+                        console.error('AI logo upload error:', logoErrorUpload);
+                        throw new Error(`AI logo upload failed: ${logoErrorUpload.message}`);
+                    }
+                    const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
+                    logoUrl = logoUrlData.publicUrl;
+                    console.log('AI logo successfully uploaded to:', logoUrl);
+                } catch (error) {
+                    console.error('AI logo processing failed:', error);
+                    // Keep the original AI logo URL as fallback
+                    logoUrl = logoFile;
+                }
             }
             submissionData.logo_url = logoUrl;
 
             if (thumbnailFile && typeof thumbnailFile !== 'string') {
-                const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
-                const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, thumbnailFile);
-                if (thumbError) {
-                    console.error('Thumbnail upload error:', thumbError);
-                    throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
+                // User uploaded file - preserve quality and upload
+                try {
+                    const qualityFile = await preserveImageQuality(thumbnailFile);
+                    const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
+                    const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
+                    if (thumbError) {
+                        console.error('Thumbnail upload error:', thumbError);
+                        throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
+                    }
+                    const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
+                    thumbnailUrl = thumbUrlData.publicUrl;
+                } catch (error) {
+                    console.error('Thumbnail quality preservation failed, uploading original:', error);
+                    // Fallback to original file if quality preservation fails
+                    const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
+                    const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, thumbnailFile);
+                    if (thumbError) {
+                        console.error('Thumbnail upload error:', thumbError);
+                        throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
+                    }
+                    const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
+                    thumbnailUrl = thumbUrlData.publicUrl;
                 }
-                const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
-                thumbnailUrl = thumbUrlData.publicUrl;
+            } else if (thumbnailFile && typeof thumbnailFile === 'string') {
+                // AI-generated thumbnail URL - download and upload to our storage
+                try {
+                    console.log('Processing AI-generated thumbnail:', thumbnailFile);
+                    const response = await fetch(thumbnailFile);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch AI thumbnail: ${response.status}`);
+                    }
+                    
+                    const blob = await response.blob();
+                    const thumbnailFile = new File([blob], 'ai-generated-thumbnail.png', { type: blob.type || 'image/png' });
+                    
+                    // Preserve quality and upload
+                    const qualityFile = await preserveImageQuality(thumbnailFile);
+                    const thumbPath = `${Date.now()}-ai-thumbnail-${nanoid(6)}.png`;
+                    const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
+                    if (thumbError) {
+                        console.error('AI thumbnail upload error:', thumbError);
+                        throw new Error(`AI thumbnail upload failed: ${thumbError.message}`);
+                    }
+                    const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
+                    thumbnailUrl = thumbUrlData.publicUrl;
+                    console.log('AI thumbnail successfully uploaded to:', thumbnailUrl);
+                } catch (error) {
+                    console.error('AI thumbnail processing failed:', error);
+                    // Keep the original AI thumbnail URL as fallback
+                    thumbnailUrl = thumbnailFile;
+                }
             }
             submissionData.thumbnail_url = thumbnailUrl;
 
@@ -540,14 +626,29 @@ const Register = () => {
                 for (let i = 0; i < coverFiles.length; i++) {
                     const file = coverFiles[i];
                     if (file && typeof file !== 'string') {
-                        const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
-                        const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
-                        if (coverErrorUpload) {
-                            console.error('Cover file upload error:', coverErrorUpload);
-                            throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
+                        // User uploaded file - preserve quality and upload
+                        try {
+                            const qualityFile = await preserveImageQuality(file);
+                            const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
+                            const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, qualityFile);
+                            if (coverErrorUpload) {
+                                console.error('Cover file upload error:', coverErrorUpload);
+                                throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
+                            }
+                            const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
+                            coverUrls.push(coverUrlData.publicUrl);
+                        } catch (error) {
+                            console.error('Cover quality preservation failed, uploading original:', error);
+                            // Fallback to original file if quality preservation fails
+                            const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
+                            const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
+                            if (coverErrorUpload) {
+                                console.error('Cover file upload error:', coverErrorUpload);
+                                throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
+                            }
+                            const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
+                            coverUrls.push(coverUrlData.publicUrl);
                         }
-                        const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
-                        coverUrls.push(coverUrlData.publicUrl);
                     } else if (typeof file === 'string') {
                         coverUrls.push(file);
                     }
@@ -1018,6 +1119,111 @@ const Register = () => {
     };
     const handleRemoveExistingLogo = () => {
         setExistingLogoUrl('');
+    };
+
+    // Image quality preservation functions
+    const validateImageQuality = (file) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            img.onload = () => {
+                // Check minimum dimensions
+                if (img.width < 200 || img.height < 200) {
+                    reject(new Error('Image dimensions too small. Minimum size: 200x200px'));
+                    return;
+                }
+                
+                // Check aspect ratio for logo/thumbnail (should be roughly square)
+                const aspectRatio = img.width / img.height;
+                if (aspectRatio < 0.5 || aspectRatio > 2) {
+                    reject(new Error('Logo/thumbnail should have a reasonable aspect ratio (not too wide or tall)'));
+                    return;
+                }
+                
+                resolve(true);
+            };
+            
+            img.onerror = () => reject(new Error('Invalid image file'));
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
+    const preserveImageQuality = (file) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            img.onload = () => {
+                try {
+                    // Set canvas size to match image dimensions (no resizing)
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // Use high-quality rendering
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    
+                    // Draw image at original size
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert to blob with high quality
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            // Create new file with preserved quality
+                            const qualityFile = new File([blob], file.name, {
+                                type: file.type,
+                                lastModified: Date.now()
+                            });
+                            resolve(qualityFile);
+                        } else {
+                            reject(new Error('Failed to process image'));
+                        }
+                    }, file.type, 1.0); // 1.0 = maximum quality
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            
+            img.onerror = () => reject(new Error('Invalid image file'));
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
+    const handleImageUpload = async (file, type) => {
+        try {
+            // Validate image quality first
+            await validateImageQuality(file);
+            
+            // Preserve image quality
+            const qualityFile = await preserveImageQuality(file);
+            
+            // Upload the quality-preserved file
+            const timestamp = Date.now();
+            const fileName = `${timestamp}-${type}-${sanitizeFileName(file.name)}`;
+            
+            const { data, error } = await supabase.storage
+                .from('startup-media')
+                .upload(fileName, qualityFile, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+            
+            if (error) {
+                throw new Error(`Upload failed: ${error.message}`);
+            }
+            
+            const { data: urlData } = supabase.storage
+                .from('startup-media')
+                .getPublicUrl(fileName);
+            
+            return urlData.publicUrl;
+        } catch (error) {
+            console.error(`${type} upload error:`, error);
+            throw error;
+        }
     };
 
     if (loadingProject) {
