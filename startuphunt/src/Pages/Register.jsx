@@ -60,15 +60,17 @@ const isValidUrl = (string) => {
     }
 };
 
-const slugify = (text) =>
-    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+const slugify = (text) => {
+    if (!text || typeof text !== 'string') return '';
+    return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+};
 
 const sanitizeFileName = (fileName) => {
-    // Remove spaces, special characters, and keep only alphanumeric, dots, hyphens, underscores
+    if (!fileName || typeof fileName !== 'string') return 'file';
     return fileName
         .replace(/\s+/g, '-') // Replace spaces with hyphens
         .replace(/[^a-zA-Z0-9.-_]/g, '') // Remove special characters except dots, hyphens, underscores
-        .toLowerCase(); // Convert to lowercase
+        .toLowerCase();
 };
 
 const Register = () => {
@@ -581,6 +583,15 @@ const Register = () => {
 
             setSnackbar({ open: true, message: 'Launch submitted successfully!', severity: 'success' });
 
+            // Show admin approval alert
+            setTimeout(() => {
+                setSnackbar({ 
+                    open: true, 
+                    message: '⏳ Your launch is now pending admin approval. You will be notified once it\'s approved and visible to the community!', 
+                    severity: 'info' 
+                });
+            }, 2000);
+
             setTimeout(() => {
                 navigate(`/launches/${finalSubmissionData.slug}`);
             }, 1000);
@@ -858,8 +869,8 @@ const Register = () => {
             // If no existing category found, create a new one and add it to options
             if (!categoryOption) {
                 categoryOption = {
-                    value: gptData.category.toLowerCase().replace(/\s+/g, '-'),
-                    label: gptData.category,
+                    value: gptData.category ? gptData.category.toLowerCase().replace(/\s+/g, '-') : '',
+                    label: gptData.category || '',
                     isNew: true
                 };
 

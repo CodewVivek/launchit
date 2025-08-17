@@ -142,27 +142,40 @@ const Header = ({ onMenuClick }) => {
     }, []);
 
     const handleSearchChange = useCallback((e) => {
-        const value = e.target.value;
-        setSearch(value);
-        if (value.trim()) {
-            setShowSearchSuggestions(true);
-            performSearch(value);
-        } else {
-            setShowSearchSuggestions(false);
+        try {
+            const value = e.target.value;
+            setSearch(value);
+            if (value.trim()) {
+                setShowSearchSuggestions(true);
+                performSearch(value);
+            } else {
+                setShowSearchSuggestions(false);
+            }
+        } catch (error) {
+            console.error('Search input error:', error);
+            toast.error('Search input error. Please try again.');
         }
     }, [performSearch]);
 
     const handleSearchFocus = () => {
-        if (search.trim()) {
-            setShowSearchSuggestions(true);
+        try {
+            if (search.trim()) {
+                setShowSearchSuggestions(true);
+            }
+        } catch (error) {
+            console.error('Search focus error:', error);
         }
     };
 
     const handleSearchBlur = () => {
-        // Delay hiding suggestions to allow clicking on them
-        setTimeout(() => {
-            setShowSearchSuggestions(false);
-        }, 200);
+        try {
+            // Delay hiding suggestions to allow clicking on them
+            setTimeout(() => {
+                setShowSearchSuggestions(false);
+            }, 200);
+        } catch (error) {
+            console.error('Search blur error:', error);
+        }
     };
 
     // Close dropdowns when clicking outside
@@ -234,23 +247,24 @@ const Header = ({ onMenuClick }) => {
             {/* Universal Search Bar - Hidden on mobile */}
             <div className="hidden md:block flex-1 mx-8">
                 <div className="relative w-full max-w-lg mx-auto">
-                    <input
-                        type="text"
-                        placeholder="Search startups, users, categories, tags..."
-                        className="w-full pl-12 pr-12 py-2 rounded-full border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-black/20 placeholder-gray-500 bg-white shadow"
-                        value={search}
-                        onChange={handleSearchChange}
-                        onFocus={handleSearchFocus}
-                        onBlur={handleSearchBlur}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                                setShowSearchSuggestions(false);
-                            }
-                        }}
-                    />
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        <Search className="w-5 h-5" />
-                    </span>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                            type="text"
+                            value={search || ''}
+                            onChange={handleSearchChange}
+                            onFocus={handleSearchFocus}
+                            onBlur={handleSearchBlur}
+                            placeholder="Search projects, users, categories..."
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            disabled={isSearching}
+                        />
+                        {isSearching && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                            </div>
+                        )}
+                    </div>
                     {search && (
                         <button
                             type="button"
