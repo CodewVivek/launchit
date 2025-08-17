@@ -209,7 +209,7 @@ const Header = ({ onMenuClick }) => {
                 </button>
                 <Link to="/" className="flex items-center space-x-2 group">
                     <div className="rounded flex items-center justify-center">
-                        <img className="w-8 h-8 text-white" src="/images/r6_circle.png" alt="L" />
+                        <img className="w-8 h-8 text-white" src="/images/r6_circle_optimized.png" alt="L" />
                     </div>
                     <span className="text-xl font-bold tracking-wide hidden sm:block">
                         <span className="text-gray-800">LaunchIT</span>

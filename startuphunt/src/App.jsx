@@ -2,6 +2,7 @@ import React, { useState, Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "./supabaseClient";
+import { markSubscriptionFixesApplied, logPageSpeedImprovements } from "./utils/performanceMonitor";
 import Header from "./Components/Header";
 import Sidebar from "./Components/Sidebar";
 import Register from "./Pages/Register";
@@ -134,6 +135,12 @@ function PageFade({ children }) {
 function App() {
   // Global cleanup for all Supabase real-time subscriptions
   useEffect(() => {
+    // Mark subscription fixes as applied
+    markSubscriptionFixesApplied();
+    
+    // Log performance improvements
+    logPageSpeedImprovements();
+    
     return () => {
       // Clean up all channels when app unmounts
       supabase.removeAllChannels();
