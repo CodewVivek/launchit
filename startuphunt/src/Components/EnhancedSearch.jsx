@@ -94,25 +94,49 @@ const EnhancedSearch = ({
         try {
             const result = await semanticSearch(searchQuery, 20, filters);
 
-            if (result.success) {
-                setSearchResults(result.results);
+            if (result && result.success) {
+                setSearchResults(result.results || []);
                 saveSearchHistory(searchQuery);
 
                 if (onSearchResults) {
-                    onSearchResults(result.results, searchQuery);
+                    onSearchResults(result.results || [], searchQuery);
                 }
 
-                if (result.results.length === 0) {
+                if ((result.results || []).length === 0) {
                     toast.info('No results found. Try different keywords or filters.');
                 } else {
-                    toast.success(`Found ${result.results.length} results for "${searchQuery}"`);
+                    toast.success(`Found ${(result.results || []).length} results for "${searchQuery}"`);
                 }
             } else {
-                toast.error('Search failed. Please try again.');
+                // Handle case where result is undefined or doesn't have success property
+                console.warn('Search returned unexpected result format:', result);
+                setSearchResults([]);
+                if (onSearchResults) {
+                    onSearchResults([], searchQuery);
+                }
+                toast.info('Search completed. No results found.');
             }
         } catch (error) {
             console.error('Search error:', error);
-            toast.error('Search failed. Please try again.');
+            
+            // Provide more specific error messages
+            let errorMessage = 'Search failed. Please try again.';
+            
+            if (error.message) {
+                if (error.message.includes('fetch')) {
+                    errorMessage = 'Network error. Please check your connection.';
+                } else if (error.message.includes('HTTP')) {
+                    errorMessage = 'Service temporarily unavailable. Please try again later.';
+                }
+            }
+            
+            toast.error(errorMessage);
+            
+            // Set empty results and notify parent component
+            setSearchResults([]);
+            if (onSearchResults) {
+                onSearchResults([], searchQuery);
+            }
         } finally {
             setIsSearching(false);
         }
@@ -168,7 +192,14 @@ const EnhancedSearch = ({
                     <input
                         type="text"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => {
+                            try {
+                                setQuery(e.target.value);
+                            } catch (error) {
+                                console.error('Error updating search query:', error);
+                                toast.error('Search input error. Please try again.');
+                            }
+                        }}
                         placeholder={placeholder}
                         className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         disabled={isSearching}
@@ -177,7 +208,14 @@ const EnhancedSearch = ({
                         {query && (
                             <button
                                 type="button"
-                                onClick={clearSearch}
+                                onClick={() => {
+                                    try {
+                                        clearSearch();
+                                    } catch (error) {
+                                        console.error('Error clearing search:', error);
+                                        toast.error('Error clearing search. Please try again.');
+                                    }
+                                }}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
                                 <X className="h-5 w-5" />
@@ -186,11 +224,18 @@ const EnhancedSearch = ({
                         {showFilters && (
                             <button
                                 type="button"
-                                onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+                                onClick={() => {
+                                    try {
+                                        setShowFiltersPanel(!showFiltersPanel);
+                                    } catch (error) {
+                                        console.error('Error toggling filters:', error);
+                                        toast.error('Error with filters. Please try again.');
+                                    }
+                                }}
                                 className={`p-1 rounded transition-colors ${hasActiveFilters
-                                        ? 'bg-blue-100 text-blue-600'
-                                        : 'text-gray-400 hover:text-gray-600'
-                                    }`}
+                                    ? 'bg-blue-100 text-blue-600'
+                                    : 'text-gray-400 hover:text-gray-600'
+                                }`}
                             >
                                 <Filter className="h-5 w-5" />
                             </button>
@@ -198,12 +243,12 @@ const EnhancedSearch = ({
                         <button
                             type="submit"
                             disabled={isSearching || !query.trim()}
-                            className="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {isSearching ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                                'Search'
+                                <Search className="h-5 w-5" />
                             )}
                         </button>
                     </div>

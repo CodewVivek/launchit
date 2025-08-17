@@ -376,7 +376,7 @@ const Register = () => {
         }
 
         // STEP 2: Cover Images (2 required) + Logo/Thumbnail (if AI generation failed)
-        
+
         // Check cover images - require at least 2
         const validCoverFiles = coverFiles.filter(file => file !== null);
         if (validCoverFiles.length < 2) {
@@ -386,7 +386,7 @@ const Register = () => {
         // Check logo/thumbnail - required if AI generation failed or no preview available
         const hasAIGeneratedImages = urlPreview && (urlPreview.logo || urlPreview.screenshot);
         const hasUserUploadedImages = logoFile || thumbnailFile;
-        
+
         if (!hasAIGeneratedImages && !hasUserUploadedImages) {
             errors.push('Please provide either a logo or thumbnail image (AI generation failed, manual upload required)');
         }
@@ -1160,7 +1160,7 @@ const Register = () => {
                     <p className="text-gray-500 mt-2">
                         Get your product in front of the right audience. Be seen, gain traction, and grow with confidence!
                     </p>
-                    
+
                     {/* Requirements Explanation */}
                     <div className="mt-6 max-w-3xl mx-auto bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <h3 className="font-semibold text-gray-800 mb-3">📋 Submission Requirements:</h3>
@@ -1391,7 +1391,7 @@ const Register = () => {
                                     <div className="space-y-4">
                                         <div>
                                             <label className="form-label">
-                                                Logo 
+                                                Logo
                                                 {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
                                                     <span className="text-red-500">*</span>
                                                 )}
