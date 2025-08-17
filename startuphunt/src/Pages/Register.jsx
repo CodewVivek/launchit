@@ -344,34 +344,68 @@ const Register = () => {
     };
 
     const validateForm = () => {
-        // Step 1: All basic fields are required
-        if (!formData.name || !formData.websiteUrl || !formData.tagline || !selectedCategory || !formData.description) {
-            setSnackbar({ open: true, message: 'Please fill in all required fields in Step 1.', severity: 'error' });
-            setStep(1);
+        const errors = [];
+
+        // Check required fields
+        if (!formData.name || formData.name.trim().length === 0) {
+            errors.push('Startup name is required');
+        } else if (formData.name.trim().length < 3) {
+            errors.push('Startup name must be at least 3 characters long');
+        }
+
+        if (!formData.websiteUrl || formData.websiteUrl.trim().length === 0) {
+            errors.push('Website URL is required');
+        } else if (!isValidUrl(formData.websiteUrl)) {
+            errors.push('Please enter a valid website URL (e.g., https://example.com)');
+        }
+
+        if (!formData.description || formData.description.trim().length === 0) {
+            errors.push('Description is required');
+        } else if (formData.description.trim().length < 20) {
+            errors.push('Description must be at least 20 characters long');
+        }
+
+        if (!formData.tagline || formData.tagline.trim().length === 0) {
+            errors.push('Tagline is required');
+        } else if (formData.tagline.trim().length < 10) {
+            errors.push('Tagline must be at least 10 characters long');
+        }
+
+        if (!selectedCategory) {
+            errors.push('Please select a category for your startup');
+        }
+
+        // Check if at least one logo or thumbnail is provided
+        if (!logoFile && !thumbnailFile) {
+            errors.push('Please provide either a logo or thumbnail image');
+        }
+
+        // Check tags
+        if (tags.length === 0) {
+            errors.push('Please add at least one tag to describe your startup');
+        }
+
+        // Check built-with technologies
+        if (builtWith.length === 0) {
+            errors.push('Please select at least one technology your startup is built with');
+        }
+
+        // Check links (at least one valid link)
+        const validLinks = links.filter(link => link.trim() !== '' && isValidUrl(link));
+        if (validLinks.length === 0) {
+            errors.push('Please provide at least one valid link (GitHub, demo, etc.)');
+        }
+
+        if (errors.length > 0) {
+            const errorMessage = `Please fix the following issues:\n${errors.join('\n')}`;
+            setSnackbar({ 
+                open: true, 
+                message: errorMessage, 
+                severity: 'error' 
+            });
             return false;
         }
 
-        // Step 2: Logo, Thumbnail, and at least 1 cover image are required
-        if (!logoFile) {
-            setSnackbar({ open: true, message: 'Please upload a logo image in Step 2.', severity: 'error' });
-            setStep(2);
-            return false;
-        }
-
-        if (!thumbnailFile) {
-            setSnackbar({ open: true, message: 'Please upload a thumbnail image in Step 2.', severity: 'error' });
-            setStep(2);
-            return false;
-        }
-
-        const hasCover = coverFiles && coverFiles.some(f => !!f);
-        if (!hasCover) {
-            setSnackbar({ open: true, message: 'Please upload at least one cover image in Step 2.', severity: 'error' });
-            setStep(2);
-            return false;
-        }
-
-        // Step 3: All fields are optional (no validation needed)
         return true;
     };
 
@@ -467,10 +501,22 @@ const Register = () => {
             let thumbnailUrl = typeof thumbnailFile === 'string' ? thumbnailFile : '';
             let coverUrls = [];
 
+            // Validate required fields before submission
+            if (!formData.name || !formData.websiteUrl || !formData.description || !formData.tagline) {
+                throw new Error('Missing required fields: name, website URL, description, or tagline');
+            }
+
+            if (!selectedCategory) {
+                throw new Error('Please select a category for your startup');
+            }
+
             if (logoFile && typeof logoFile !== 'string') {
                 const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
                 const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, logoFile);
-                if (logoErrorUpload) throw logoErrorUpload;
+                if (logoErrorUpload) {
+                    console.error('Logo upload error:', logoErrorUpload);
+                    throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
+                }
                 const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                 logoUrl = logoUrlData.publicUrl;
             }
@@ -479,7 +525,10 @@ const Register = () => {
             if (thumbnailFile && typeof thumbnailFile !== 'string') {
                 const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
                 const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, thumbnailFile);
-                if (thumbError) throw thumbError;
+                if (thumbError) {
+                    console.error('Thumbnail upload error:', thumbError);
+                    throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
+                }
                 const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                 thumbnailUrl = thumbUrlData.publicUrl;
             }
@@ -491,7 +540,10 @@ const Register = () => {
                     if (file && typeof file !== 'string') {
                         const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
                         const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
-                        if (coverErrorUpload) throw coverErrorUpload;
+                        if (coverErrorUpload) {
+                            console.error('Cover file upload error:', coverErrorUpload);
+                            throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
+                        }
                         const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                         coverUrls.push(coverUrlData.publicUrl);
                     } else if (typeof file === 'string') {
@@ -501,17 +553,32 @@ const Register = () => {
             }
             submissionData.cover_urls = coverUrls;
 
+            // Log submission data for debugging
+            console.log('Submitting data:', {
+                ...submissionData,
+                logo_url: submissionData.logo_url ? '✓ Set' : '✗ Missing',
+                thumbnail_url: submissionData.thumbnail_url ? '✓ Set' : '✗ Missing',
+                cover_urls: submissionData.cover_urls?.length || 0
+            });
+
             let finalSubmissionData;
             if (isEditing && editingProjectId) {
                 submissionData.status = 'launched';
                 const { data, error } = await supabase.from('projects').update(submissionData).eq('id', editingProjectId).select().single();
-                if (error) throw error;
+                if (error) {
+                    console.error('Update error:', error);
+                    throw new Error(`Update failed: ${error.message}`);
+                }
                 finalSubmissionData = data;
             } else {
                 const { data, error } = await supabase.from('projects').insert([submissionData]).select().single();
-                if (error) throw error;
+                if (error) {
+                    console.error('Insert error:', error);
+                    throw new Error(`Insert failed: ${error.message}`);
+                }
                 finalSubmissionData = data;
             }
+            
             setSnackbar({ open: true, message: 'Launch submitted successfully!', severity: 'success' });
 
             setTimeout(() => {
@@ -528,7 +595,30 @@ const Register = () => {
             setEditingProjectId(null);
         } catch (error) {
             console.error('Error submitting form:', error);
-            setSnackbar({ open: true, message: 'Failed to register startup. Please try again.', severity: 'error' });
+            
+            // Provide more specific error messages
+            let errorMessage = 'Failed to register startup. Please try again.';
+            let severity = 'error';
+            
+            if (error.message) {
+                if (error.message.includes('Missing required fields')) {
+                    errorMessage = `❌ ${error.message}`;
+                } else if (error.message.includes('upload failed')) {
+                    errorMessage = `📁 ${error.message}`;
+                } else if (error.message.includes('Insert failed') || error.message.includes('Update failed')) {
+                    errorMessage = `💾 Database error: ${error.message}`;
+                } else if (error.message.includes('duplicate key')) {
+                    errorMessage = '⚠️ A startup with this name already exists. Please choose a different name.';
+                    severity = 'warning';
+                } else if (error.message.includes('violates')) {
+                    errorMessage = '⚠️ Some data is invalid. Please check your inputs and try again.';
+                    severity = 'warning';
+                } else {
+                    errorMessage = `❌ ${error.message}`;
+                }
+            }
+            
+            setSnackbar({ open: true, message: errorMessage, severity });
         }
     };
 
@@ -538,7 +628,7 @@ const Register = () => {
             // Try to get basic metadata from the URL
             const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&meta=true&screenshot=true&embed=screenshot.url`);
             const data = await response.json();
-            
+
             if (data.status === 'success') {
                 const preview = {
                     title: data.data.title || 'Website Title',
@@ -548,26 +638,26 @@ const Register = () => {
                     domain: new URL(url).hostname
                 };
                 setUrlPreview(preview);
-                
+
                 // Auto-fill basic fields with preview data
                 setFormData(prev => ({
                     ...prev,
                     name: prev.name || preview.title,
                     description: prev.description || preview.description
                 }));
-                
+
                 if (preview.logo && !logoFile) {
                     setLogoFile(preview.logo);
                 }
-                
+
                 if (preview.screenshot && !thumbnailFile) {
                     setThumbnailFile(preview.screenshot);
                 }
-                
-                setSnackbar({ 
-                    open: true, 
-                    message: `📱 Basic preview generated from ${preview.domain}`, 
-                    severity: 'success' 
+
+                setSnackbar({
+                    open: true,
+                    message: `📱 Basic preview generated from ${preview.domain}`,
+                    severity: 'success'
                 });
             }
         } catch (error) {
@@ -591,16 +681,16 @@ const Register = () => {
             setRetryCount(0);
         }
 
-        const loadingMessage = isRetry 
-            ? `🔄 Retrying AI generation (attempt ${retryCount + 1})...` 
+        const loadingMessage = isRetry
+            ? `🔄 Retrying AI generation (attempt ${retryCount + 1})...`
             : "🤖 AI is analyzing your website... This may take up to 30 seconds.";
-            
+
         setSnackbar({ open: true, message: loadingMessage, severity: 'info' });
 
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
-            
+
             // Create AbortController for timeout handling
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
@@ -622,7 +712,7 @@ const Register = () => {
             }
 
             const gptData = await res.json();
-            
+
             if (gptData.err || gptData.error) {
                 throw new Error(gptData.message || 'AI generation failed');
             }
@@ -630,13 +720,13 @@ const Register = () => {
             // Validate that we got the essential data
             const essentialFields = ['name', 'description', 'tagline'];
             const missingFields = essentialFields.filter(field => !gptData[field]);
-            
+
             if (missingFields.length > 0) {
                 console.warn('Missing essential fields:', missingFields);
-                setSnackbar({ 
-                    open: true, 
-                    message: `⚠️ AI generated partial data. Missing: ${missingFields.join(', ')}`, 
-                    severity: 'warning' 
+                setSnackbar({
+                    open: true,
+                    message: `⚠️ AI generated partial data. Missing: ${missingFields.join(', ')}`,
+                    severity: 'warning'
                 });
             }
 
@@ -655,14 +745,14 @@ const Register = () => {
 
             // Check how many fields are already filled
             const filledCount = getFilledFieldsCount();
-            
+
             if (filledCount < 4) {
                 // If less than 4 fields filled, directly apply AI data
                 applyAIData(processedData, false); // Fill all fields
-                setSnackbar({ 
-                    open: true, 
-                    message: `🤖 AI generated data successfully! ${processedData.name ? `Found: ${processedData.name}` : ''}`, 
-                    severity: 'success' 
+                setSnackbar({
+                    open: true,
+                    message: `🤖 AI generated data successfully! ${processedData.name ? `Found: ${processedData.name}` : ''}`,
+                    severity: 'success'
                 });
             } else {
                 // If 4+ fields filled, show dialog for user choice
@@ -706,12 +796,12 @@ const Register = () => {
                 generateBasicPreview(formData.websiteUrl);
             }
 
-            setSnackbar({ 
-                open: true, 
-                message: errorMessage, 
+            setSnackbar({
+                open: true,
+                message: errorMessage,
                 severity,
                 action: showRetry ? (
-                    <button 
+                    <button
                         onClick={() => handleGenerateLaunchData(true)}
                         className="text-blue-600 hover:text-blue-800 underline"
                     >
@@ -1153,7 +1243,7 @@ const Register = () => {
                                                         </>
                                                     )}
                                                 </button>
-                                                
+
                                                 {/* Fallback basic preview button */}
                                                 {!urlPreview && !isGeneratingPreview && (
                                                     <button
@@ -1177,7 +1267,7 @@ const Register = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                            
+
                                             {/* Show preview data if available */}
                                             {urlPreview && (
                                                 <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
