@@ -118,10 +118,10 @@ const EnhancedSearch = ({
             }
         } catch (error) {
             console.error('Search error:', error);
-            
+
             // Provide more specific error messages
             let errorMessage = 'Search failed. Please try again.';
-            
+
             if (error.message) {
                 if (error.message.includes('fetch')) {
                     errorMessage = 'Network error. Please check your connection.';
@@ -129,9 +129,9 @@ const EnhancedSearch = ({
                     errorMessage = 'Service temporarily unavailable. Please try again later.';
                 }
             }
-            
+
             toast.error(errorMessage);
-            
+
             // Set empty results and notify parent component
             setSearchResults([]);
             if (onSearchResults) {
@@ -235,7 +235,7 @@ const EnhancedSearch = ({
                                 className={`p-1 rounded transition-colors ${hasActiveFilters
                                     ? 'bg-blue-100 text-blue-600'
                                     : 'text-gray-400 hover:text-gray-600'
-                                }`}
+                                    }`}
                             >
                                 <Filter className="h-5 w-5" />
                             </button>
