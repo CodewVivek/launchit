@@ -1,0 +1,65 @@
+{
+    "name": "LaunchIT - Decode Limitless Growth",
+    "short_name": "LaunchIT",
+    "description": "Discover and launch early-stage startups. Be part of the journey from day one.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#3B82F6",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "en",
+    "categories": [
+        "business",
+        "productivity",
+        "finance"
+    ],
+    "icons": [
+        {
+            "src": "/images/r6_circle.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/images/r6_circle.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/images/og-preview.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Submit Project",
+            "short_name": "Submit",
+            "description": "Submit a new startup project",
+            "url": "/submit",
+            "icons": [
+                {
+                    "src": "/images/r6_circle.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "My Profile",
+            "short_name": "Profile",
+            "description": "View your profile and projects",
+            "url": "/profile",
+            "icons": [
+                {
+                    "src": "/images/r6_circle.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}

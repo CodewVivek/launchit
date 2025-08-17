@@ -175,16 +175,16 @@ const UserProfile = () => {
 
       try {
         const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", decodedUsername)
-        .single();
+          .from("profiles")
+          .select("*")
+          .eq("username", decodedUsername)
+          .single();
 
         if (profileError) {
           console.error("Error fetching profile:", profileError.message);
-        setProfile(null);
-        setLoading(false);
-        return;
+          setProfile(null);
+          setLoading(false);
+          return;
         }
 
         setProfile(profileData);
@@ -244,7 +244,7 @@ const UserProfile = () => {
         description: editForm.description,
         website_url: editForm.website_url,
         category_type: editForm.category_type,
-          updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }).eq("id", editProject.id);
       if (error) throw error;
       setEditProject(null);
@@ -392,7 +392,7 @@ const UserProfile = () => {
     );
   }
   if (!profile) {
-  return (
+    return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-500 text-lg">User profile not found.</p>
       </div>
@@ -486,94 +486,94 @@ const UserProfile = () => {
                   All ({projects.length})
                 </button>
                 {isOwner && (
-                            <button
+                  <button
                     onClick={() => setProjectFilter("draft")}
                     className={`px-4 py-2 rounded-full transition-colors ${projectFilter === "draft" ? "bg-yellow-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                   >
                     Drafts ({projects.filter((p) => p.status === "draft").length})
-                            </button>
+                  </button>
                 )}
-                            <button
+                <button
                   onClick={() => setProjectFilter("launched")}
                   className={`px-4 py-2 rounded-full transition-colors ${projectFilter === "launched" ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                            >
+                >
                   Launched ({projects.filter((p) => p.status !== "draft").length})
-                            </button>
-                          </div>
+                </button>
+              </div>
               <SortByDateFilter value={sortOrder} onChange={setSortOrder} />
-                        </div>
+            </div>
 
             {sortedProjects.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sortedProjects.map((project) => (
-                        <div
-                          key={project.id}
-                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
-                          onClick={() => navigate(`/launches/${project.slug}`)}
-                        >
-                          <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
-                            {project.thumbnail_url ? (
-                              <img
-                                src={project.thumbnail_url}
-                                alt={`${project.name} thumbnail`}
-                                className="absolute top-0 left-0 w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
+                  <div
+                    key={project.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+                    onClick={() => navigate(`/launches/${project.slug}`)}
+                  >
+                    <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
+                      {project.thumbnail_url ? (
+                        <img
+                          src={project.thumbnail_url}
+                          alt={`${project.name} thumbnail`}
+                          className="absolute top-0 left-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
                         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">Nt</div>
-                            )}
-                          </div>
-                          <div className="p-5 flex-grow flex flex-col">
-                            <div className="flex items-start gap-4 mb-3">
-                              {project.logo_url ? (
-                                <img
-                                  src={project.logo_url}
-                                  alt="Logo"
-                                  className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border flex-shrink-0 mt-1">
+                      )}
+                    </div>
+                    <div className="p-5 flex-grow flex flex-col">
+                      <div className="flex items-start gap-4 mb-3">
+                        {project.logo_url ? (
+                          <img
+                            src={project.logo_url}
+                            alt="Logo"
+                            className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border flex-shrink-0 mt-1">
                             <span>{project.name.charAt(0).toUpperCase()}</span>
-                                </div>
-                              )}
-                              <div>
+                          </div>
+                        )}
+                        <div>
                           <h2 className="text-lg font-bold text-gray-800 hover:text-blue-600 transition-colors">{project.name}</h2>
                           <p className="text-sm text-gray-600 line-clamp-2">{project.tagline}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-2 text-sm text-gray-500 mt-auto mb-4">
-                              <div className="flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-500 mt-auto mb-4">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-gray-400" />
                           <span className="capitalize font-medium text-gray-700">{project.category_type}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-400" />
-                                <span>
-                                  Launched on{" "}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span>
+                            Launched on{" "}
                             {new Date(project.created_at).toLocaleDateString("en-GB", {
                               day: "2-digit", month: "short", year: "numeric",
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                              <Like projectId={project.id} />
-                              {isOwner && (
-                                <div className="flex gap-2">
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/submit?edit=${project.id}`); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                                    <Edit3 className="w-4 h-4" />
-                                  </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(project); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            })}
+                          </span>
                         </div>
-                      ))}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <Like projectId={project.id} />
+                        {isOwner && (
+                          <div className="flex gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/submit?edit=${project.id}`); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(project); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                ))}
+              </div>
             ) : (
               <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
                 <h4 className="text-lg font-semibold text-gray-800">No Projects Found</h4>
@@ -667,26 +667,26 @@ const UserProfile = () => {
                               <span>{getTimeAgo(comment.created_at)}</span>
                             </div>
                             {isOwner && (
-                        <button
+                              <button
                                 onClick={() => handleDeleteComment(comment.id)}
                                 className="text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-50"
                                 title="Delete comment"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
                     </li>
-                ))}
+                  ))}
                 </ul>
               ) : (
                 <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
                   <h4 className="text-lg font-semibold text-gray-800">No Comments Yet</h4>
                   <p className="text-gray-500 mt-1">You haven't made any comments yet.</p>
-              </div>
-            )}
+                </div>
+              )}
             </div>
           </div>
         )}

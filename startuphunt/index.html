@@ -8,53 +8,84 @@
 
   <!-- Security: Content Security Policy -->
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://*.onrender.com https://api.microlink.io wss://*.supabase.co http://localhost:3001; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://*.onrender.com https://api.microlink.io wss://*.supabase.co https://launchit-ai-backend.onrender.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
 
   <!-- Title -->
   <title>LaunchIT - Decode Limitless Growth</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/images/r6_circle.png" />
+  <link rel="apple-touch-icon" href="/images/r6_circle.png" />
 
   <!-- SEO Meta Tags -->
   <meta name="description"
-    content="LaunchIT is a platform to discover and launch early-stage startups,projects and much more. Find the next big idea before anyone else." />
-  <meta name="keywords" content="startups, early-stage, launch platform, side projects, beta startups,projects" />
+    content="LaunchIT is a platform to discover and launch early-stage startups, projects and much more. Find the next big idea before anyone else." />
+  <meta name="keywords"
+    content="startups, early-stage, launch platform, side projects, beta startups, projects, innovation, entrepreneurship" />
   <meta name="author" content="LaunchIT Team" />
+  <meta name="robots" content="index, follow" />
+  <meta name="language" content="English" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:title" content="LaunchIT - Decode Limitless Growth" />
   <meta property="og:description"
     content="Discover and launch early-stage startups. Be part of the journey from day one." />
-  <meta property="og:image" content="/images/og-preview.png" />
+  <meta property="og:image" content="https://launchit.site/images/og-preview.png" />
   <meta property="og:url" content="https://launchit.site/" />
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="LaunchIT" />
 
   <!-- Twitter Meta -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Launch It - Discover and Launch Startups Early" />
+  <meta name="twitter:title" content="LaunchIT - Discover and Launch Startups Early" />
   <meta name="twitter:description"
     content="Discover and launch early-stage startups. Be part of the journey from day one." />
-  <meta name="twitter:image" content="/images/og-preview.png" />
+  <meta name="twitter:image" content="https://launchit.site/images/og-preview.png" />
+  <meta name="twitter:site" content="@launchit" />
 
-  <!-- Preload Fonts or CSS (optional performance improvement) -->
-  <!-- <link rel="preload" href="/fonts/some-font.woff2" as="font" type="font/woff2" crossorigin> -->
+  <!-- Performance Optimizations -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://*.supabase.co" />
+  <link rel="dns-prefetch" href="https://*.onrender.com" />
 
-  <!-- Optional: Google Analytics (replace G-XXXXXXX) -->
+  <!-- Manifest for PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#3B82F6" />
+
+  <!-- Google Analytics (uncomment and add your tracking ID) -->
   <!--
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXX');
-    </script>
-    -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXX', {
+      page_title: 'LaunchIT - Home',
+      custom_map: {
+        dimension1: 'user_type'
+      }
+    });
+  </script>
+  -->
 </head>
 
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+
+  <!-- Performance monitoring -->
+  <script>
+    // Basic performance monitoring
+    window.addEventListener('load', () => {
+      if ('performance' in window) {
+        const perfData = performance.getEntriesByType('navigation')[0];
+        if (perfData) {
+          console.log('Page Load Time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+        }
+      }
+    });
+  </script>
 </body>
 
 </html>
