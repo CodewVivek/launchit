@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 // Simple in-memory rate limiting
 const requestCounts = new Map();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per 15 minutes
+const MAX_REQUESTS_PER_WINDOW = 50; // 50 requests per 15 minutes (increased for content moderation)
 
 const rateLimitMiddleware = (req, res, next) => {
   const clientId = req.ip || req.connection.remoteAddress;
@@ -218,7 +218,7 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
 // ==================== AI FEATURES ENDPOINTS ====================
 
 // 1. CONTENT MODERATION ENDPOINT
-app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
+app.post('/api/moderate', async (req, res) => {
   try {
     const { content, contentType, userId } = req.body;
 
