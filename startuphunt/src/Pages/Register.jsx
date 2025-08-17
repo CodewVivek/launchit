@@ -346,7 +346,7 @@ const Register = () => {
     const validateForm = () => {
         const errors = [];
 
-        // Check required fields
+        // STEP 1: Fully Required Fields
         if (!formData.name || formData.name.trim().length === 0) {
             errors.push('Startup name is required');
         } else if (formData.name.trim().length < 3) {
@@ -375,33 +375,33 @@ const Register = () => {
             errors.push('Please select a category for your startup');
         }
 
-        // Check if at least one logo or thumbnail is provided
-        if (!logoFile && !thumbnailFile) {
-            errors.push('Please provide either a logo or thumbnail image');
+        // STEP 2: Cover Images (2 required) + Logo/Thumbnail (if AI generation failed)
+        
+        // Check cover images - require at least 2
+        const validCoverFiles = coverFiles.filter(file => file !== null);
+        if (validCoverFiles.length < 2) {
+            errors.push('Please upload at least 2 cover images for your startup');
         }
 
-        // Check tags
-        if (tags.length === 0) {
-            errors.push('Please add at least one tag to describe your startup');
+        // Check logo/thumbnail - required if AI generation failed or no preview available
+        const hasAIGeneratedImages = urlPreview && (urlPreview.logo || urlPreview.screenshot);
+        const hasUserUploadedImages = logoFile || thumbnailFile;
+        
+        if (!hasAIGeneratedImages && !hasUserUploadedImages) {
+            errors.push('Please provide either a logo or thumbnail image (AI generation failed, manual upload required)');
         }
 
-        // Check built-with technologies
-        if (builtWith.length === 0) {
-            errors.push('Please select at least one technology your startup is built with');
-        }
-
-        // Check links (at least one valid link)
-        const validLinks = links.filter(link => link.trim() !== '' && isValidUrl(link));
-        if (validLinks.length === 0) {
-            errors.push('Please provide at least one valid link (GitHub, demo, etc.)');
-        }
+        // STEP 3: Optional Fields (no validation required)
+        // - tags
+        // - built-with technologies  
+        // - links
 
         if (errors.length > 0) {
             const errorMessage = `Please fix the following issues:\n${errors.join('\n')}`;
-            setSnackbar({ 
-                open: true, 
-                message: errorMessage, 
-                severity: 'error' 
+            setSnackbar({
+                open: true,
+                message: errorMessage,
+                severity: 'error'
             });
             return false;
         }
@@ -578,7 +578,7 @@ const Register = () => {
                 }
                 finalSubmissionData = data;
             }
-            
+
             setSnackbar({ open: true, message: 'Launch submitted successfully!', severity: 'success' });
 
             setTimeout(() => {
@@ -595,11 +595,11 @@ const Register = () => {
             setEditingProjectId(null);
         } catch (error) {
             console.error('Error submitting form:', error);
-            
+
             // Provide more specific error messages
             let errorMessage = 'Failed to register startup. Please try again.';
             let severity = 'error';
-            
+
             if (error.message) {
                 if (error.message.includes('Missing required fields')) {
                     errorMessage = `❌ ${error.message}`;
@@ -617,7 +617,7 @@ const Register = () => {
                     errorMessage = `❌ ${error.message}`;
                 }
             }
-            
+
             setSnackbar({ open: true, message: errorMessage, severity });
         }
     };
@@ -1160,6 +1160,34 @@ const Register = () => {
                     <p className="text-gray-500 mt-2">
                         Get your product in front of the right audience. Be seen, gain traction, and grow with confidence!
                     </p>
+                    
+                    {/* Requirements Explanation */}
+                    <div className="mt-6 max-w-3xl mx-auto bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h3 className="font-semibold text-gray-800 mb-3">📋 Submission Requirements:</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="text-center">
+                                <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2 font-bold">1</div>
+                                <p className="font-medium text-red-700">Step 1: Basic Info</p>
+                                <p className="text-gray-600">Name, URL, Description, Tagline, Category</p>
+                                <span className="inline-block bg-red-100 text-red-600 px-2 py-1 rounded text-xs mt-1">Required</span>
+                            </div>
+                            <div className="text-center">
+                                <div className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-2 font-bold">2</div>
+                                <p className="font-medium text-orange-700">Step 2: Media & Images</p>
+                                <p className="text-gray-600">2 Cover Images + Logo/Thumbnail</p>
+                                <span className="inline-block bg-orange-100 text-orange-600 px-2 py-1 rounded text-xs mt-1">Required</span>
+                            </div>
+                            <div className="text-center">
+                                <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2 font-bold">3</div>
+                                <p className="font-medium text-green-700">Step 3: Additional Details</p>
+                                <p className="text-gray-600">Tags, Technologies, Links</p>
+                                <span className="inline-block bg-green-100 text-green-600 px-2 py-1 rounded text-xs mt-1">Optional</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 text-xs text-gray-600 text-center">
+                            💡 <strong>Pro Tip:</strong> Use "Auto-generate from URL" in Step 1 to automatically get logo and thumbnail!
+                        </div>
+                    </div>
                 </header>
                 <div className="form-container">
                     {/* Tabs for Navigation */}
@@ -1169,7 +1197,10 @@ const Register = () => {
                             onClick={() => setStep(1)}
                             className={`tab-button ${step === 1 ? 'active' : ''}`}
                         >
-                            Basic Info
+                            <span className="flex items-center gap-2">
+                                <span>Step 1: Basic Info</span>
+                                <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">Required</span>
+                            </span>
                         </button>
                         <button
                             type="button"
@@ -1177,7 +1208,10 @@ const Register = () => {
                             className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 2 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                         >
-                            Media
+                            <span className="flex items-center gap-2">
+                                <span>Step 2: Media & Images</span>
+                                <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">Required</span>
+                            </span>
                         </button>
                         <button
                             type="button"
@@ -1185,7 +1219,10 @@ const Register = () => {
                             className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 3 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                         >
-                            Details
+                            <span className="flex items-center gap-2">
+                                <span>Step 3: Additional Details</span>
+                                <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">Optional</span>
+                            </span>
                         </button>
                     </nav>
 
@@ -1196,7 +1233,9 @@ const Register = () => {
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="name">Name of the launch</label>
+                                            <label className="form-label" htmlFor="name">
+                                                Name of the launch <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 id="name"
                                                 name="name"
@@ -1212,7 +1251,9 @@ const Register = () => {
                                             {/* Content Moderation will be checked on submit */}
                                         </div>
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="websiteUrl">Website URL</label>
+                                            <label className="form-label" htmlFor="websiteUrl">
+                                                Website URL <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 id="websiteUrl"
                                                 name="websiteUrl"
@@ -1287,7 +1328,9 @@ const Register = () => {
                                             )}
                                         </div>
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="tagline">Tagline</label>
+                                            <label className="form-label" htmlFor="tagline">
+                                                Tagline <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 id="tagline"
                                                 name="tagline"
@@ -1302,7 +1345,9 @@ const Register = () => {
                                             {/* Content Moderation will be checked on submit */}
                                         </div>
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="category">Category(ies)</label>
+                                            <label className="form-label" htmlFor="category">
+                                                Category(ies) <span className="text-red-500">*</span>
+                                            </label>
                                             <Select
                                                 options={dynamicCategoryOptions}
                                                 isClearable={true}
@@ -1314,7 +1359,9 @@ const Register = () => {
                                             />
                                         </div>
                                         <div className="form-field-group md:col-span-2">
-                                            <label className="form-label" htmlFor="description">Description</label>
+                                            <label className="form-label" htmlFor="description">
+                                                Description <span className="text-red-500">*</span>
+                                            </label>
                                             <textarea
                                                 id="description"
                                                 name="description"
@@ -1343,7 +1390,15 @@ const Register = () => {
                                     </div>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="form-label">Logo</label>
+                                            <label className="form-label">
+                                                Logo 
+                                                {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                    <span className="text-red-500">*</span>
+                                                )}
+                                                {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
+                                                    <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
+                                                )}
+                                            </label>
                                             <div className="flex items-center gap-6 mt-2">
                                                 <div className="relative">
                                                     <label className="w-24 h-24 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
@@ -1377,6 +1432,9 @@ const Register = () => {
                                                 </div>
                                                 <div className="text-sm text-gray-500">
                                                     Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
+                                                    {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                        <div className="text-red-600 font-medium">Required if AI generation fails</div>
+                                                    )}
                                                     {logoFile && (
                                                         <div className="mt-2 space-y-1">
                                                             <button type="button" onClick={removeLogo} className="block text-red-600 hover:text-red-800">Remove</button>
@@ -1392,7 +1450,15 @@ const Register = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="form-label">Thumbnail (Dashboard)</label>
+                                            <label className="form-label">
+                                                Thumbnail (Dashboard)
+                                                {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                    <span className="text-red-500">*</span>
+                                                )}
+                                                {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
+                                                    <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
+                                                )}
+                                            </label>
                                             <div className="flex items-center gap-6 mt-2">
                                                 <div className="relative">
                                                     <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
@@ -1441,7 +1507,9 @@ const Register = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="form-label">Cover image(s)</label>
+                                            <label className="form-label">
+                                                Cover image(s) <span className="text-red-500">*</span>
+                                            </label>
                                             <div className="flex flex-wrap gap-4 mt-2">
                                                 {coverFiles.map((file, idx) => (
                                                     <div key={idx} className="relative">
@@ -1466,6 +1534,7 @@ const Register = () => {
                                                 ))}
                                             </div>
                                             <div className="text-sm text-gray-500 mt-2">
+                                                <span className="text-red-600 font-medium">Required: At least 2 cover images</span><br />
                                                 Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
                                             </div>
                                         </div>
