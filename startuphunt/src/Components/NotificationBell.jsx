@@ -26,8 +26,9 @@ export default function NotificationBell() {
         if (user) {
             fetchNotifications();
             // Set up real-time subscription for new notifications
-            const subscription = supabase
-                .channel("notifications")
+            const channel = supabase.channel(`notifications-${user.id}`);
+
+            const subscription = channel
                 .on(
                     "postgres_changes",
                     {
@@ -43,7 +44,9 @@ export default function NotificationBell() {
                 )
                 .subscribe();
 
-            return () => subscription.unsubscribe();
+            return () => {
+                channel.unsubscribe();
+            };
         }
     }, [user]);
 

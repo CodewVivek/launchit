@@ -36,11 +36,8 @@ const Header = ({ onMenuClick }) => {
         };
         getUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => subscription.unsubscribe();
+        // Remove real-time auth subscription to reduce database load
+        // Auth state will be checked on-demand when needed
     }, []);
 
     const handlepopover = () => {
