@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plus, X, Upload, User, Star, Rocket, Link as LinkIcon, Edit3, Image, Layout, Layers, Hash, Eye } from 'lucide-react';
+import { Plus, X, Upload, User, Star, Rocket, Link as LinkIcon, Edit3, Image, Layout, Layers, Hash, Eye, Wand2, CheckCircle } from 'lucide-react';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -97,6 +97,14 @@ const Register = () => {
 
     // Content Moderation State
     const [isModerating, setIsModerating] = useState(false);
+
+    // Add retry state
+    const [retryCount, setRetryCount] = useState(0);
+    const [isRetrying, setIsRetrying] = useState(false);
+
+    // Add fallback URL preview functionality
+    const [urlPreview, setUrlPreview] = useState(null);
+    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
     const handleUrlBlur = (e) => {
         const { value } = e.target;
@@ -524,17 +532,79 @@ const Register = () => {
         }
     };
 
-    const handleGenerateLaunchData = async () => {
+    const generateBasicPreview = async (url) => {
+        setIsGeneratingPreview(true);
+        try {
+            // Try to get basic metadata from the URL
+            const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&meta=true&screenshot=true&embed=screenshot.url`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const preview = {
+                    title: data.data.title || 'Website Title',
+                    description: data.data.description || 'No description available',
+                    logo: data.data.logo?.url || null,
+                    screenshot: data.data.screenshot?.url || null,
+                    domain: new URL(url).hostname
+                };
+                setUrlPreview(preview);
+                
+                // Auto-fill basic fields with preview data
+                setFormData(prev => ({
+                    ...prev,
+                    name: prev.name || preview.title,
+                    description: prev.description || preview.description
+                }));
+                
+                if (preview.logo && !logoFile) {
+                    setLogoFile(preview.logo);
+                }
+                
+                if (preview.screenshot && !thumbnailFile) {
+                    setThumbnailFile(preview.screenshot);
+                }
+                
+                setSnackbar({ 
+                    open: true, 
+                    message: `📱 Basic preview generated from ${preview.domain}`, 
+                    severity: 'success' 
+                });
+            }
+        } catch (error) {
+            console.log('Basic preview failed, continuing with manual input');
+        } finally {
+            setIsGeneratingPreview(false);
+        }
+    };
+
+    const handleGenerateLaunchData = async (isRetry = false) => {
         if (!formData.websiteUrl) {
             setSnackbar({ open: true, message: "Please enter a website URL first.", severity: 'warning' });
             return;
         }
 
-        setIsAILoading(true); // Start loading
+        if (isRetry) {
+            setIsRetrying(true);
+            setRetryCount(prev => prev + 1);
+        } else {
+            setIsAILoading(true);
+            setRetryCount(0);
+        }
+
+        const loadingMessage = isRetry 
+            ? `🔄 Retrying AI generation (attempt ${retryCount + 1})...` 
+            : "🤖 AI is analyzing your website... This may take up to 30 seconds.";
+            
+        setSnackbar({ open: true, message: loadingMessage, severity: 'info' });
 
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
+            
+            // Create AbortController for timeout handling
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+
             const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -542,40 +612,116 @@ const Register = () => {
                     url: formData.websiteUrl,
                     user_id,
                 }),
+                signal: controller.signal
             });
-            const gptData = await res.json();
-            if (gptData.err || gptData.error) throw new Error(gptData.message);
 
-            // Process AI response
-            // AI Response processed successfully
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+
+            const gptData = await res.json();
+            
+            if (gptData.err || gptData.error) {
+                throw new Error(gptData.message || 'AI generation failed');
+            }
+
+            // Validate that we got the essential data
+            const essentialFields = ['name', 'description', 'tagline'];
+            const missingFields = essentialFields.filter(field => !gptData[field]);
+            
+            if (missingFields.length > 0) {
+                console.warn('Missing essential fields:', missingFields);
+                setSnackbar({ 
+                    open: true, 
+                    message: `⚠️ AI generated partial data. Missing: ${missingFields.join(', ')}`, 
+                    severity: 'warning' 
+                });
+            }
+
+            // Process AI response with better error handling
+            const processedData = {
+                name: gptData.name || '',
+                website_url: gptData.website_url || formData.websiteUrl,
+                tagline: gptData.tagline || '',
+                description: gptData.description || '',
+                logo_url: gptData.logo_url || null,
+                thumbnail_url: gptData.thumbnail_url || null,
+                features: gptData.features || [],
+                category: gptData.category || null,
+                links: gptData.links || []
+            };
 
             // Check how many fields are already filled
             const filledCount = getFilledFieldsCount();
+            
             if (filledCount < 4) {
                 // If less than 4 fields filled, directly apply AI data
-                applyAIData(gptData, false); // Fill all fields
-                setSnackbar({ open: true, message: "🤖 All fields auto-filled with AI data!", severity: 'success' });
+                applyAIData(processedData, false); // Fill all fields
+                setSnackbar({ 
+                    open: true, 
+                    message: `🤖 AI generated data successfully! ${processedData.name ? `Found: ${processedData.name}` : ''}`, 
+                    severity: 'success' 
+                });
             } else {
                 // If 4+ fields filled, show dialog for user choice
-                setPendingAIData(gptData);
+                setPendingAIData(processedData);
                 setShowSmartFillDialog(true);
             }
+
+            // Reset retry count on success
+            setRetryCount(0);
         }
         catch (error) {
-            console.error("Auto Generate failed :", error);
+            console.error("Auto Generate failed:", error);
 
-            // Check if it's a specific error and provide better feedback
             let errorMessage = "AI failed to extract startup info...";
+            let severity = 'error';
+            let showRetry = false;
 
-            if (error.message && error.message.includes("Microlink")) {
-                errorMessage = "AI extracted text data but failed to generate logo/thumbnail. You can upload them manually!";
+            if (error.name === 'AbortError') {
+                errorMessage = "⏰ AI generation timed out. The website might be complex or slow.";
+                severity = 'warning';
+                showRetry = retryCount < 2; // Allow up to 2 retries
+            } else if (error.message && error.message.includes("Microlink")) {
+                errorMessage = "🖼️ AI extracted text but failed to generate logo/thumbnail. You can upload them manually!";
+                severity = 'warning';
             } else if (error.message && error.message.includes("OpenAI")) {
-                errorMessage = "AI service temporarily unavailable. Please try again later.";
+                errorMessage = "🤖 AI service temporarily unavailable. Please try again in a few minutes.";
+                severity = 'warning';
+                showRetry = retryCount < 1; // Allow 1 retry for service issues
+            } else if (error.message && error.message.includes("HTTP")) {
+                errorMessage = "🌐 Backend service error. Please try again later.";
+                severity = 'error';
+                showRetry = retryCount < 1;
+            } else if (error.message && error.message.includes("fetch")) {
+                errorMessage = "🌐 Network error. Please check your connection and try again.";
+                severity = 'error';
+                showRetry = retryCount < 2;
             }
 
-            setSnackbar({ open: true, message: errorMessage, severity: 'warning' });
+            // Try to generate basic preview as fallback
+            if (!urlPreview && !isGeneratingPreview) {
+                generateBasicPreview(formData.websiteUrl);
+            }
+
+            setSnackbar({ 
+                open: true, 
+                message: errorMessage, 
+                severity,
+                action: showRetry ? (
+                    <button 
+                        onClick={() => handleGenerateLaunchData(true)}
+                        className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                        Retry
+                    </button>
+                ) : undefined
+            });
         } finally {
-            setIsAILoading(false); // Stop loading
+            setIsAILoading(false);
+            setIsRetrying(false);
         }
     }
 
@@ -895,6 +1041,14 @@ const Register = () => {
                     font-weight: 500;
                     font-size: 0.875rem;
                 }
+                .btn-text-icon-secondary {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    color: #6b7280;
+                    font-weight: 500;
+                    font-size: 0.875rem;
+                }
                 .text-error {
                     color: #ef4444;
                     font-size: 0.875rem;
@@ -980,24 +1134,67 @@ const Register = () => {
                                                 disabled={editingLaunched}
                                             />
                                             {urlError && <p className="text-red-500 text-sm mt-1">{urlError}</p>}
-                                            <button
-                                                type="button"
-                                                onClick={handleGenerateLaunchData}
-                                                disabled={isAILoading}
-                                                className={`btn-text-icon ${isAILoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                {isAILoading ? (
-                                                    <>
-                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                                                        Generating...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Rocket className="w-4 h-4" />
-                                                        Auto-generate from URL
-                                                    </>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleGenerateLaunchData}
+                                                    disabled={isAILoading || isRetrying}
+                                                    className={`btn-text-icon ${isAILoading || isRetrying ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                >
+                                                    {isAILoading || isRetrying ? (
+                                                        <>
+                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                                            {isRetrying ? `Retrying... (Attempt ${retryCount + 1})` : 'Generating...'}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Wand2 className="w-4 h-4" />
+                                                            Auto-generate from URL
+                                                        </>
+                                                    )}
+                                                </button>
+                                                
+                                                {/* Fallback basic preview button */}
+                                                {!urlPreview && !isGeneratingPreview && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => generateBasicPreview(formData.websiteUrl)}
+                                                        disabled={isGeneratingPreview || !formData.websiteUrl}
+                                                        className="btn-text-icon-secondary"
+                                                        title="Generate basic preview if AI fails"
+                                                    >
+                                                        {isGeneratingPreview ? (
+                                                            <>
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                                                                Preview...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Eye className="w-4 h-4" />
+                                                                Basic Preview
+                                                            </>
+                                                        )}
+                                                    </button>
                                                 )}
-                                            </button>
+                                            </div>
+                                            
+                                            {/* Show preview data if available */}
+                                            {urlPreview && (
+                                                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                                        <span className="text-sm font-medium text-green-800">
+                                                            Basic preview available from {urlPreview.domain}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs text-green-700">
+                                                        <p><strong>Title:</strong> {urlPreview.title}</p>
+                                                        <p><strong>Description:</strong> {urlPreview.description}</p>
+                                                        {urlPreview.logo && <p><strong>Logo:</strong> ✓ Found</p>}
+                                                        {urlPreview.screenshot && <p><strong>Screenshot:</strong> ✓ Found</p>}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="form-field-group">
                                             <label className="form-label" htmlFor="tagline">Tagline</label>
