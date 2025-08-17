@@ -80,6 +80,31 @@ const Header = ({ onMenuClick }) => {
         handleClose();
     };
 
+    // Simple fallback search - just search projects by name
+    const performFallbackSearch = useCallback(async (query) => {
+        try {
+            const { data: projects, error } = await supabase
+                .from('projects')
+                .select('id, name, tagline, category_type, created_at, slug, logo_url')
+                .ilike('name', `%${query}%`)
+                .limit(5);
+
+            if (error) {
+                console.error('Fallback search error:', error);
+                return;
+            }
+
+            setSearchSuggestions({
+                projects: projects || [],
+                users: [],
+                categories: [],
+                tags: []
+            });
+        } catch (error) {
+            console.error('Fallback search failed:', error);
+        }
+    }, []);
+
     // Universal search functionality
     const performSearch = useCallback(async (query) => {
         if (!query.trim()) {
@@ -90,70 +115,96 @@ const Header = ({ onMenuClick }) => {
         setIsSearching(true);
         try {
             // Search projects
-            const { data: projects } = await supabase
+            const { data: projects, error: projectsError } = await supabase
                 .from('projects')
                 .select('id, name, tagline, category_type, created_at, slug, logo_url')
                 .or(`name.ilike.%${query}%,tagline.ilike.%${query}%,category_type.ilike.%${query}%`)
                 .limit(3);
 
+            if (projectsError) {
+                console.error('Projects search error:', projectsError);
+            }
+
             // Search users/profiles
-            const { data: users } = await supabase
+            const { data: users, error: usersError } = await supabase
                 .from('profiles')
                 .select('id, username, full_name, avatar_url')
                 .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
                 .limit(3);
 
+            if (usersError) {
+                console.error('Users search error:', usersError);
+            }
+
             // Search categories (from projects)
-            const { data: categories } = await supabase
+            const { data: categories, error: categoriesError } = await supabase
                 .from('projects')
                 .select('category_type')
                 .ilike('category_type', `%${query}%`)
                 .limit(3);
 
-            // Search tags (from projects)
-            const { data: tagProjects } = await supabase
-                .from('projects')
-                .select('id, name, slug, logo_url, tags')
-                .not('tags', 'is', null)
-                .limit(10);
+            if (categoriesError) {
+                console.error('Categories search error:', categoriesError);
+            }
 
-            // Filter projects that contain the search query in their tags
-            const tagMatches = tagProjects?.filter(project =>
-                project.tags &&
-                project.tags.some(tag =>
-                    tag.toLowerCase().includes(query.toLowerCase())
-                )
-            ).slice(0, 3) || [];
+            // Search tags (from projects) - tags is ARRAY type in database
+            let tagMatches = [];
+            try {
+                const { data: tagProjects, error: tagError } = await supabase
+                    .from('projects')
+                    .select('id, name, slug, logo_url, tags')
+                    .limit(10);
 
-            // AI suggestions removed - using basic search only
+                if (tagError) {
+                    console.error('Tags search error:', tagError);
+                } else if (tagProjects) {
+                    // Filter projects that contain the search query in their tags array
+                    tagMatches = tagProjects.filter(project =>
+                        project.tags &&
+                        Array.isArray(project.tags) &&
+                        project.tags.length > 0 &&
+                        project.tags.some(tag =>
+                            tag && typeof tag === 'string' && tag.toLowerCase().includes(query.toLowerCase())
+                        )
+                    ).slice(0, 3);
+                }
+            } catch (tagFilterError) {
+                console.error('Tag filtering error:', tagFilterError);
+            }
 
             setSearchSuggestions({
                 projects: projects || [],
                 users: users || [],
-                categories: [...new Set(categories?.map(c => c.category_type) || [])],
+                categories: [...new Set(categories?.map(c => c.category_type).filter(Boolean) || [])],
                 tags: tagMatches
             });
         } catch (error) {
             console.error('Search error:', error);
-            toast.error('Search failed');
+            // Try fallback search if main search fails
+            await performFallbackSearch(query);
         } finally {
             setIsSearching(false);
         }
-    }, []);
+    }, [performFallbackSearch]);
 
     const handleSearchChange = useCallback((e) => {
         try {
-            const value = e.target.value;
+            const value = e?.target?.value || '';
             setSearch(value);
             if (value.trim()) {
                 setShowSearchSuggestions(true);
-                performSearch(value);
+                // Debounce the search to avoid too many API calls
+                const timeoutId = setTimeout(() => {
+                    performSearch(value);
+                }, 300);
+                return () => clearTimeout(timeoutId);
             } else {
                 setShowSearchSuggestions(false);
+                setSearchSuggestions({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
             }
         } catch (error) {
             console.error('Search input error:', error);
-            toast.error('Search input error. Please try again.');
+            // Don't show error toast for input errors, just log them
         }
     }, [performSearch]);
 
@@ -217,10 +268,10 @@ const Header = ({ onMenuClick }) => {
         }
     };
 
-    const totalSuggestions = (searchSuggestions.projects?.length || 0) +
-        (searchSuggestions.users?.length || 0) +
-        (searchSuggestions.categories?.length || 0) +
-        (searchSuggestions.tags?.length || 0);
+    const totalSuggestions = (searchSuggestions?.projects?.length || 0) +
+        (searchSuggestions?.users?.length || 0) +
+        (searchSuggestions?.categories?.length || 0) +
+        (searchSuggestions?.tags?.length || 0);
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 bg-white ">
@@ -252,9 +303,39 @@ const Header = ({ onMenuClick }) => {
                         <input
                             type="text"
                             value={search || ''}
-                            onChange={handleSearchChange}
-                            onFocus={handleSearchFocus}
-                            onBlur={handleSearchBlur}
+                            onChange={(e) => {
+                                try {
+                                    const value = e.target.value || '';
+                                    setSearch(value);
+                                    if (value.trim()) {
+                                        setShowSearchSuggestions(true);
+                                        performSearch(value);
+                                    } else {
+                                        setShowSearchSuggestions(false);
+                                    }
+                                } catch (error) {
+                                    console.error('Search input error:', error);
+                                    setSearch('');
+                                }
+                            }}
+                            onFocus={() => {
+                                try {
+                                    if (search && search.trim()) {
+                                        setShowSearchSuggestions(true);
+                                    }
+                                } catch (error) {
+                                    console.error('Search focus error:', error);
+                                }
+                            }}
+                            onBlur={() => {
+                                try {
+                                    setTimeout(() => {
+                                        setShowSearchSuggestions(false);
+                                    }, 200);
+                                } catch (error) {
+                                    console.error('Search blur error:', error);
+                                }
+                            }}
                             placeholder="Search projects, users, categories..."
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             disabled={isSearching}
@@ -375,20 +456,20 @@ const Header = ({ onMenuClick }) => {
                                     {searchSuggestions.tags?.length > 0 && (
                                         <div className="mb-2">
                                             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                                Tags
+                                                Tagged Projects
                                             </div>
-                                            {searchSuggestions.tags.map((tag) => (
+                                            {searchSuggestions.tags.map((project) => (
                                                 <button
-                                                    key={tag}
-                                                    onClick={() => handleSuggestionClick('tag', { tag })}
+                                                    key={project.id}
+                                                    onClick={() => handleSuggestionClick('project', project)}
                                                     className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
                                                 >
                                                     <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                         <Tag className="w-4 h-4 text-green-600" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">{tag}</div>
-                                                        <div className="text-sm text-gray-500">Tag</div>
+                                                        <div className="font-medium text-gray-900 truncate">{project.name}</div>
+                                                        <div className="text-sm text-gray-500">Tagged Project</div>
                                                     </div>
                                                 </button>
                                             ))}
