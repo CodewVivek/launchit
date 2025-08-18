@@ -93,7 +93,7 @@ const Sidebar = ({ isOpen }) => {
     }
 
     return (
-        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white overflow-y-auto shadow-xl ${isProjectDetails ? 'z-50' : 'z-40'}`}>
+        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'}`}>
             <div className="">
                 {/* Mobile Search Bar - Only visible when sidebar is open */}
                 <div className="block lg:hidden p-4 border-b border-gray-200">

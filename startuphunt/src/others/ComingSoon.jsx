@@ -31,27 +31,25 @@ const ComingSoon = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-16">
+    <div className="min-h-screen bg-white ">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
-            <Rocket className="w-10 h-10 text-blue-600" />
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center justify-center w-20 h-2 bg-blue-100 rounded-full mb-6">
+            <img src="/images/r6_circle_optimized.png"/>
           </div>
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Coming Soon to LaunchIT
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            We're constantly building and improving LaunchIT to provide the best startup discovery 
+            We're constantly building and improving LaunchIT to provide the best startup discovery
             and launch platform experience. Here's what we're working on next.
           </p>
         </div>
 
         {/* Upcoming Features */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
-            Exciting Features in Development
-          </h2>
+        <div className="mb-4">
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {upcomingFeatures.map((feature, index) => (
               <div

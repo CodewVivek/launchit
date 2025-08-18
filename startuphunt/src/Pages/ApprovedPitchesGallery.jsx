@@ -67,7 +67,7 @@ export default function ApprovedPitchesGallery() {
   }, []);
 
   return (
-    <div className="min-h-screen py-16 bg-gradient-to-br from-emerald-50 to-cyan-50">
+    <div className="min-h-screen py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
