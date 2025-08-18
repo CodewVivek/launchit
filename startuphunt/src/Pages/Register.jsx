@@ -412,6 +412,11 @@ const Register = () => {
     };
 
     // Content Moderation Function
+    // This function checks content for truly inappropriate material:
+    // - Profanity, hate speech, threats
+    // - Harmful or dangerous content
+    // - Spam or malicious links
+    // It should NOT block legitimate business descriptions, technical terms, or professional content
     const checkContentModeration = async (content, contentType) => {
         try {
             const result = await moderateContent(content, contentType, user?.id);
@@ -442,14 +447,37 @@ const Register = () => {
 
             // Check for high severity content (70-100%)
             const highSeverityContent = [];
-            if (nameModeration.action === 'reject') highSeverityContent.push('Project Name');
-            if (taglineModeration.action === 'reject') highSeverityContent.push('Tagline');
-            if (descriptionModeration.action === 'reject') highSeverityContent.push('Description');
+            if (nameModeration.action === 'reject') {
+                highSeverityContent.push({
+                    field: 'Project Name',
+                    content: formData.name,
+                    reason: nameModeration.message || 'Contains inappropriate content'
+                });
+            }
+            if (taglineModeration.action === 'reject') {
+                highSeverityContent.push({
+                    field: 'Tagline',
+                    content: formData.tagline,
+                    reason: taglineModeration.message || 'Contains inappropriate content'
+                });
+            }
+            if (descriptionModeration.action === 'reject') {
+                highSeverityContent.push({
+                    field: 'Description',
+                    content: formData.description,
+                    reason: descriptionModeration.message || 'Contains inappropriate content'
+                });
+            }
 
             if (highSeverityContent.length > 0) {
+                const blockedFields = highSeverityContent.map(item => item.field).join(', ');
+                const detailedMessage = highSeverityContent.map(item =>
+                    `• ${item.field}: "${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}" - ${item.reason}`
+                ).join('\n');
+
                 setSnackbar({
                     open: true,
-                    message: `🚫 Submission blocked: ${highSeverityContent.join(', ')} contain inappropriate content. Please review and try again.`,
+                    message: `🚫 Content Blocked: ${blockedFields} contain inappropriate content.\n\n${detailedMessage}\n\n💡 Tip: Avoid profanity, hate speech, threats, or harmful content. Keep descriptions professional and business-focused. If you believe this is an error, please rephrase your content.`,
                     severity: 'error'
                 });
                 setIsModerating(false);
@@ -458,14 +486,37 @@ const Register = () => {
 
             // Show warnings for medium severity content (below 70% but flagged)
             const mediumSeverityContent = [];
-            if (nameModeration.action === 'review') mediumSeverityContent.push('Project Name');
-            if (taglineModeration.action === 'review') mediumSeverityContent.push('Tagline');
-            if (descriptionModeration.action === 'review') mediumSeverityContent.push('Description');
+            if (nameModeration.action === 'review') {
+                mediumSeverityContent.push({
+                    field: 'Project Name',
+                    content: formData.name,
+                    reason: nameModeration.message || 'Flagged for review'
+                });
+            }
+            if (taglineModeration.action === 'review') {
+                mediumSeverityContent.push({
+                    field: 'Tagline',
+                    content: formData.tagline,
+                    reason: taglineModeration.message || 'Flagged for review'
+                });
+            }
+            if (descriptionModeration.action === 'review') {
+                mediumSeverityContent.push({
+                    field: 'Description',
+                    content: formData.description,
+                    reason: descriptionModeration.message || 'Flagged for review'
+                });
+            }
 
             if (mediumSeverityContent.length > 0) {
+                const flaggedFields = mediumSeverityContent.map(item => item.field).join(', ');
+                const detailedMessage = mediumSeverityContent.map(item =>
+                    `• ${item.field}: "${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}" - ${item.reason}`
+                ).join('\n');
+
                 setSnackbar({
                     open: true,
-                    message: `⚠️ Warning: ${mediumSeverityContent.join(', ')} flagged for review. Your submission will be monitored by moderators.`,
+                    message: `⚠️ Content Flagged: ${flaggedFields} flagged for review.\n\n${detailedMessage}\n\n💡 Your submission will be monitored by moderators. Consider reviewing flagged content for professionalism.`,
                     severity: 'warning'
                 });
                 // Continue with submission (content will be auto-reported to admin)
@@ -517,13 +568,13 @@ const Register = () => {
                 try {
                     console.log('🔄 Processing user uploaded logo for quality preservation...');
                     const qualityFile = await preserveImageQuality(logoFile);
-                    
+
                     // Verify quality was maintained
                     if (qualityFile.size < logoFile.size * 0.8) {
                         console.warn('⚠️ Quality may have been lost, using original file');
                         throw new Error('Quality preservation resulted in significant size reduction');
                     }
-                    
+
                     const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
                     if (logoErrorUpload) {
@@ -551,16 +602,16 @@ const Register = () => {
                 try {
                     console.log('🔄 Processing AI-generated logo:', logoFile);
                     console.log('📥 Fetching logo from URL...');
-                    
+
                     const response = await fetch(logoFile);
                     if (!response.ok) {
                         throw new Error(`Failed to fetch AI logo: ${response.status}`);
                     }
-                    
+
                     console.log('✅ Logo fetched successfully, converting to blob...');
                     const blob = await response.blob();
                     console.log('📦 Blob created:', blob.size, 'bytes, type:', blob.type);
-                    
+
                     const aiLogoFile = new File([blob], 'ai-generated-logo.png', { type: blob.type || 'image/png' });
                     console.log('📁 File created:', aiLogoFile.name, 'size:', aiLogoFile.size);
 
@@ -568,15 +619,15 @@ const Register = () => {
                     console.log('🎨 Preserving image quality...');
                     const qualityFile = await preserveImageQuality(aiLogoFile);
                     console.log('✨ Quality preserved, uploading to Supabase...');
-                    
+
                     const logoPath = `${Date.now()}-ai-logo-${nanoid(6)}.png`;
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
-                    
+
                     if (logoErrorUpload) {
                         console.error('❌ AI logo upload error:', logoErrorUpload);
                         throw new Error(`AI logo upload failed: ${logoErrorUpload.message}`);
                     }
-                    
+
                     console.log('✅ Logo uploaded to Supabase, getting public URL...');
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                     logoUrl = logoUrlData.publicUrl;
@@ -595,13 +646,13 @@ const Register = () => {
                 try {
                     console.log('🔄 Processing user uploaded thumbnail for quality preservation...');
                     const qualityFile = await preserveImageQuality(thumbnailFile);
-                    
+
                     // Verify quality was maintained
                     if (qualityFile.size < thumbnailFile.size * 0.8) {
                         console.warn('⚠️ Thumbnail quality may have been lost, using original file');
                         throw new Error('Quality preservation resulted in significant size reduction');
                     }
-                    
+
                     const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
                     const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
                     if (thumbError) {
@@ -663,13 +714,13 @@ const Register = () => {
                         try {
                             console.log(`🔄 Processing cover image ${i + 1} for quality preservation...`);
                             const qualityFile = await preserveImageQuality(file);
-                            
+
                             // Verify quality was maintained
                             if (qualityFile.size < file.size * 0.8) {
                                 console.warn(`⚠️ Cover image ${i + 1} quality may have been lost, using original file`);
                                 throw new Error('Quality preservation resulted in significant size reduction');
                             }
-                            
+
                             const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
                             const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, qualityFile);
                             if (coverErrorUpload) {
@@ -703,7 +754,7 @@ const Register = () => {
             console.log('🔍 FINAL SUBMISSION DATA DEBUG:');
             console.log('📝 Form Data:', formData);
             console.log('🖼️ Logo File State:', logoFile);
-            console.log('🖼️ Logo File Type:', typeof logoFile);
+            console.log('��️ Logo File Type:', typeof logoFile);
             console.log('🔗 Final Logo URL:', logoUrl);
             console.log('🔗 Final Thumbnail URL:', thumbnailUrl);
             console.log('📁 Cover Files:', coverFiles);
@@ -852,7 +903,7 @@ const Register = () => {
 
         const startTime = Date.now();
         const loadingMessage = isRetry
-            ? `🔄 Retrying AI generation (attempt ${retryCount + 1})...`
+            ? 'Generating...'
             : "🤖 AI is analyzing your website... This may take up to 25 seconds.";
 
         setSnackbar({ open: true, message: loadingMessage, severity: 'info' });
@@ -1227,7 +1278,7 @@ const Register = () => {
         return new Promise((resolve, reject) => {
             // For maximum quality preservation, we'll use different strategies based on file type
             const fileType = file.type.toLowerCase();
-            
+
             // If it's already a high-quality format and small enough, don't process
             if (file.size < 5 * 1024 * 1024 && (fileType.includes('png') || fileType.includes('webp'))) {
                 console.log('🔄 Image already high quality, skipping processing:', file.name, file.size);
@@ -1242,7 +1293,7 @@ const Register = () => {
             img.onload = () => {
                 try {
                     console.log('🖼️ Processing image:', file.name, 'Original size:', img.width, 'x', img.height);
-                    
+
                     // Set canvas size to match image dimensions (no resizing)
                     canvas.width = img.width;
                     canvas.height = img.height;
@@ -1250,10 +1301,10 @@ const Register = () => {
                     // Use highest quality rendering settings
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
-                    
+
                     // Set composite operation for better quality
                     ctx.globalCompositeOperation = 'source-over';
-                    
+
                     // Clear canvas with transparent background
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1263,7 +1314,7 @@ const Register = () => {
                     // Determine best output format for quality
                     let outputType = 'image/png'; // PNG for maximum quality
                     let quality = 1.0; // Maximum quality
-                    
+
                     // For JPEG images, use WebP if supported, otherwise PNG
                     if (fileType.includes('jpeg') || fileType.includes('jpg')) {
                         // Try WebP first for better compression with quality
@@ -1286,13 +1337,13 @@ const Register = () => {
                                 type: outputType,
                                 lastModified: Date.now()
                             });
-                            
-                            console.log('✅ Quality preserved:', 
+
+                            console.log('✅ Quality preserved:',
                                 'Original size:', file.size, 'bytes',
                                 'New size:', qualityFile.size, 'bytes',
                                 'Quality maintained:', qualityFile.size >= file.size * 0.9 ? 'Yes' : 'Warning'
                             );
-                            
+
                             resolve(qualityFile);
                         } else {
                             console.warn('⚠️ Blob creation failed, using original file');
@@ -1314,7 +1365,7 @@ const Register = () => {
             // Create object URL for image loading
             const objectUrl = URL.createObjectURL(file);
             img.src = objectUrl;
-            
+
             // Clean up object URL after loading
             img.onload = () => {
                 URL.revokeObjectURL(objectUrl);
@@ -1537,7 +1588,29 @@ const Register = () => {
                         </button>
                     </nav>
 
-                    <form onSubmit={handleSubmit}>
+                    {/* Content Moderation Info */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                            <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+                                <span className="text-blue-600 text-xs">ℹ️</span>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-blue-800 mb-2">Content Guidelines</h4>
+                                <p className="text-blue-700 text-sm mb-2">
+                                    Your content will be automatically checked for inappropriate material. Please ensure your project description is:
+                                </p>
+                                <ul className="text-blue-700 text-sm space-y-1">
+                                    <li>• Professional and business-focused</li>
+                                    <li>• Free of profanity or offensive language</li>
+                                    <li>• Clear and descriptive about your project</li>
+                                    <li>• Appropriate for all audiences</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Step-specific content */}
                         {step === 1 && (
                             <div className="form-tab-panel active">
@@ -1555,7 +1628,7 @@ const Register = () => {
                                                 className="form-input"
                                                 maxLength={30}
                                                 disabled={editingLaunched}
-                                                placeholder='e.g LaunchIT'
+                                                placeholder='e.g launchit'
                                             />
                                             <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
 
@@ -1586,7 +1659,7 @@ const Register = () => {
                                                     {isAILoading || isRetrying ? (
                                                         <>
                                                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                                                            {isRetrying ? `Retrying... (Attempt ${retryCount + 1})` : 'Generating...'}
+                                                            {isRetrying ? 'Generating...' : 'Generating...'}
                                                         </>
                                                     ) : (
                                                         <>

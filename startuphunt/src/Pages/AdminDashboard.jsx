@@ -13,6 +13,11 @@ import {
   DialogActions,
   TextField,
   Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
 } from "@mui/material";
 
 import {
@@ -29,6 +34,10 @@ import {
   Mail,
   Phone,
   Calendar,
+  Bell,
+  Send,
+  Users,
+  User,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -70,6 +79,18 @@ const AdminDashboard = () => {
   const [loadingAdvertisingInterests, setLoadingAdvertisingInterests] = useState(true);
   const [selectedInterest, setSelectedInterest] = useState(null);
   const [showInterestModal, setShowInterestModal] = useState(false);
+
+  // New state for notifications
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [notificationModal, setNotificationModal] = useState({
+    open: false,
+    type: "single", // "single" or "all"
+    selectedUserId: "",
+    title: "",
+    message: "",
+    notificationType: "admin_notification"
+  });
 
   const [rejectionModal, setRejectionModal] = useState({
     open: false,
@@ -185,6 +206,13 @@ const AdminDashboard = () => {
     fetchCounts();
   }, []);
 
+  // New useEffect to fetch users when notifications tab is selected
+  useEffect(() => {
+    if (activeTab === "notifications") {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
   // New function to fetch advertising interests
   const fetchAdvertisingInterests = async () => {
     setLoadingAdvertisingInterests(true);
@@ -198,17 +226,116 @@ const AdminDashboard = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching advertising interests:", error);
-        setAdvertisingInterests([]);
-      } else {
-        setAdvertisingInterests(data || []);
-      }
+      if (error) throw error;
+      setAdvertisingInterests(data || []);
     } catch (error) {
-      console.error("Error in fetchAdvertisingInterests:", error);
-      setAdvertisingInterests([]);
+      console.error("Error fetching advertising interests:", error);
     } finally {
       setLoadingAdvertisingInterests(false);
+    }
+  };
+
+  // New function to fetch users for notifications
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, username")
+        .order("full_name", { ascending: true });
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch users",
+        severity: "error",
+      });
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // New function to send notifications
+  const sendNotification = async () => {
+    try {
+      if (notificationModal.type === "single" && !notificationModal.selectedUserId) {
+        setSnackbar({
+          open: true,
+          message: "Please select a user",
+          severity: "error",
+        });
+        return;
+      }
+
+      if (!notificationModal.message || !notificationModal.title) {
+        setSnackbar({
+          open: true,
+          message: "Please fill in all fields",
+          severity: "error",
+        });
+        return;
+      }
+
+      let notificationsToSend = [];
+
+      if (notificationModal.type === "single") {
+        // Send to specific user
+        notificationsToSend.push({
+          user_id: notificationModal.selectedUserId,
+          type: notificationModal.notificationType,
+          title: notificationModal.title,
+          message: notificationModal.message,
+          read: false,
+        });
+      } else {
+        // Send to all users
+        const { data: allUsers, error: usersError } = await supabase
+          .from("profiles")
+          .select("id");
+
+        if (usersError) throw usersError;
+
+        notificationsToSend = allUsers.map(user => ({
+          user_id: user.id,
+          type: notificationModal.notificationType,
+          title: notificationModal.title,
+          message: notificationModal.message,
+          read: false,
+        }));
+      }
+
+      const { error } = await supabase
+        .from("notifications")
+        .insert(notificationsToSend);
+
+      if (error) throw error;
+
+      setSnackbar({
+        open: true,
+        message: `Notification sent to ${notificationModal.type === "single" ? "selected user" : "all users"} successfully!`,
+        severity: "success",
+      });
+
+      // Reset form
+      setNotificationModal({
+        open: false,
+        type: "single",
+        selectedUserId: "",
+        title: "",
+        message: "",
+        notificationType: "admin_notification"
+      });
+
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to send notification",
+        severity: "error",
+      });
     }
   };
 
@@ -861,6 +988,22 @@ const AdminDashboard = () => {
               <DollarSign className="w-4 h-4" /> Advertising ( {advertisingInterests.length})
             </div>
           </button>
+          <button
+            onClick={() => setActiveTab("notifications")}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
+                activeTab==='notifications'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }
+
+            `}
+          >
+
+            <div className="flex items-center gap-2">
+
+              <Bell className="w-4 h-4" /> Notifications ( {pitches.length})
+            </div>
+          </button>
         </div>
         {/* Projects Tab */}
         {activeTab === "projects" && (
@@ -1436,10 +1579,10 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${interest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                interest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
-                                  interest.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                    interest.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                              interest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
+                                interest.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  interest.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
                               }`}
                           >
                             {interest.status}
@@ -1493,6 +1636,44 @@ const AdminDashboard = () => {
                 </table>
               </div>
             )}
+          </div>
+        )}
+        {/* Notifications Tab */}
+        {activeTab === "notifications" && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Send Notifications
+              </h2>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setNotificationModal(prev => ({ ...prev, open: true }))}
+                startIcon={<Bell className="w-4 h-4" />}
+              >
+                Send New Notification
+              </Button>
+            </div>
+            <div className="p-6">
+              <div className="text-center py-8">
+                <Bell className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Admin Notification System
+                </h3>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                  Send notifications to specific users or broadcast messages to all users on the platform.
+                </p>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => setNotificationModal(prev => ({ ...prev, open: true }))}
+                  startIcon={<Send className="w-4 h-4" />}
+                >
+                  Send Notification
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -1600,10 +1781,10 @@ const AdminDashboard = () => {
                     <p className="text-sm text-gray-600">Status:</p>
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedInterest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          selectedInterest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
-                            selectedInterest.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              selectedInterest.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
+                        selectedInterest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
+                          selectedInterest.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            selectedInterest.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
                         }`}
                     >
                       {selectedInterest.status}
@@ -1878,7 +2059,155 @@ const AdminDashboard = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* MUI Snackbar */}
+      {/* Notification Modal */}
+      <Dialog
+        open={notificationModal.open}
+        onClose={() => setNotificationModal(prev => ({ ...prev, open: false }))}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle className="flex items-center gap-2">
+          <Bell className="w-5 h-5 text-blue-600" />
+          Send Notification
+        </DialogTitle>
+        <DialogContent>
+          <div className="space-y-4 pt-2">
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="notification-type-label">Notification Type</InputLabel>
+              <Select
+                labelId="notification-type-label"
+                value={notificationModal.type}
+                onChange={(e) =>
+                  setNotificationModal((prev) => ({
+                    ...prev,
+                    type: e.target.value,
+                  }))
+                }
+                label="Notification Type"
+              >
+                <MenuItem value="single">Send to a Specific User</MenuItem>
+                <MenuItem value="all">Send to All Users</MenuItem>
+              </Select>
+            </FormControl>
+
+            {notificationModal.type === "single" && (
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="user-select-label">Select User</InputLabel>
+                <Select
+                  labelId="user-select-label"
+                  value={notificationModal.selectedUserId}
+                  onChange={(e) =>
+                    setNotificationModal((prev) => ({
+                      ...prev,
+                      selectedUserId: e.target.value,
+                    }))
+                  }
+                  label="Select User"
+                  disabled={loadingUsers}
+                >
+                  {loadingUsers ? (
+                    <MenuItem value="">
+                      <Chip label="Loading Users..." />
+                    </MenuItem>
+                  ) : (
+                    <>
+                      <MenuItem value="">
+                        <Chip label="Select a user" />
+                      </MenuItem>
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          <Chip label={user.full_name || user.username || user.email} />
+                        </MenuItem>
+                      ))}
+                    </>
+                  )}
+                </Select>
+              </FormControl>
+            )}
+
+            <TextField
+              fullWidth
+              label="Notification Title"
+              value={notificationModal.title}
+              onChange={(e) =>
+                setNotificationModal((prev) => ({
+                  ...prev,
+                  title: e.target.value,
+                }))
+              }
+              variant="outlined"
+              placeholder="Enter notification title..."
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Notification Message"
+              value={notificationModal.message}
+              onChange={(e) =>
+                setNotificationModal((prev) => ({
+                  ...prev,
+                  message: e.target.value,
+                }))
+              }
+              variant="outlined"
+              placeholder="Enter notification message..."
+            />
+
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="notification-category-label">Category</InputLabel>
+              <Select
+                labelId="notification-category-label"
+                value={notificationModal.notificationType}
+                onChange={(e) =>
+                  setNotificationModal((prev) => ({
+                    ...prev,
+                    notificationType: e.target.value,
+                  }))
+                }
+                label="Category"
+              >
+                <MenuItem value="admin_notification">Admin Notification</MenuItem>
+                <MenuItem value="pitch_approved">Pitch Approved</MenuItem>
+                <MenuItem value="pitch_rejected">Pitch Rejected</MenuItem>
+                <MenuItem value="project_approved">Project Approved</MenuItem>
+                <MenuItem value="project_rejected">Project Rejected</MenuItem>
+                <MenuItem value="announcement">Announcement</MenuItem>
+                <MenuItem value="maintenance">Maintenance Notice</MenuItem>
+                <MenuItem value="update">Platform Update</MenuItem>
+              </Select>
+            </FormControl>
+
+            {notificationModal.type === "all" && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-yellow-800">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="font-medium">Broadcast Notice</span>
+                </div>
+                <p className="text-yellow-700 text-sm mt-1">
+                  This notification will be sent to all users on the platform. Use this feature carefully.
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNotificationModal(prev => ({ ...prev, open: false }))}>
+            Cancel
+          </Button>
+          <Button
+            onClick={sendNotification}
+            variant="contained"
+            color="primary"
+            disabled={loadingUsers || !notificationModal.message || !notificationModal.title || (notificationModal.type === "single" && !notificationModal.selectedUserId)}
+            startIcon={<Send className="w-4 h-4" />}
+          >
+            Send Notification
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}

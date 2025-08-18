@@ -39,10 +39,10 @@ const ComingSoon = () => {
             <img src="/images/r6_circle_optimized.png"/>
           </div>
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            Coming Soon to LaunchIT
+            Coming Soon to launchit
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            We're constantly building and improving LaunchIT to provide the best startup discovery
+          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            We're constantly building and improving launchit to provide the best startup discovery
             and launch platform experience. Here's what we're working on next.
           </p>
         </div>

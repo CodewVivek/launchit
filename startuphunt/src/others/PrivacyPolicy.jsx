@@ -17,7 +17,7 @@ const PrivacyPolicy = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">1. Introduction</h2>
         <p className="text-gray-700 leading-relaxed">
-          LaunchIT ("we", "our", "us") is a platform dedicated to discovering, showcasing, and launching early-stage startups and innovative projects.
+          launchit ("we", "our", "us") is a platform dedicated to discovering, showcasing, and launching early-stage startups and innovative projects.
           We are committed to protecting your privacy and ensuring transparency about how we collect, use, and protect your information.
         </p>
         <p className="text-gray-700 leading-relaxed mt-3">
@@ -30,7 +30,7 @@ const PrivacyPolicy = () => (
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">2. What We Do</h2>
         <div className="bg-gray-50 p-6 rounded-lg">
           <p className="text-gray-700 mb-3">
-            <strong>LaunchIT is a startup discovery and launch platform that:</strong>
+            <strong>launchit is a startup discovery and launch platform that:</strong>
           </p>
           <ul className="list-disc ml-6 text-gray-700 space-y-2">
             <li>Allows users to discover and explore early-stage startups and projects</li>
@@ -80,7 +80,7 @@ const PrivacyPolicy = () => (
 
         <h3 className="text-xl font-medium mb-3 text-gray-700">4.1 Core Platform Services</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-          <li>Providing and maintaining the LaunchIT platform</li>
+          <li>Providing and maintaining the launchit platform</li>
           <li>Processing your startup submissions and project uploads</li>
           <li>Enabling user authentication and account management</li>
           <li>Facilitating community interactions and networking</li>
@@ -108,7 +108,7 @@ const PrivacyPolicy = () => (
 
         <h3 className="text-xl font-medium mb-3 text-gray-700">5.1 Public Content</h3>
         <p className="text-gray-700 mb-3">
-          <strong>Important:</strong> When you submit a startup or project to LaunchIT, this information becomes publicly visible
+          <strong>Important:</strong> When you submit a startup or project to launchit, this information becomes publicly visible
           to all platform users. This includes:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
@@ -181,7 +181,7 @@ const PrivacyPolicy = () => (
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">8. Cookies and Tracking Technologies</h2>
 
         <p className="text-gray-700 mb-3">
-          We use cookies and similar technologies to enhance your experience on LaunchIT:
+          We use cookies and similar technologies to enhance your experience on launchit:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li><strong>Authentication Cookies:</strong> To keep you logged in and secure</li>
@@ -198,7 +198,7 @@ const PrivacyPolicy = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">9. Children's Privacy</h2>
         <p className="text-gray-700">
-          LaunchIT is not intended for children under 13 years of age. We do not knowingly collect personal information
+          launchit is not intended for children under 13 years of age. We do not knowingly collect personal information
           from children under 13. If you are a parent or guardian and believe your child has provided us with personal information,
           please contact us immediately.
         </p>
@@ -207,7 +207,7 @@ const PrivacyPolicy = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">10. International Data Transfers</h2>
         <p className="text-gray-700">
-          LaunchIT operates globally, and your information may be transferred to and processed in countries other than your own.
+          launchit operates globally, and your information may be transferred to and processed in countries other than your own.
           We ensure that all data transfers comply with applicable data protection laws and implement appropriate safeguards.
         </p>
       </section>
@@ -225,7 +225,7 @@ const PrivacyPolicy = () => (
           <li>Provide a summary of key changes</li>
         </ul>
         <p className="text-gray-700">
-          Your continued use of LaunchIT after any changes indicates your acceptance of the updated policy.
+          Your continued use of launchit after any changes indicates your acceptance of the updated policy.
         </p>
       </section>
 

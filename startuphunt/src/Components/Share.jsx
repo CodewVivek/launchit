@@ -34,7 +34,7 @@ const Share = ({ projectSlug, projectName = "this project", isProfile = false })
   const baseUrl = getBaseUrl();
   // Use profile URL if it's a profile, otherwise use project URL
   const shareUrl = isProfile ? `${baseUrl}/profile/${projectSlug}` : `${baseUrl}/launches/${projectSlug}`;
-  const title = isProfile ? `Check out ${projectName} on LaunchIt!` : `Check out ${projectName} on LaunchIt!`;
+  const title = isProfile ? `Check out ${projectName} on launchit!` : `Check out ${projectName} on launchit!`;
 
   // Debug logging for development
   useEffect(() => {

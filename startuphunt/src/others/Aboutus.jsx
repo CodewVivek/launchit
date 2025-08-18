@@ -3,13 +3,13 @@ import React from "react";
 const Aboutus = () => {
     return (
         <div className="min-h-screen bg-white pt-16">
-            <div className="max-w-4xl mx-auto px-4 py-12">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold text-gray-900 mb-6">
-                        About LaunchIT
+                        About launchit
                     </h1>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Empowering the next generation of entrepreneurs to discover, launch, and scale their innovative ideas.
+                    <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
+                        launchit is dedicated to democratizing access to startup discovery and launch opportunities.
                     </p>
                 </div>
 
@@ -148,7 +148,7 @@ const Aboutus = () => {
                     </h2>
                     <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
                         Whether you're an entrepreneur with a groundbreaking idea, an investor looking for the next big thing,
-                        or simply passionate about innovation, LaunchIT is your platform to connect, collaborate, and create.
+                        or simply passionate about innovation, launchit is your platform to connect, collaborate, and create.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <a

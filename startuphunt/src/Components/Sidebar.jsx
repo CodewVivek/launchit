@@ -200,10 +200,10 @@ const Sidebar = ({ isOpen }) => {
 
                         </div>
                         <div className="px-3">
-                            <a href="/launchitguide" className="hover:text-gray-800">How LaunchIT works</a>
+                            <a href="/launchitguide" className="hover:text-gray-800">How launchit works</a>
                         </div>
                         <div className="px-3 pt-2 text-xs text-gray-500">
-                            © 2025 LaunchIT LLC
+                            © 2025 launchit LLC
                         </div>
                     </div>
                 </div>

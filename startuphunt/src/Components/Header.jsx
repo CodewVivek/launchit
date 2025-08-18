@@ -290,7 +290,7 @@ const Header = ({ onMenuClick }) => {
                         <img className="w-8 h-8 text-white" src="/images/r6_circle_optimized.png" alt="L" />
                     </div>
                     <span className="text-xl font-bold tracking-wide hidden sm:block">
-                        <span className="text-gray-800">LaunchIT</span>
+                        <span className="text-gray-800">launchit</span>
                     </span>
                 </Link>
             </div>

@@ -17,26 +17,27 @@ const TermsOfService = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">1. Introduction and Acceptance</h2>
         <p className="text-gray-700 leading-relaxed">
-          Welcome to LaunchIT! These Terms of Service ("Terms") govern your use of our startup discovery and launch platform.
-          By accessing or using LaunchIT, you agree to be bound by these Terms and our Privacy Policy.
+          Welcome to launchit! These Terms of Service ("Terms") govern your use of our startup discovery and launch platform.
+          By accessing or using launchit, you agree to be bound by these Terms and our Privacy Policy.
         </p>
         <p className="text-gray-700 leading-relaxed mt-3">
-          LaunchIT is a platform that connects entrepreneurs, investors, and startup enthusiasts. We provide tools for discovering,
+          launchit is a platform that connects entrepreneurs, investors, and startup enthusiasts. We provide tools for discovering,
           showcasing, and launching early-stage startups and innovative projects.
         </p>
         <div className="bg-yellow-50 p-4 rounded-lg mt-4">
           <p className="text-yellow-800 text-sm">
             <strong>Important:</strong> If you do not agree to these Terms, please do not use our platform.
-            Your continued use of LaunchIT constitutes acceptance of these Terms.
+            Your continued use of launchit constitutes acceptance of these Terms.
           </p>
         </div>
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">2. What LaunchIT Does</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">2. What launchit Does</h2>
         <div className="bg-gray-50 p-6 rounded-lg">
           <p className="text-gray-700 mb-3">
-            <strong>LaunchIT is a startup platform that provides:</strong>
+            Our platform serves as a bridge between innovative ideas and the resources needed to bring them to life.
+            <strong>launchit is a startup platform that provides:</strong>
           </p>
           <ul className="list-disc ml-6 text-gray-700 space-y-2">
             <li><strong>Startup Discovery:</strong> Browse and discover early-stage startups and innovative projects</li>
@@ -107,7 +108,7 @@ const TermsOfService = () => (
 
         <h3 className="text-xl font-medium mb-3 text-gray-700">5.1 Your Content</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-          <li>You retain ownership of the content you submit to LaunchIT</li>
+          <li>You retain ownership of the content you submit to launchit</li>
           <li>You are responsible for the accuracy and legality of your submissions</li>
           <li>You grant us a license to display and distribute your content on the platform</li>
           <li>You represent that you have the right to share the content you submit</li>
@@ -163,7 +164,7 @@ const TermsOfService = () => (
 
         <h3 className="text-xl font-medium mb-3 text-gray-700">7.1 Platform Intellectual Property</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-          <li>LaunchIT and its content are protected by intellectual property laws</li>
+          <li>launchit and its content are protected by intellectual property laws</li>
           <li>You may not copy, modify, or distribute our platform code or design</li>
           <li>Our trademarks and branding are our exclusive property</li>
           <li>You may use the platform for its intended purpose only</li>
@@ -287,7 +288,7 @@ const TermsOfService = () => (
           <li>Provide a summary of key changes when possible</li>
         </ul>
         <p className="text-gray-700">
-          Your continued use of LaunchIT after any changes indicates your acceptance of the updated Terms.
+          Your continued use of launchit after any changes indicates your acceptance of the updated Terms.
         </p>
       </section>
 
@@ -337,7 +338,7 @@ const TermsOfService = () => (
       <div className="mt-12 p-6 bg-gray-50 rounded-lg text-center">
         <p className="text-gray-600 text-sm">
           These Terms of Service are effective as of August 17, 2025.
-          By using LaunchIT, you agree to be bound by these Terms and our Privacy Policy.
+          By using launchit, you agree to be bound by these Terms and our Privacy Policy.
         </p>
       </div>
     </div>
