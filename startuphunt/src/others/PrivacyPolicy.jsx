@@ -3,7 +3,7 @@ import React from "react";
 const PrivacyPolicy = () => (
   <div className="max-w-4xl mx-auto py-12 px-4">
     <h1 className="text-4xl font-bold mb-8 text-center">Privacy Policy</h1>
-    
+
     <div className="bg-blue-50 p-6 rounded-lg mb-8">
       <p className="text-lg text-blue-800">
         <strong>Effective Date:</strong> August 17, 2025
@@ -17,11 +17,11 @@ const PrivacyPolicy = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">1. Introduction</h2>
         <p className="text-gray-700 leading-relaxed">
-          LaunchIT ("we", "our", "us") is a platform dedicated to discovering, showcasing, and launching early-stage startups and innovative projects. 
+          LaunchIT ("we", "our", "us") is a platform dedicated to discovering, showcasing, and launching early-stage startups and innovative projects.
           We are committed to protecting your privacy and ensuring transparency about how we collect, use, and protect your information.
         </p>
         <p className="text-gray-700 leading-relaxed mt-3">
-          This Privacy Policy explains how we handle your information when you use our platform to discover startups, submit your own projects, 
+          This Privacy Policy explains how we handle your information when you use our platform to discover startups, submit your own projects,
           interact with other users, and engage with our community features.
         </p>
       </section>
@@ -45,7 +45,7 @@ const PrivacyPolicy = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">3. Information We Collect</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">3.1 Account Information</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li><strong>Profile Data:</strong> Name, email address, profile picture, and username</li>
@@ -77,7 +77,7 @@ const PrivacyPolicy = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">4. How We Use Your Information</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">4.1 Core Platform Services</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Providing and maintaining the LaunchIT platform</li>
@@ -105,10 +105,10 @@ const PrivacyPolicy = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">5. Information Sharing and Disclosure</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">5.1 Public Content</h3>
         <p className="text-gray-700 mb-3">
-          <strong>Important:</strong> When you submit a startup or project to LaunchIT, this information becomes publicly visible 
+          <strong>Important:</strong> When you submit a startup or project to LaunchIT, this information becomes publicly visible
           to all platform users. This includes:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
@@ -137,7 +137,7 @@ const PrivacyPolicy = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">6. Data Security and Protection</h2>
-        
+
         <div className="bg-green-50 p-6 rounded-lg">
           <h3 className="text-xl font-medium mb-3 text-green-800">Security Measures We Implement:</h3>
           <ul className="list-disc ml-6 text-green-700 space-y-2">
@@ -152,7 +152,7 @@ const PrivacyPolicy = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">7. Your Rights and Choices</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">7.1 Account Management</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Update your profile information at any time</li>
@@ -179,7 +179,7 @@ const PrivacyPolicy = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">8. Cookies and Tracking Technologies</h2>
-        
+
         <p className="text-gray-700 mb-3">
           We use cookies and similar technologies to enhance your experience on LaunchIT:
         </p>
@@ -189,7 +189,7 @@ const PrivacyPolicy = () => (
           <li><strong>Preference Cookies:</strong> To remember your settings and preferences</li>
           <li><strong>Security Cookies:</strong> To protect against fraud and abuse</li>
         </ul>
-        
+
         <p className="text-gray-700">
           You can control cookies through your browser settings, though this may affect platform functionality.
         </p>
@@ -198,8 +198,8 @@ const PrivacyPolicy = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">9. Children's Privacy</h2>
         <p className="text-gray-700">
-          LaunchIT is not intended for children under 13 years of age. We do not knowingly collect personal information 
-          from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, 
+          LaunchIT is not intended for children under 13 years of age. We do not knowingly collect personal information
+          from children under 13. If you are a parent or guardian and believe your child has provided us with personal information,
           please contact us immediately.
         </p>
       </section>
@@ -207,7 +207,7 @@ const PrivacyPolicy = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">10. International Data Transfers</h2>
         <p className="text-gray-700">
-          LaunchIT operates globally, and your information may be transferred to and processed in countries other than your own. 
+          LaunchIT operates globally, and your information may be transferred to and processed in countries other than your own.
           We ensure that all data transfers comply with applicable data protection laws and implement appropriate safeguards.
         </p>
       </section>
@@ -215,7 +215,7 @@ const PrivacyPolicy = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">11. Changes to This Privacy Policy</h2>
         <p className="text-gray-700 mb-3">
-          We may update this Privacy Policy from time to time to reflect changes in our practices or applicable laws. 
+          We may update this Privacy Policy from time to time to reflect changes in our practices or applicable laws.
           When we make significant changes, we will:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
@@ -231,10 +231,10 @@ const PrivacyPolicy = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">12. Contact Information</h2>
-        
+
         <div className="bg-blue-50 p-6 rounded-lg">
           <p className="text-gray-700 mb-3">
-            If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, 
+            If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices,
             please contact us:
           </p>
           <div className="space-y-2">
@@ -262,7 +262,7 @@ const PrivacyPolicy = () => (
 
       <div className="mt-12 p-6 bg-gray-50 rounded-lg text-center">
         <p className="text-gray-600 text-sm">
-          This Privacy Policy is effective as of August 17, 2025. 
+          This Privacy Policy is effective as of August 17, 2025.
           We are committed to protecting your privacy and being transparent about our data practices.
         </p>
       </div>

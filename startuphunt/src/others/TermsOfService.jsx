@@ -3,7 +3,7 @@ import React from "react";
 const TermsOfService = () => (
   <div className="max-w-4xl mx-auto py-12 px-4">
     <h1 className="text-4xl font-bold mb-8 text-center">Terms of Service</h1>
-    
+
     <div className="bg-blue-50 p-6 rounded-lg mb-8">
       <p className="text-lg text-blue-800">
         <strong>Effective Date:</strong> August 17, 2025
@@ -17,16 +17,16 @@ const TermsOfService = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">1. Introduction and Acceptance</h2>
         <p className="text-gray-700 leading-relaxed">
-          Welcome to LaunchIT! These Terms of Service ("Terms") govern your use of our startup discovery and launch platform. 
+          Welcome to LaunchIT! These Terms of Service ("Terms") govern your use of our startup discovery and launch platform.
           By accessing or using LaunchIT, you agree to be bound by these Terms and our Privacy Policy.
         </p>
         <p className="text-gray-700 leading-relaxed mt-3">
-          LaunchIT is a platform that connects entrepreneurs, investors, and startup enthusiasts. We provide tools for discovering, 
+          LaunchIT is a platform that connects entrepreneurs, investors, and startup enthusiasts. We provide tools for discovering,
           showcasing, and launching early-stage startups and innovative projects.
         </p>
         <div className="bg-yellow-50 p-4 rounded-lg mt-4">
           <p className="text-yellow-800 text-sm">
-            <strong>Important:</strong> If you do not agree to these Terms, please do not use our platform. 
+            <strong>Important:</strong> If you do not agree to these Terms, please do not use our platform.
             Your continued use of LaunchIT constitutes acceptance of these Terms.
           </p>
         </div>
@@ -51,7 +51,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">3. User Accounts and Registration</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">3.1 Account Creation</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>You must be at least 13 years old to create an account</li>
@@ -78,7 +78,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">4. Acceptable Use and Community Guidelines</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">4.1 What You Can Do</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Submit legitimate startup projects and business ideas</li>
@@ -104,7 +104,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">5. Content Submission and Ownership</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">5.1 Your Content</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>You retain ownership of the content you submit to LaunchIT</li>
@@ -132,7 +132,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">6. Community Features and Interactions</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">6.1 Comments and Feedback</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Comments should be constructive and respectful</li>
@@ -160,7 +160,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">7. Intellectual Property and Licensing</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">7.1 Platform Intellectual Property</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>LaunchIT and its content are protected by intellectual property laws</li>
@@ -189,7 +189,7 @@ const TermsOfService = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">8. Privacy and Data Protection</h2>
         <p className="text-gray-700 mb-3">
-          Your privacy is important to us. Our collection and use of your information is governed by our Privacy Policy, 
+          Your privacy is important to us. Our collection and use of your information is governed by our Privacy Policy,
           which is incorporated into these Terms by reference.
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2">
@@ -202,7 +202,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">9. Platform Availability and Maintenance</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">9.1 Service Availability</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>We strive to maintain 24/7 platform availability</li>
@@ -222,7 +222,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">10. Disclaimers and Limitations</h2>
-        
+
         <div className="bg-yellow-50 p-6 rounded-lg">
           <h3 className="text-xl font-medium mb-3 text-yellow-800">Important Disclaimers:</h3>
           <ul className="list-disc ml-6 text-yellow-700 space-y-2 mb-4">
@@ -235,7 +235,7 @@ const TermsOfService = () => (
 
         <h3 className="text-xl font-medium mb-3 text-gray-700 mt-6">10.1 Limitation of Liability</h3>
         <p className="text-gray-700 mb-3">
-          To the maximum extent permitted by law, LaunchIT shall not be liable for any indirect, incidental, 
+          To the maximum extent permitted by law, LaunchIT shall not be liable for any indirect, incidental,
           special, consequential, or punitive damages arising from your use of the platform.
         </p>
       </section>
@@ -243,7 +243,7 @@ const TermsOfService = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">11. Indemnification</h2>
         <p className="text-gray-700 mb-3">
-          You agree to indemnify and hold harmless LaunchIT, its officers, directors, employees, and agents from any claims, 
+          You agree to indemnify and hold harmless LaunchIT, its officers, directors, employees, and agents from any claims,
           damages, or expenses arising from:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2">
@@ -256,7 +256,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">12. Termination and Suspension</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">12.1 Account Termination</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>You may terminate your account at any time</li>
@@ -277,7 +277,7 @@ const TermsOfService = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">13. Changes to Terms</h2>
         <p className="text-gray-700 mb-3">
-          We may update these Terms from time to time to reflect changes in our services, legal requirements, 
+          We may update these Terms from time to time to reflect changes in our services, legal requirements,
           or platform functionality. When we make changes, we will:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
@@ -294,7 +294,7 @@ const TermsOfService = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">14. Governing Law and Disputes</h2>
         <p className="text-gray-700 mb-3">
-          These Terms are governed by the laws of the jurisdiction where LaunchIT operates. Any disputes arising from 
+          These Terms are governed by the laws of the jurisdiction where LaunchIT operates. Any disputes arising from
           these Terms or your use of the platform will be resolved through:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2">
@@ -306,7 +306,7 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">15. Contact Information</h2>
-        
+
         <div className="bg-blue-50 p-6 rounded-lg">
           <p className="text-gray-700 mb-3">
             If you have any questions about these Terms of Service or need assistance, please contact us:
@@ -336,7 +336,7 @@ const TermsOfService = () => (
 
       <div className="mt-12 p-6 bg-gray-50 rounded-lg text-center">
         <p className="text-gray-600 text-sm">
-          These Terms of Service are effective as of August 17, 2025. 
+          These Terms of Service are effective as of August 17, 2025.
           By using LaunchIT, you agree to be bound by these Terms and our Privacy Policy.
         </p>
       </div>

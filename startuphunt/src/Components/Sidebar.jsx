@@ -52,7 +52,7 @@ const Sidebar = ({ isOpen }) => {
 
     const mainItems = [
         { title: "Home", icon: Home, active: true, to: "/" },
-        { title: "Shorts", icon: Scissors, to: "/shorts" },
+        { title: "pitch", icon: Scissors, to: "/approved-pitches" },
         { title: "Community", icon: Users, to: "/launchit-community" },
         { title: "You", icon: User, to: "/explore" },
     ];
@@ -83,8 +83,7 @@ const Sidebar = ({ isOpen }) => {
                                     }`}
                                 title={item.title}
                             >
-                                <item.icon className="w-5 h-5" />
-                                
+                                <item.icon className="w-5 h-5 mb-1" />
                             </Link>
                         ))}
                     </div>
