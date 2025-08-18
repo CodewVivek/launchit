@@ -227,29 +227,18 @@ const TermsOfService = () => (
         <div className="bg-yellow-50 p-6 rounded-lg">
           <h3 className="text-xl font-medium mb-3 text-yellow-800">Important Disclaimers:</h3>
           <ul className="list-disc ml-6 text-yellow-700 space-y-2 mb-4">
-            <li><strong>No Investment Advice:</strong> LaunchIT does not provide investment, financial, or legal advice</li>
+            <li><strong>No Investment Advice:</strong> launchit does not provide investment, financial, or legal advice</li>
             <li><strong>User Responsibility:</strong> Users are responsible for their own business decisions and due diligence</li>
             <li><strong>Content Accuracy:</strong> We do not verify the accuracy of user-submitted content</li>
-            <li><strong>No Guarantees:</strong> We do not guarantee success for any startup or project</li>
-          </ul>
-        </div>
-
-        <h3 className="text-xl font-medium mb-3 text-gray-700 mt-6">10.1 Limitation of Liability</h3>
-        <p className="text-gray-700 mb-3">
-          To the maximum extent permitted by law, LaunchIT shall not be liable for any indirect, incidental,
-          special, consequential, or punitive damages arising from your use of the platform.
+            <li><strong>No Guarantees:</strong> We do not guarantee the success of any startup or project</li>
+            <li><strong>Third-Party Services:</strong> We may link to external services we do not control</li>
+        </ul>
+        <p className="text-gray-700 mt-4">
+            To the maximum extent permitted by law, launchit shall not be liable for any indirect, incidental,
+            special, consequential, or punitive damages arising from your use of the platform.
         </p>
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">11. Indemnification</h2>
-        <p className="text-gray-700 mb-3">
-          You agree to indemnify and hold harmless LaunchIT, its officers, directors, employees, and agents from any claims,
-          damages, or expenses arising from:
-        </p>
-        <ul className="list-disc ml-6 text-gray-700 space-y-2">
-          <li>Your violation of these Terms</li>
-          <li>Your use of the platform</li>
+        <p className="text-gray-700 mt-4">
+            You agree to indemnify and hold harmless launchit, its officers, directors, employees, and agents from any claims,
           <li>Your content submissions</li>
           <li>Your interactions with other users</li>
         </ul>
@@ -295,7 +284,7 @@ const TermsOfService = () => (
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">14. Governing Law and Disputes</h2>
         <p className="text-gray-700 mb-3">
-          These Terms are governed by the laws of the jurisdiction where LaunchIT operates. Any disputes arising from
+          These Terms are governed by the laws of the jurisdiction where launchit operates. Any disputes arising from
           these Terms or your use of the platform will be resolved through:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2">
