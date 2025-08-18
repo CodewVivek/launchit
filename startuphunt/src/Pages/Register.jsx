@@ -515,7 +515,15 @@ const Register = () => {
             if (logoFile && typeof logoFile !== 'string') {
                 // User uploaded file - preserve quality and upload
                 try {
+                    console.log('🔄 Processing user uploaded logo for quality preservation...');
                     const qualityFile = await preserveImageQuality(logoFile);
+                    
+                    // Verify quality was maintained
+                    if (qualityFile.size < logoFile.size * 0.8) {
+                        console.warn('⚠️ Quality may have been lost, using original file');
+                        throw new Error('Quality preservation resulted in significant size reduction');
+                    }
+                    
                     const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
                     if (logoErrorUpload) {
@@ -524,6 +532,7 @@ const Register = () => {
                     }
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                     logoUrl = logoUrlData.publicUrl;
+                    console.log('✅ Logo uploaded with quality preservation');
                 } catch (error) {
                     console.error('Logo quality preservation failed, uploading original:', error);
                     // Fallback to original file if quality preservation fails
@@ -535,6 +544,7 @@ const Register = () => {
                     }
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                     logoUrl = logoUrlData.publicUrl;
+                    console.log('✅ Logo uploaded with original file (fallback)');
                 }
             } else if (logoFile && typeof logoFile === 'string') {
                 // AI-generated logo URL - download and upload to our storage
@@ -583,7 +593,15 @@ const Register = () => {
             if (thumbnailFile && typeof thumbnailFile !== 'string') {
                 // User uploaded file - preserve quality and upload
                 try {
+                    console.log('🔄 Processing user uploaded thumbnail for quality preservation...');
                     const qualityFile = await preserveImageQuality(thumbnailFile);
+                    
+                    // Verify quality was maintained
+                    if (qualityFile.size < thumbnailFile.size * 0.8) {
+                        console.warn('⚠️ Thumbnail quality may have been lost, using original file');
+                        throw new Error('Quality preservation resulted in significant size reduction');
+                    }
+                    
                     const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
                     const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
                     if (thumbError) {
@@ -592,6 +610,7 @@ const Register = () => {
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                     thumbnailUrl = thumbUrlData.publicUrl;
+                    console.log('✅ Thumbnail uploaded with quality preservation');
                 } catch (error) {
                     console.error('Thumbnail quality preservation failed, uploading original:', error);
                     // Fallback to original file if quality preservation fails
@@ -603,6 +622,7 @@ const Register = () => {
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                     thumbnailUrl = thumbUrlData.publicUrl;
+                    console.log('✅ Thumbnail uploaded with original file (fallback)');
                 }
             } else if (thumbnailFile && typeof thumbnailFile === 'string') {
                 // AI-generated thumbnail URL - download and upload to our storage
@@ -641,7 +661,15 @@ const Register = () => {
                     if (file && typeof file !== 'string') {
                         // User uploaded file - preserve quality and upload
                         try {
+                            console.log(`🔄 Processing cover image ${i + 1} for quality preservation...`);
                             const qualityFile = await preserveImageQuality(file);
+                            
+                            // Verify quality was maintained
+                            if (qualityFile.size < file.size * 0.8) {
+                                console.warn(`⚠️ Cover image ${i + 1} quality may have been lost, using original file`);
+                                throw new Error('Quality preservation resulted in significant size reduction');
+                            }
+                            
                             const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
                             const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, qualityFile);
                             if (coverErrorUpload) {
@@ -650,8 +678,9 @@ const Register = () => {
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                             coverUrls.push(coverUrlData.publicUrl);
+                            console.log(`✅ Cover image ${i + 1} uploaded with quality preservation`);
                         } catch (error) {
-                            console.error('Cover quality preservation failed, uploading original:', error);
+                            console.error(`Cover image ${i + 1} quality preservation failed, uploading original:`, error);
                             // Fallback to original file if quality preservation fails
                             const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
                             const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
@@ -661,6 +690,7 @@ const Register = () => {
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                             coverUrls.push(coverUrlData.publicUrl);
+                            console.log(`✅ Cover image ${i + 1} uploaded with original file (fallback)`);
                         }
                     } else if (typeof file === 'string') {
                         coverUrls.push(file);
@@ -1195,43 +1225,101 @@ const Register = () => {
 
     const preserveImageQuality = (file) => {
         return new Promise((resolve, reject) => {
+            // For maximum quality preservation, we'll use different strategies based on file type
+            const fileType = file.type.toLowerCase();
+            
+            // If it's already a high-quality format and small enough, don't process
+            if (file.size < 5 * 1024 * 1024 && (fileType.includes('png') || fileType.includes('webp'))) {
+                console.log('🔄 Image already high quality, skipping processing:', file.name, file.size);
+                resolve(file);
+                return;
+            }
+
             const img = new Image();
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
             img.onload = () => {
                 try {
+                    console.log('🖼️ Processing image:', file.name, 'Original size:', img.width, 'x', img.height);
+                    
                     // Set canvas size to match image dimensions (no resizing)
                     canvas.width = img.width;
                     canvas.height = img.height;
 
-                    // Use high-quality rendering
+                    // Use highest quality rendering settings
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
+                    
+                    // Set composite operation for better quality
+                    ctx.globalCompositeOperation = 'source-over';
+                    
+                    // Clear canvas with transparent background
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                    // Draw image at original size
+                    // Draw image at original size with high quality
                     ctx.drawImage(img, 0, 0);
 
-                    // Convert to blob with high quality
+                    // Determine best output format for quality
+                    let outputType = 'image/png'; // PNG for maximum quality
+                    let quality = 1.0; // Maximum quality
+                    
+                    // For JPEG images, use WebP if supported, otherwise PNG
+                    if (fileType.includes('jpeg') || fileType.includes('jpg')) {
+                        // Try WebP first for better compression with quality
+                        if (canvas.toDataURL('image/webp', 1.0)) {
+                            outputType = 'image/webp';
+                            quality = 1.0;
+                        } else {
+                            outputType = 'image/png';
+                            quality = 1.0;
+                        }
+                    }
+
+                    console.log('🎨 Output format:', outputType, 'Quality:', quality);
+
+                    // Convert to blob with maximum quality
                     canvas.toBlob((blob) => {
                         if (blob) {
                             // Create new file with preserved quality
                             const qualityFile = new File([blob], file.name, {
-                                type: file.type,
+                                type: outputType,
                                 lastModified: Date.now()
                             });
+                            
+                            console.log('✅ Quality preserved:', 
+                                'Original size:', file.size, 'bytes',
+                                'New size:', qualityFile.size, 'bytes',
+                                'Quality maintained:', qualityFile.size >= file.size * 0.9 ? 'Yes' : 'Warning'
+                            );
+                            
                             resolve(qualityFile);
                         } else {
-                            reject(new Error('Failed to process image'));
+                            console.warn('⚠️ Blob creation failed, using original file');
+                            resolve(file);
                         }
-                    }, file.type, 1.0); // 1.0 = maximum quality
+                    }, outputType, quality);
                 } catch (error) {
-                    reject(error);
+                    console.error('❌ Image processing error:', error);
+                    console.warn('⚠️ Using original file due to processing error');
+                    resolve(file);
                 }
             };
 
-            img.onerror = () => reject(new Error('Invalid image file'));
-            img.src = URL.createObjectURL(file);
+            img.onerror = () => {
+                console.error('❌ Image loading failed, using original file');
+                resolve(file);
+            };
+
+            // Create object URL for image loading
+            const objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
+            
+            // Clean up object URL after loading
+            img.onload = () => {
+                URL.revokeObjectURL(objectUrl);
+                img.onload(); // Call the original onload
+            };
         });
     };
 
