@@ -517,7 +517,7 @@ const Header = ({ onMenuClick }) => {
                     )}
                 </div>
 
-                <Link to="/coming-soon" className="text-gray-800  font-medium flex items-center gap-2  rounded hover:bg-gray-300">
+                <Link to="/coming-soon" className="text-gray-800  font-medium flex items-center gap-2   ">
                     <Rocket className="w-4 h-4" />
                     Coming Soon
                 </Link>

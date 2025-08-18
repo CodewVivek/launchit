@@ -58,6 +58,7 @@ const Sidebar = ({ isOpen }) => {
     ];
 
     const youItems = [
+        { title: "Profile", icon: User, route: `/profile/${user?.email?.split('@')[0] || user?.id || 'profile'}` },
         { title: "Your Launches", icon: Rocket, route: "/my-launches" },
         { title: "Saved Launches", icon: Bookmark, route: "/saved-projects" },
         { title: "Upvoted Launches", icon: ThumbsUp, route: "/upvoted-projects" },
@@ -144,10 +145,20 @@ const Sidebar = ({ isOpen }) => {
 
                 {/* You Section */}
                 <div className="space-y-1">
-                    <div className="flex items-center px-3 py-2 text-black font-medium text-base">
+                    <button
+                        onClick={() => {
+                            if (!user) {
+                                toast.error("Please login to access your profile");
+                                navigate("/UserRegister");
+                                return;
+                            }
+                            navigate(`/profile/${user.email?.split('@')[0] || user.id}`);
+                        }}
+                        className="w-full flex items-center px-3 py-2 text-black font-medium text-base hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                    >
                         You
                         <ChevronRight className="ml-1 text-gray-500 w-4 h-4" />
-                    </div>
+                    </button>
                     {youItems.map((item) => (
                         <button
                             key={item.title}
