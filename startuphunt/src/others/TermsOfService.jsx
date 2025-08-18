@@ -232,16 +232,38 @@ const TermsOfService = () => (
             <li><strong>Content Accuracy:</strong> We do not verify the accuracy of user-submitted content</li>
             <li><strong>No Guarantees:</strong> We do not guarantee the success of any startup or project</li>
             <li><strong>Third-Party Services:</strong> We may link to external services we do not control</li>
-        </ul>
+          </ul>
+        </div>
         <p className="text-gray-700 mt-4">
             To the maximum extent permitted by law, launchit shall not be liable for any indirect, incidental,
             special, consequential, or punitive damages arising from your use of the platform.
         </p>
         <p className="text-gray-700 mt-4">
             You agree to indemnify and hold harmless launchit, its officers, directors, employees, and agents from any claims,
+            damages, or expenses arising from:
+        </p>
+        <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Your content submissions</li>
           <li>Your interactions with other users</li>
+          <li>Your violation of these Terms</li>
+          <li>Your use of the platform</li>
         </ul>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">11. Liability and Indemnification</h2>
+        
+        <h3 className="text-xl font-medium mb-3 text-gray-700">11.1 Limitation of Liability</h3>
+        <p className="text-gray-700 mb-3">
+          In no event shall launchit be liable for any damages beyond the amount you paid for our services, if any.
+          Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim.
+        </p>
+        
+        <h3 className="text-xl font-medium mb-3 text-gray-700">11.2 Indemnification</h3>
+        <p className="text-gray-700 mb-3">
+          You agree to defend, indemnify, and hold harmless launchit from and against any claims, damages,
+          obligations, losses, liabilities, costs, or debt arising from your use of the platform.
+        </p>
       </section>
 
       <section>

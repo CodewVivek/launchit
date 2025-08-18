@@ -68,7 +68,7 @@ const PopularProjects = ({ limit = 5 }) => {
     return (
         <div className="mt-2">
             <div className="font-semibold text-md mb-5 text-gray-800">
-                ⭐ Popular Launches (>24h old)
+                ⭐ Popular Launches (&gt;24h old)
             </div>
             <div className="flex flex-col gap-4">
                 {projects.map((project) => (
