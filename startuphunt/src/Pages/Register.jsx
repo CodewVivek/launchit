@@ -544,12 +544,12 @@ const Register = () => {
                     if (!response.ok) {
                         throw new Error(`Failed to fetch AI logo: ${response.status}`);
                     }
-                    
+
                     const blob = await response.blob();
-                    const logoFile = new File([blob], 'ai-generated-logo.png', { type: blob.type || 'image/png' });
-                    
+                    const aiLogoFile = new File([blob], 'ai-generated-logo.png', { type: blob.type || 'image/png' });
+
                     // Preserve quality and upload
-                    const qualityFile = await preserveImageQuality(logoFile);
+                    const qualityFile = await preserveImageQuality(aiLogoFile);
                     const logoPath = `${Date.now()}-ai-logo-${nanoid(6)}.png`;
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
                     if (logoErrorUpload) {
@@ -599,12 +599,12 @@ const Register = () => {
                     if (!response.ok) {
                         throw new Error(`Failed to fetch AI thumbnail: ${response.status}`);
                     }
-                    
+
                     const blob = await response.blob();
-                    const thumbnailFile = new File([blob], 'ai-generated-thumbnail.png', { type: blob.type || 'image/png' });
-                    
+                    const aiThumbnailFile = new File([blob], 'ai-generated-thumbnail.png', { type: blob.type || 'image/png' });
+
                     // Preserve quality and upload
-                    const qualityFile = await preserveImageQuality(thumbnailFile);
+                    const qualityFile = await preserveImageQuality(aiThumbnailFile);
                     const thumbPath = `${Date.now()}-ai-thumbnail-${nanoid(6)}.png`;
                     const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
                     if (thumbError) {
@@ -686,10 +686,10 @@ const Register = () => {
 
             // Show admin approval alert
             setTimeout(() => {
-                setSnackbar({ 
-                    open: true, 
-                    message: '⏳ Your launch is now pending admin approval. You will be notified once it\'s approved and visible to the community!', 
-                    severity: 'info' 
+                setSnackbar({
+                    open: true,
+                    message: '⏳ Your launch is now pending admin approval. You will be notified once it\'s approved and visible to the community!',
+                    severity: 'info'
                 });
             }, 2000);
 
@@ -793,11 +793,26 @@ const Register = () => {
             setRetryCount(0);
         }
 
+        const startTime = Date.now();
         const loadingMessage = isRetry
             ? `🔄 Retrying AI generation (attempt ${retryCount + 1})...`
-            : "🤖 AI is analyzing your website... This may take up to 30 seconds.";
+            : "🤖 AI is analyzing your website... This may take up to 25 seconds.";
 
         setSnackbar({ open: true, message: loadingMessage, severity: 'info' });
+
+        // Add progress updates
+        const progressInterval = setInterval(() => {
+            if (isAILoading || isRetrying) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                if (elapsed < 25) {
+                    setSnackbar({ 
+                        open: true, 
+                        message: `🤖 AI is analyzing your website... (${elapsed}s/25s)`, 
+                        severity: 'info' 
+                    });
+                }
+            }
+        }, 2000);
 
         try {
             const { data: userData } = await supabase.auth.getUser();
@@ -805,7 +820,7 @@ const Register = () => {
 
             // Create AbortController for timeout handling
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout (reduced from 45)
 
             const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {
                 method: "POST",
@@ -924,6 +939,7 @@ const Register = () => {
         } finally {
             setIsAILoading(false);
             setIsRetrying(false);
+            clearInterval(progressInterval);
         }
     }
 
@@ -1127,24 +1143,24 @@ const Register = () => {
             const img = new Image();
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
+
             img.onload = () => {
                 // Check minimum dimensions
                 if (img.width < 200 || img.height < 200) {
                     reject(new Error('Image dimensions too small. Minimum size: 200x200px'));
                     return;
                 }
-                
+
                 // Check aspect ratio for logo/thumbnail (should be roughly square)
                 const aspectRatio = img.width / img.height;
                 if (aspectRatio < 0.5 || aspectRatio > 2) {
                     reject(new Error('Logo/thumbnail should have a reasonable aspect ratio (not too wide or tall)'));
                     return;
                 }
-                
+
                 resolve(true);
             };
-            
+
             img.onerror = () => reject(new Error('Invalid image file'));
             img.src = URL.createObjectURL(file);
         });
@@ -1155,20 +1171,20 @@ const Register = () => {
             const img = new Image();
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
+
             img.onload = () => {
                 try {
                     // Set canvas size to match image dimensions (no resizing)
                     canvas.width = img.width;
                     canvas.height = img.height;
-                    
+
                     // Use high-quality rendering
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
-                    
+
                     // Draw image at original size
                     ctx.drawImage(img, 0, 0);
-                    
+
                     // Convert to blob with high quality
                     canvas.toBlob((blob) => {
                         if (blob) {
@@ -1186,7 +1202,7 @@ const Register = () => {
                     reject(error);
                 }
             };
-            
+
             img.onerror = () => reject(new Error('Invalid image file'));
             img.src = URL.createObjectURL(file);
         });
@@ -1196,29 +1212,29 @@ const Register = () => {
         try {
             // Validate image quality first
             await validateImageQuality(file);
-            
+
             // Preserve image quality
             const qualityFile = await preserveImageQuality(file);
-            
+
             // Upload the quality-preserved file
             const timestamp = Date.now();
             const fileName = `${timestamp}-${type}-${sanitizeFileName(file.name)}`;
-            
+
             const { data, error } = await supabase.storage
                 .from('startup-media')
                 .upload(fileName, qualityFile, {
                     cacheControl: '3600',
                     upsert: false
                 });
-            
+
             if (error) {
                 throw new Error(`Upload failed: ${error.message}`);
             }
-            
+
             const { data: urlData } = supabase.storage
                 .from('startup-media')
                 .getPublicUrl(fileName);
-            
+
             return urlData.publicUrl;
         } catch (error) {
             console.error(`${type} upload error:`, error);

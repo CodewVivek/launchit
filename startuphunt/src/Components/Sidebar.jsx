@@ -70,7 +70,7 @@ const Sidebar = ({ isOpen }) => {
 
     if (!isOpen) {
         return (
-            <aside className={`fixed left-0 top-14 w-16 h-[calc(100vh-64px)] bg-white overflow-y-auto shadow-lg ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
+            <aside className={`fixed left-0 top-14 w-16 h-[calc(100vh-64px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
                 <div className="p-2">
                     <div className="space-y-2">
                         {mainItems.map((item) => (
@@ -84,6 +84,7 @@ const Sidebar = ({ isOpen }) => {
                                 title={item.title}
                             >
                                 <item.icon className="w-5 h-5" />
+                                
                             </Link>
                         ))}
                     </div>
