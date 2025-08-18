@@ -517,13 +517,13 @@ const Header = ({ onMenuClick }) => {
                     )}
                 </div>
 
-                <Link to="/coming-soon" className="text-gray-800 text-gray-800font-medium flex items-center gap-2  rounded hover:bg-gray-300">
+                <Link to="/coming-soon" className="text-gray-800 px-4 py-2 font-medium flex items-center gap-2  rounded hover:bg-gray-300">
                     <Rocket className="w-4 h-4" />
                     Coming Soon
                 </Link>
 
                 {userRole === "admin" && (
-                    <Link to="/admin" className="text-gray-800 text-gray-800font-medium rounded hover:bg-gray-300">Admin</Link>
+                    <Link to="/admin" className="text-gray-800  px-4 py-2 font-medium rounded hover:bg-gray-300 ">Admin</Link>
                 )}
 
                 {user && <NotificationBell />}
