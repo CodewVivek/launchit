@@ -7,74 +7,49 @@ const TrendingProjects = ({ limit = 5, by = "trending" }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Enhanced trending algorithm
+  // Simple trending algorithm: boost + likes = trending score
   const calculateTrendingScore = (project) => {
-    const now = new Date();
-    const ageInHours = (now - new Date(project.created_at)) / (1000 * 60 * 60);
-
-    // Base engagement
-    const engagement = project.likesCount + project.commentsCount;
-
-    // Time decay factor (newer projects get boost)
-    const timeDecay = Math.pow(ageInHours + 2, 1.5);
-
-    // Engagement quality (projects with both likes AND comments get bonus)
-    const engagementQuality = project.likesCount > 0 && project.commentsCount > 0 ? 1.2 : 1;
-
-    // Freshness boost (projects less than 24 hours old get bonus)
-    const freshnessBoost = ageInHours < 24 ? 1.5 : 1;
-
-    // Category popularity boost (can be customized per category)
-    const categoryWeight = 1;
-
-    const trendingScore = (engagement * engagementQuality * freshnessBoost * categoryWeight) / timeDecay;
-
-    return trendingScore;
+    return project.likesCount || 0;
   };
 
   useEffect(() => {
     const fetchTrending = async () => {
       setLoading(true);
-      // Fetch all projects
+
+      // Get current time for 24h calculation
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+
+      // Fetch only projects launched in last 24 hours
       let { data: projectsData, error } = await supabase
         .from("projects")
         .select("*")
-        .neq("status", "draft");
+        .neq("status", "draft")
+        .gte("created_at", twentyFourHoursAgo.toISOString());
+
       if (error || !projectsData) {
         setProjects([]);
         setLoading(false);
         return;
       }
 
-      // Check if there are any projects launched in last 24 hours
-      const now = new Date();
-      const hasRecentLaunches = projectsData.some(project => {
-        const ageInHours = (now - new Date(project.created_at)) / (1000 * 60 * 60);
-        return ageInHours < 24;
-      });
-
       // If no recent launches, don't show trending projects
-      if (!hasRecentLaunches && by === "trending") {
+      if (projectsData.length === 0) {
         setProjects([]);
         setLoading(false);
         return;
       }
 
-      // For each project, fetch likes and comments count
+      // For each project, fetch likes count
       const projectsWithCounts = await Promise.all(
         projectsData.map(async (project) => {
           const { count: likesCount } = await supabase
             .from("project_likes")
             .select("id", { count: "exact", head: true })
             .eq("project_id", project.id);
-          const { count: commentsCount } = await supabase
-            .from("comments")
-            .select("id", { count: "exact", head: true })
-            .eq("project_id", project.id);
           return {
             ...project,
             likesCount: likesCount || 0,
-            commentsCount: commentsCount || 0,
           };
         }),
       );
@@ -87,12 +62,8 @@ const TrendingProjects = ({ limit = 5, by = "trending" }) => {
 
       let sorted;
       if (by === "trending") {
-        // Sort by trending score (default)
+        // Sort by trending score (likes count)
         sorted = projectsWithTrending.sort((a, b) => b.trendingScore - a.trendingScore);
-      } else if (by === "comments") {
-        sorted = projectsWithTrending.sort((a, b) => b.commentsCount - a.commentsCount);
-      } else if (by === "likes") {
-        sorted = projectsWithTrending.sort((a, b) => b.likesCount - a.likesCount);
       } else if (by === "newest") {
         sorted = projectsWithTrending.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       } else {
@@ -115,7 +86,7 @@ const TrendingProjects = ({ limit = 5, by = "trending" }) => {
   if (!projects.length)
     return (
       <div className="text-gray-400 py-4">
-        No recent launches to trend.
+        No launches in last 24 hours.
       </div>
     );
 
@@ -151,9 +122,8 @@ const TrendingProjects = ({ limit = 5, by = "trending" }) => {
               </p>
               <div className="flex gap-3 mt-1 text-xs text-gray-500">
                 <span>🚀 {project.likesCount}</span>
-                <span>💬 {project.commentsCount}</span>
                 {by === "trending" && (
-                  <span title={`Trending Score: ${project.trendingScore?.toFixed(2)}`}>
+                  <span title={`Trending Score: ${project.trendingScore}`}>
                     🔥 Trending
                   </span>
                 )}

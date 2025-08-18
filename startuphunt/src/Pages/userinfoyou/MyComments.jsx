@@ -127,7 +127,7 @@ const MyComments = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 pt-16">
+            <div className="min-h-screen bg-white pt-16">
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center">
                         <p className="text-red-600 mb-4">{error}</p>

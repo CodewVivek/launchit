@@ -29,16 +29,6 @@ const ComingSoon = () => {
     }
   ];
 
-  const currentFeatures = [
-    "Startup Discovery & Submission",
-    "User Authentication & Profiles",
-    "Project Showcasing & Categorization",
-    "Community Interaction (Likes, Comments)",
-    "Pitch Upload & Management",
-    "Admin Dashboard & Moderation",
-    "Search & Filtering",
-    "Responsive Design & Mobile Support"
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-16">
@@ -55,24 +45,6 @@ const ComingSoon = () => {
             We're constantly building and improving LaunchIT to provide the best startup discovery 
             and launch platform experience. Here's what we're working on next.
           </p>
-        </div>
-
-        {/* Current Features */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
-            What's Already Available
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {currentFeatures.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-              >
-                <div className="w-3 h-3 bg-green-500 rounded-full mb-4"></div>
-                <p className="text-gray-700 font-medium">{feature}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Upcoming Features */}
@@ -100,58 +72,6 @@ const ComingSoon = () => {
                 </p>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Development Timeline */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
-            Development Roadmap
-          </h2>
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-            <div className="space-y-8">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-bold">Q4</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Q4 2025</h3>
-                  <ul className="text-gray-600 space-y-1">
-                    <li>• Enhanced community features</li>
-                    <li>• Improved search and filtering</li>
-                    <li>• Mobile app beta testing</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-bold">Q1</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Q1 2026</h3>
-                  <ul className="text-gray-600 space-y-1">
-                    <li>• AI-powered recommendations</li>
-                    <li>• Advanced analytics dashboard</li>
-                    <li>• Investor matching system</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="text-purple-600 font-bold">Q2</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Q2 2026</h3>
-                  <ul className="text-gray-600 space-y-1">
-                    <li>• Marketplace integration</li>
-                    <li>• Advanced collaboration tools</li>
-                    <li>• API for third-party developers</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 

@@ -10,37 +10,40 @@ const PopularProjects = ({ limit = 5 }) => {
     useEffect(() => {
         const fetchPopular = async () => {
             setLoading(true);
-            // Fetch all projects
+
+            // Get current time for 24h calculation
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+
+            // Fetch only projects older than 24 hours
             let { data: projectsData, error } = await supabase
                 .from("projects")
                 .select("*")
-                .neq("status", "draft");
+                .neq("status", "draft")
+                .lt("created_at", twentyFourHoursAgo.toISOString());
+
             if (error || !projectsData) {
                 setProjects([]);
                 setLoading(false);
                 return;
             }
-            // For each project, fetch likes and comments count
+
+            // For each project, fetch likes count
             const projectsWithCounts = await Promise.all(
                 projectsData.map(async (project) => {
                     const { count: likesCount } = await supabase
                         .from("project_likes")
                         .select("id", { count: "exact", head: true })
                         .eq("project_id", project.id);
-                    const { count: commentsCount } = await supabase
-                        .from("comments")
-                        .select("id", { count: "exact", head: true })
-                        .eq("project_id", project.id);
                     return {
                         ...project,
                         likesCount: likesCount || 0,
-                        commentsCount: commentsCount || 0,
-                        totalScore: (likesCount || 0) + (commentsCount || 0)
+                        totalScore: likesCount || 0
                     };
                 }),
             );
 
-            // Sort by total popularity (likes + comments) - NO time boost
+            // Sort by likes count (more likes = more popular)
             const sorted = projectsWithCounts.sort((a, b) => b.totalScore - a.totalScore);
 
             setProjects(sorted.slice(0, limit));
@@ -65,7 +68,7 @@ const PopularProjects = ({ limit = 5 }) => {
     return (
         <div className="mt-2">
             <div className="font-semibold text-md mb-5 text-gray-800">
-                Popular Launches
+                ⭐ Popular Launches (>24h old)
             </div>
             <div className="flex flex-col gap-4">
                 {projects.map((project) => (
@@ -94,7 +97,6 @@ const PopularProjects = ({ limit = 5 }) => {
                             </p>
                             <div className="flex gap-3 mt-1 text-xs text-gray-500">
                                 <span>🚀 {project.likesCount}</span>
-                                <span>💬 {project.commentsCount}</span>
                                 <span title={`Total Popularity Score: ${project.totalScore}`}>
                                     ⭐ Popular
                                 </span>
