@@ -74,41 +74,11 @@ const ComingSoon = () => {
             ))}
           </div>
         </div>
-
-        {/* Feedback Section */}
-        <div className="text-center">
-          <div className="bg-blue-50 p-8 rounded-xl border border-blue-200">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Have Feature Ideas?
-            </h2>
-            <p className="text-gray-600 mb-6">
-              We'd love to hear your suggestions for new features and improvements. 
-              Your feedback helps shape the future of LaunchIT.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="/suggestions"
-                className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Lightbulb className="w-5 h-5 mr-2" />
-                Suggest Features
-              </a>
-              <a
-                href="mailto:feedback@launchit.site"
-                className="inline-flex items-center justify-center px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <Bell className="w-5 h-5 mr-2" />
-                Get Updates
-              </a>
-            </div>
-          </div>
-        </div>
-
         {/* Stay Updated */}
         <div className="mt-16 text-center">
           <div className="inline-flex items-center space-x-2 text-gray-600">
             <Clock className="w-5 h-5" />
-            <span>Last updated: August 17, 2025</span>
+            <span>Last updated: August 19, 2025</span>
           </div>
         </div>
       </div>
