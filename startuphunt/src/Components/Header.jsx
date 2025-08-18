@@ -517,13 +517,13 @@ const Header = ({ onMenuClick }) => {
                     )}
                 </div>
 
-                <Link to="/coming-soon" className="text-gray-800 px-4 py-2 font-medium flex items-center gap-2  rounded hover:bg-gray-300">
+                <Link to="/coming-soon" className="text-gray-800  font-medium flex items-center gap-2  rounded hover:bg-gray-300">
                     <Rocket className="w-4 h-4" />
                     Coming Soon
                 </Link>
 
                 {userRole === "admin" && (
-                    <Link to="/admin" className="text-gray-800  px-4 py-2 font-medium rounded hover:bg-gray-300 ">Admin</Link>
+                    <Link to="/admin" className="text-gray-800  font-medium rounded ">Admin</Link>
                 )}
 
                 {user && <NotificationBell />}
@@ -581,7 +581,7 @@ const Header = ({ onMenuClick }) => {
                             ) : (
                                 <div className="py-1">
                                     <button onClick={() => { handleClose(); navigate("/UserRegister"); }}
-                                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-600">
                                         <CircleUserRound className="w-4 h-4 mr-2" />
                                         Sign In
                                     </button>
