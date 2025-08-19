@@ -278,8 +278,21 @@ const Header = ({ onMenuClick }) => {
 
             {/* Left side with menu button and logo */}
             <div className="flex items-center space-x-3 sm:space-x-4">
+                {/* Mobile Menu Button - NEW */}
                 <button
-                    className="p-2 sm:p-2.5 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none"
+                    className="p-2 sm:p-2.5 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none md:hidden"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Toggle sidebar menu"
+                >
+                    {mobileMenuOpen ? (
+                        <X className="w-6 h-6 sm:w-7 sm:h-7" />
+                    ) : (
+                        <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
+                    )}
+                </button>
+                {/* Desktop Menu Button (retained for consistency) */}
+                <button
+                    className="p-2 sm:p-2.5 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none hidden md:block"
                     onClick={onMenuClick}
                     aria-label="Toggle sidebar menu"
                 >
@@ -304,38 +317,17 @@ const Header = ({ onMenuClick }) => {
                             type="text"
                             value={search || ''}
                             onChange={(e) => {
-                                try {
-                                    const value = e.target.value || '';
-                                    setSearch(value);
-                                    if (value.trim()) {
-                                        setShowSearchSuggestions(true);
-                                        performSearch(value);
-                                    } else {
-                                        setShowSearchSuggestions(false);
-                                    }
-                                } catch (error) {
-                                    console.error('Search input error:', error);
-                                    setSearch('');
+                                const value = e.target.value || '';
+                                setSearch(value);
+                                if (value.trim()) {
+                                    setShowSearchSuggestions(true);
+                                    performSearch(value);
+                                } else {
+                                    setShowSearchSuggestions(false);
                                 }
                             }}
-                            onFocus={() => {
-                                try {
-                                    if (search && search.trim()) {
-                                        setShowSearchSuggestions(true);
-                                    }
-                                } catch (error) {
-                                    console.error('Search focus error:', error);
-                                }
-                            }}
-                            onBlur={() => {
-                                try {
-                                    setTimeout(() => {
-                                        setShowSearchSuggestions(false);
-                                    }, 200);
-                                } catch (error) {
-                                    console.error('Search blur error:', error);
-                                }
-                            }}
+                            onFocus={handleSearchFocus}
+                            onBlur={handleSearchBlur}
                             placeholder="Search projects, users, categories..."
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             disabled={isSearching}
@@ -359,8 +351,6 @@ const Header = ({ onMenuClick }) => {
                             &times;
                         </button>
                     )}
-
-                    {/* Search Suggestions Dropdown */}
                     {showSearchSuggestions && totalSuggestions > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
                             {isSearching ? (
@@ -370,7 +360,6 @@ const Header = ({ onMenuClick }) => {
                                 </div>
                             ) : (
                                 <div className="py-2">
-                                    {/* Projects */}
                                     {searchSuggestions.projects?.length > 0 && (
                                         <div className="mb-2">
                                             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -397,10 +386,6 @@ const Header = ({ onMenuClick }) => {
                                             ))}
                                         </div>
                                     )}
-
-
-
-                                    {/* Users */}
                                     {searchSuggestions.users?.length > 0 && (
                                         <div className="mb-2">
                                             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -427,8 +412,6 @@ const Header = ({ onMenuClick }) => {
                                             ))}
                                         </div>
                                     )}
-
-                                    {/* Categories */}
                                     {searchSuggestions.categories?.length > 0 && (
                                         <div className="mb-2">
                                             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -451,8 +434,6 @@ const Header = ({ onMenuClick }) => {
                                             ))}
                                         </div>
                                     )}
-
-                                    {/* Tags */}
                                     {searchSuggestions.tags?.length > 0 && (
                                         <div className="mb-2">
                                             <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -592,44 +573,9 @@ const Header = ({ onMenuClick }) => {
                 </div>
             </nav>
 
-            {/* Mobile Navigation - Right Side */}
+            {/* Mobile Navigation - Right Side (Simplified) */}
             <div className="md:hidden flex items-center space-x-2 sm:space-x-3">
-                {/* + Launch Dropdown Mobile */}
-                <div className="relative launch-dropdown">
-                    <button
-                        onClick={handleLaunchDropdownToggle}
-                        className="flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 text-black rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                        <CirclePlus className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="text-sm sm:text-base">Launch</span>
-                    </button>
-
-                    {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                            <button
-                                onClick={() => handleLaunchItemClick('submit')}
-                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                                <CirclePlus className="w-4 h-4 mr-2" />
-                                Submit
-                            </button>
-                            {user && (
-                                <button
-                                    onClick={() => handleLaunchItemClick('pitch')}
-                                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                >
-                                    <Video className="w-4 h-4 mr-2" />
-                                    Pitch
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Notifications Mobile */}
                 {user && <NotificationBell />}
-
-                {/* User Dropdown Mobile */}
                 <div className="user-dropdown relative">
                     <button className="p-2 sm:p-2.5 rounded-full hover:bg-white/20" onClick={handlepopover}>
                         {user ? (
@@ -642,7 +588,6 @@ const Header = ({ onMenuClick }) => {
                             <CircleUserRound className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                         )}
                     </button>
-
                     {open && (
                         <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
                             {user ? (
@@ -691,76 +636,187 @@ const Header = ({ onMenuClick }) => {
                         </div>
                     )}
                 </div>
-
-                <button
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="p-2 sm:p-2.5 rounded-lg hover:bg-white/20 text-white"
-                >
-                    {mobileMenuOpen ? <X className="w-6 h-6 sm:w-7 sm:h-7" /> : <Menu className="w-6 h-6 sm:w-7 sm:h-7" />}
-                </button>
-            </div>
-            {/* Mobile Search Bar */}
-            <div className="block md:hidden absolute top-full left-0 right-0 px-3 sm:px-4 py-2 bg-blue-500 border-t border-blue-400 z-30">
-                <div className="relative w-full max-w-full mx-auto">
-                    <input
-                        type="text"
-                        placeholder="Search startups, users, categories, tags..."
-                        className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-black/20 placeholder-gray-500 bg-white shadow text-sm"
-                        value={search}
-                        onChange={handleSearchChange}
-                        onFocus={handleSearchFocus}
-                        onBlur={handleSearchBlur}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                                setShowSearchSuggestions(false);
-                            }
-                        }}
-                    />
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        <Search className="w-4 h-4" />
-                    </span>
-                    {search && (
-                        <button
-                            type="button"
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg"
-                            onClick={() => {
-                                setSearch("");
-                                setShowSearchSuggestions(false);
-                            }}
-                            aria-label="Clear search"
-                        >
-                            &times;
-                        </button>
-                    )}
-                </div>
             </div>
 
-            {/* Mobile Menu */}
-            {
-                mobileMenuOpen && (
-                    <div className="md:hidden absolute top-full left-0 right-0 bg-blue-500 border-t border-blue-400 z-30">
-                        <div className="px-3 sm:px-4 py-2 space-y-1">
-                            <Link to="/submit" className="block text-gray-800 font-medium flex items-center gap-2 py-2 px-2 rounded hover:bg-blue-400 transition-colors">
-                                <CirclePlus className="w-4 h-4" />
-                                Submit
+            {/* Full-screen Mobile Menu (New Component) */}
+            {mobileMenuOpen && (
+                <div className="md:hidden fixed top-0 left-0 w-full h-full bg-white z-40 overflow-y-auto transform transition-transform duration-300 ease-in-out">
+                    <div className="px-4 py-4 flex flex-col h-full">
+                        {/* Header for the menu */}
+                        <div className="flex items-center justify-between mb-6">
+                            <Link to="/" className="flex items-center space-x-2 group" onClick={() => setMobileMenuOpen(false)}>
+                                <img className="w-9 h-9" src="/images/r6_circle_optimized.png" alt="L" />
+                                <span className="text-xl font-bold tracking-wide text-gray-800">launchit</span>
                             </Link>
-                            {user && (
-                                <Link to="/upload-pitch" className="block text-gray-800 font-medium flex items-center gap-2 py-2 px-2 rounded hover:bg-blue-400 transition-colors">
-                                    <Video className="w-4 h-4" />
-                                    Pitch
-                                </Link>
+                            <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-lg text-gray-800 hover:bg-gray-100">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Search bar inside the mobile menu */}
+                        <div className="relative mb-6">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                            <input
+                                type="text"
+                                value={search || ''}
+                                onChange={(e) => {
+                                    const value = e.target.value || '';
+                                    setSearch(value);
+                                    if (value.trim()) {
+                                        setShowSearchSuggestions(true);
+                                        performSearch(value);
+                                    } else {
+                                        setShowSearchSuggestions(false);
+                                    }
+                                }}
+                                onFocus={handleSearchFocus}
+                                onBlur={handleSearchBlur}
+                                placeholder="Search projects, users, categories..."
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                disabled={isSearching}
+                            />
+                            {isSearching && (
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                </div>
                             )}
-                            <Link to="/coming-soon" className="block text-gray-800 font-medium flex items-center gap-2 py-2 px-2 rounded hover:bg-blue-400 transition-colors">
-                                <Rocket className="w-4 h-4" />
-                                Coming Soon
-                            </Link>
-                            {userRole === "admin" && (
-                                <Link to="/admin" className="block text-gray-800 font-medium py-2 px-2 rounded hover:bg-blue-400 transition-colors">Admin</Link>
+                            {showSearchSuggestions && totalSuggestions > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-80 overflow-y-auto z-50">
+                                    {isSearching ? (
+                                        <div className="p-4 text-center">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
+                                            <p className="text-sm text-gray-500 mt-2">Searching...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="py-2">
+                                            {searchSuggestions.projects?.length > 0 && (
+                                                <div className="mb-2">
+                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                        Projects
+                                                    </div>
+                                                    {searchSuggestions.projects.map((project) => (
+                                                        <button
+                                                            key={project.id}
+                                                            onClick={() => handleSuggestionClick('project', project)}
+                                                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                        >
+                                                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                {project.logo_url ? (
+                                                                    <img src={project.logo_url} alt={project.name} className="w-6 h-6 rounded object-cover" />
+                                                                ) : (
+                                                                    <Rocket className="w-4 h-4 text-gray-500" />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-medium text-gray-900 truncate">{project.name}</div>
+                                                                <div className="text-sm text-gray-500 truncate">{project.category_type}</div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {searchSuggestions.users?.length > 0 && (
+                                                <div className="mb-2">
+                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                        Users
+                                                    </div>
+                                                    {searchSuggestions.users.map((user) => (
+                                                        <button
+                                                            key={user.id}
+                                                            onClick={() => handleSuggestionClick('user', user)}
+                                                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                        >
+                                                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                {user.avatar_url ? (
+                                                                    <img src={user.avatar_url} alt={user.username} className="w-6 h-6 rounded object-cover" />
+                                                                ) : (
+                                                                    <User className="w-4 h-4 text-gray-500" />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-medium text-gray-900 truncate">{user.username}</div>
+                                                                <div className="text-sm text-gray-500 truncate">{user.full_name}</div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {searchSuggestions.categories?.length > 0 && (
+                                                <div className="mb-2">
+                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                        Categories
+                                                    </div>
+                                                    {searchSuggestions.categories.map((category) => (
+                                                        <button
+                                                            key={category}
+                                                            onClick={() => handleSuggestionClick('category', { category_type: category })}
+                                                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                        >
+                                                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                <Monitor className="w-4 h-4 text-blue-600" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-medium text-gray-900 truncate">{category}</div>
+                                                                <div className="text-sm text-gray-500">Category</div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {searchSuggestions.tags?.length > 0 && (
+                                                <div className="mb-2">
+                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                        Tagged Projects
+                                                    </div>
+                                                    {searchSuggestions.tags.map((project) => (
+                                                        <button
+                                                            key={project.id}
+                                                            onClick={() => handleSuggestionClick('project', project)}
+                                                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                        >
+                                                            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                <Tag className="w-4 h-4 text-green-600" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-medium text-gray-900 truncate">{project.name}</div>
+                                                                <div className="text-sm text-gray-500">Tagged Project</div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
+
+                        {/* Navigation links in the mobile menu */}
+                        <nav className="flex-1 space-y-2">
+                            <Link to="/submit" onClick={() => setMobileMenuOpen(false)} className="w-full flex items-center gap-3 py-3 px-4 text-gray-800 rounded-lg hover:bg-gray-100">
+                                <CirclePlus className="w-5 h-5" />
+                                <span className="text-lg font-medium">Submit</span>
+                            </Link>
+                            {user && (
+                                <Link to="/upload-pitch" onClick={() => setMobileMenuOpen(false)} className="w-full flex items-center gap-3 py-3 px-4 text-gray-800 rounded-lg hover:bg-gray-100">
+                                    <Video className="w-5 h-5" />
+                                    <span className="text-lg font-medium">Pitch</span>
+                                </Link>
+                            )}
+                            <Link to="/coming-soon" onClick={() => setMobileMenuOpen(false)} className="w-full flex items-center gap-3 py-3 px-4 text-gray-800 rounded-lg hover:bg-gray-100">
+                                <Rocket className="w-5 h-5" />
+                                <span className="text-lg font-medium">Coming Soon</span>
+                            </Link>
+                            {userRole === "admin" && (
+                                <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="w-full flex items-center gap-3 py-3 px-4 text-gray-800 rounded-lg hover:bg-gray-100">
+                                    <Monitor className="w-5 h-5" />
+                                    <span className="text-lg font-medium">Admin</span>
+                                </Link>
+                            )}
+                        </nav>
                     </div>
-                )
-            }
+                </div>
+            )}
         </header >
     );
 };

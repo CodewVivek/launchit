@@ -54,12 +54,13 @@ function AppRoutes() {
 
   const isProjectDetailsPage = location.pathname.startsWith("/launches/");
 
-  // Auto-close sidebar when location changes (new page opened)
+  // Auto-close sidebar on mobile when navigating to a new page
   useEffect(() => {
-    if (sidebarOpen) {
+    // Only auto-close on mobile devices (screen width < 1024px)
+    if (window.innerWidth < 1024 && sidebarOpen) {
       setSidebarOpen(false);
     }
-  }, [location.pathname]);
+  }, [location.pathname, sidebarOpen]);
 
   // The main content container will have a left margin ONLY IF the sidebar is open AND it's NOT the ProjectDetails page
   const mainContentMargin = sidebarOpen && !isProjectDetailsPage ? 'lg:ml-60' : 'lg:ml-10';
