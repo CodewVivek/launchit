@@ -61,7 +61,7 @@ const Sidebar = ({ isOpen }) => {
                     toast.error("Profile not found");
                 }
             } catch (error) {
-                console.error("Error fetching profile:", error);
+                
                 toast.error("Error loading profile");
             }
         } else {
@@ -115,7 +115,7 @@ const Sidebar = ({ isOpen }) => {
                                                 toast.error("Profile not found");
                                             }
                                         } catch (error) {
-                                            console.error("Error fetching profile:", error);
+                                            
                                             toast.error("Error loading profile");
                                         }
                                     }}
@@ -172,7 +172,7 @@ const Sidebar = ({ isOpen }) => {
                                             toast.error("Profile not found");
                                         }
                                     } catch (error) {
-                                        console.error("Error fetching profile:", error);
+                                        
                                         toast.error("Error loading profile");
                                     }
                                 }}
@@ -221,7 +221,7 @@ const Sidebar = ({ isOpen }) => {
                                     toast.error("Profile not found");
                                 }
                             } catch (error) {
-                                console.error("Error fetching profile:", error);
+                                
                                 toast.error("Error loading profile");
                             }
                         }}

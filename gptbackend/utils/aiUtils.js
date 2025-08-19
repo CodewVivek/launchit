@@ -2,6 +2,19 @@
 const embeddingsCache = new Map();
 const moderationCache = new Map();
 
+// OpenAI client setup
+let openaiClient = null;
+
+async function getOpenAIClient() {
+    if (!openaiClient) {
+        const OpenAI = (await import('openai')).default;
+        openaiClient = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+    }
+    return openaiClient;
+}
+
 // Generate embeddings for text
 async function generateEmbedding(text) {
     try {
@@ -20,7 +33,7 @@ async function generateEmbedding(text) {
         embeddingsCache.set(cacheKey, embedding);
         return embedding;
     } catch (error) {
-        console.error('Error generating embedding:', error);
+        // Error generating embedding
         throw new Error('Failed to generate embedding');
     }
 }
@@ -72,7 +85,7 @@ async function semanticSearch(query, projects, limit = 10) {
         return scoredProjects.slice(0, limit);
 
     } catch (error) {
-        console.error('Error in semantic search:', error);
+        // Error in semantic search
         throw new Error('Semantic search failed');
     }
 }
@@ -163,7 +176,7 @@ async function moderateContent(content) {
         return analysis;
 
     } catch (error) {
-        console.error('Error moderating content:', error);
+        // Error moderating content
 
         // 🚨 CRITICAL: When moderation fails, check for adult content locally FIRST
         const adultContentCheck = checkAdultContent(content);

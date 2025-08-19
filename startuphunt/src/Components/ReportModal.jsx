@@ -84,7 +84,7 @@ const ReportModal = ({
     setSubmitting(false);
 
     if (error) {
-      console.error("Error submitting report:", error);
+      
       alert("Failed to submit report. Please try again.");
     } else {
       setShowSuccess(true);

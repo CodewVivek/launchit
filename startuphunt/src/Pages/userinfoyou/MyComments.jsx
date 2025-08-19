@@ -50,7 +50,7 @@ const MyComments = () => {
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Error fetching comments:', error);
+                
                 setError('Failed to load your comments');
                 toast.error('Failed to load your comments');
             } else {
@@ -65,7 +65,7 @@ const MyComments = () => {
                 setComments(validComments);
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             setError('An error occurred while loading your comments');
             toast.error('An error occurred while loading your comments');
         } finally {
@@ -81,14 +81,14 @@ const MyComments = () => {
                 .eq('id', commentId);
 
             if (error) {
-                console.error('Error deleting comment:', error);
+                
                 toast.error('Failed to delete comment');
             } else {
                 setComments(prev => prev.filter(comment => comment.id !== commentId));
                 toast.success('Comment deleted successfully');
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             toast.error('An error occurred while deleting the comment');
         }
     };

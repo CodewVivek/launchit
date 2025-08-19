@@ -107,7 +107,7 @@ const Like = ({ projectId }) => {
         }
       }
     } catch (error) {
-      console.error("Error toggling like:", error);
+      
       setSnackbar({
         open: true,
         message: "Failed to update like",

@@ -14,7 +14,7 @@ import Button from '@mui/material/Button';
 import categoryOptions from '../Components/categoryOptions';
 import BuiltWithSelect from '../Components/BuiltWithSelect';
 import { config } from '../config';
-import { moderateContent } from '../utils/aiApi';
+// Content moderation removed for merge
 import { optimizeImage, formatFileSize } from '../utils/imageOptimizer';
 
 // Custom styles for the react-select component to match the new UI
@@ -96,8 +96,7 @@ const Register = () => {
     const [pendingAIData, setPendingAIData] = useState(null);
     const [isAILoading, setIsAILoading] = useState(false);
 
-    // Content Moderation State
-    const [isModerating, setIsModerating] = useState(false);
+    // Content moderation removed for merge
 
     // Add retry state
     const [retryCount, setRetryCount] = useState(0);
@@ -248,7 +247,7 @@ const Register = () => {
                         .single();
 
                     if (error) {
-                        console.error('Error loading project:', error);
+
                         setSnackbar({ open: true, message: 'Project not found or access denied.', severity: 'error' });
                         return;
                     }
@@ -279,7 +278,7 @@ const Register = () => {
                         setCoverFiles(project.cover_urls || [null, null, null, null]);
                     }
                 } catch (error) {
-                    console.error('Error loading project for editing:', error);
+
                     setSnackbar({ open: true, message: 'Failed to load project for editing.', severity: 'error' });
                 } finally {
                     setLoadingProject(false);
@@ -407,20 +406,7 @@ const Register = () => {
     };
 
     // Content Moderation Function
-    // This function checks content for truly inappropriate material:
-    // - Profanity, hate speech, threats
-    // - Harmful or dangerous content
-    // - Spam or malicious links
-    // It should NOT block legitimate business descriptions, technical terms, or professional content
-    const checkContentModeration = async (content, contentType) => {
-        try {
-            const result = await moderateContent(content, contentType, user?.id);
-            return result;
-        } catch (error) {
-            console.error('Moderation error:', error);
-            return { action: 'approve', message: 'Moderation failed, allowing submission' };
-        }
-    };
+    // Content moderation removed for merge - direct submission enabled
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -434,94 +420,7 @@ const Register = () => {
         }
 
         // Content Moderation Check
-        setIsModerating(true);
-        try {
-            const nameModeration = await checkContentModeration(formData.name, 'project_name');
-            const taglineModeration = await checkContentModeration(formData.tagline, 'project_tagline');
-            const descriptionModeration = await checkContentModeration(formData.description, 'project_description');
-
-            // Check for high severity content (70-100%)
-            const highSeverityContent = [];
-            if (nameModeration.action === 'reject') {
-                highSeverityContent.push({
-                    field: 'Project Name',
-                    content: formData.name,
-                    reason: nameModeration.message || 'Contains inappropriate content'
-                });
-            }
-            if (taglineModeration.action === 'reject') {
-                highSeverityContent.push({
-                    field: 'Tagline',
-                    content: formData.tagline,
-                    reason: taglineModeration.message || 'Contains inappropriate content'
-                });
-            }
-            if (descriptionModeration.action === 'reject') {
-                highSeverityContent.push({
-                    field: 'Description',
-                    content: formData.description,
-                    reason: descriptionModeration.message || 'Contains inappropriate content'
-                });
-            }
-
-            if (highSeverityContent.length > 0) {
-                const blockedFields = highSeverityContent.map(item => item.field).join(', ');
-                const detailedMessage = highSeverityContent.map(item =>
-                    `• ${item.field}: "${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}" - ${item.reason}`
-                ).join('\n');
-
-                setSnackbar({
-                    open: true,
-                    message: `🚫 Content Blocked: ${blockedFields} contain inappropriate content.\n\n${detailedMessage}\n\n💡 Tip: Avoid profanity, hate speech, threats, or harmful content. Keep descriptions professional and business-focused. If you believe this is an error, please rephrase your content.`,
-                    severity: 'error'
-                });
-                setIsModerating(false);
-                return;
-            }
-
-            // Show warnings for medium severity content (below 70% but flagged)
-            const mediumSeverityContent = [];
-            if (nameModeration.action === 'review') {
-                mediumSeverityContent.push({
-                    field: 'Project Name',
-                    content: formData.name,
-                    reason: nameModeration.message || 'Flagged for review'
-                });
-            }
-            if (taglineModeration.action === 'review') {
-                mediumSeverityContent.push({
-                    field: 'Tagline',
-                    content: formData.tagline,
-                    reason: taglineModeration.message || 'Flagged for review'
-                });
-            }
-            if (descriptionModeration.action === 'review') {
-                mediumSeverityContent.push({
-                    field: 'Description',
-                    content: formData.description,
-                    reason: descriptionModeration.message || 'Flagged for review'
-                });
-            }
-
-            if (mediumSeverityContent.length > 0) {
-                const flaggedFields = mediumSeverityContent.map(item => item.field).join(', ');
-                const detailedMessage = mediumSeverityContent.map(item =>
-                    `• ${item.field}: "${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}" - ${item.reason}`
-                ).join('\n');
-
-                setSnackbar({
-                    open: true,
-                    message: `⚠️ Content Flagged: ${flaggedFields} flagged for review.\n\n${detailedMessage}\n\n💡 Your submission will be monitored by moderators. Consider reviewing flagged content for professionalism.`,
-                    severity: 'warning'
-                });
-                // Continue with submission (content will be auto-reported to admin)
-            }
-        } catch (error) {
-            console.error('Moderation check failed:', error);
-            // Continue with submission if moderation fails
-        } finally {
-            setIsModerating(false);
-        }
+        // Content moderation removed for merge - direct submission enabled
 
         const submissionData = {
             name: formData.name,
@@ -566,26 +465,26 @@ const Register = () => {
 
                     // Verify quality was maintained
                     if (qualityFile.size < logoFile.size * 0.8) {
-                        console.warn('⚠️ Quality may have been lost, using original file');
+
                         throw new Error('Quality preservation resulted in significant size reduction');
                     }
 
                     const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
                     if (logoErrorUpload) {
-                        console.error('Logo upload error:', logoErrorUpload);
+
                         throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
                     }
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                     logoUrl = logoUrlData.publicUrl;
 
                 } catch (error) {
-                    console.error('Logo quality preservation failed, uploading original:', error);
+
                     // Fallback to original file if quality preservation fails
                     const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, logoFile);
                     if (logoErrorUpload) {
-                        console.error('Logo upload error:', logoErrorUpload);
+
                         throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
                     }
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
@@ -613,7 +512,7 @@ const Register = () => {
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
 
                     if (logoErrorUpload) {
-                        console.error('❌ AI logo upload error:', logoErrorUpload);
+
                         throw new Error(`AI logo upload failed: ${logoErrorUpload.message}`);
                     }
 
@@ -622,7 +521,7 @@ const Register = () => {
                     logoUrl = logoUrlData.publicUrl;
 
                 } catch (error) {
-                    console.error('❌ AI logo processing failed:', error);
+
 
                     logoUrl = logoFile;
                 }
@@ -637,26 +536,26 @@ const Register = () => {
 
                     // Verify quality was maintained
                     if (qualityFile.size < thumbnailFile.size * 0.8) {
-                        console.warn('⚠️ Thumbnail quality may have been lost, using original file');
+
                         throw new Error('Quality preservation resulted in significant size reduction');
                     }
 
                     const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
                     const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
                     if (thumbError) {
-                        console.error('Thumbnail upload error:', thumbError);
+
                         throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                     thumbnailUrl = thumbUrlData.publicUrl;
 
                 } catch (error) {
-                    console.error('Thumbnail quality preservation failed, uploading original:', error);
+
                     // Fallback to original file if quality preservation fails
                     const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
                     const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, thumbnailFile);
                     if (thumbError) {
-                        console.error('Thumbnail upload error:', thumbError);
+
                         throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
@@ -680,14 +579,14 @@ const Register = () => {
                     const thumbPath = `${Date.now()}-ai-thumbnail-${nanoid(6)}.png`;
                     const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
                     if (thumbError) {
-                        console.error('AI thumbnail upload error:', thumbError);
+
                         throw new Error(`AI thumbnail upload failed: ${thumbError.message}`);
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                     thumbnailUrl = thumbUrlData.publicUrl;
 
                 } catch (error) {
-                    console.error('AI thumbnail processing failed:', error);
+
                     // Keep the original AI thumbnail URL as fallback
                     thumbnailUrl = thumbnailFile;
                 }
@@ -705,26 +604,26 @@ const Register = () => {
 
                             // Verify quality was maintained
                             if (qualityFile.size < file.size * 0.8) {
-                                console.warn(`⚠️ Cover image ${i + 1} quality may have been lost, using original file`);
+
                                 throw new Error('Quality preservation resulted in significant size reduction');
                             }
 
                             const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
                             const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, qualityFile);
                             if (coverErrorUpload) {
-                                console.error('Cover file upload error:', coverErrorUpload);
+
                                 throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                             coverUrls.push(coverUrlData.publicUrl);
 
                         } catch (error) {
-                            console.error(`Cover image ${i + 1} quality preservation failed, uploading original:`, error);
+
                             // Fallback to original file if quality preservation fails
                             const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
                             const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
                             if (coverErrorUpload) {
-                                console.error('Cover file upload error:', coverErrorUpload);
+
                                 throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
@@ -755,14 +654,14 @@ const Register = () => {
                 submissionData.status = 'launched';
                 const { data, error } = await supabase.from('projects').update(submissionData).eq('id', editingProjectId).select().single();
                 if (error) {
-                    console.error('Update error:', error);
+
                     throw new Error(`Update failed: ${error.message}`);
                 }
                 finalSubmissionData = data;
             } else {
                 const { data, error } = await supabase.from('projects').insert([submissionData]).select().single();
                 if (error) {
-                    console.error('Insert error:', error);
+
                     throw new Error(`Insert failed: ${error.message}`);
                 }
                 finalSubmissionData = data;
@@ -800,7 +699,7 @@ const Register = () => {
             setIsRetrying(false);
             setIsGeneratingPreview(false);
         } catch (error) {
-            console.error('Error submitting form:', error);
+
 
             // Provide more specific error messages
             let errorMessage = 'Failed to register startup. Please try again.';
@@ -942,7 +841,7 @@ const Register = () => {
             const missingFields = essentialFields.filter(field => !gptData[field]);
 
             if (missingFields.length > 0) {
-                console.warn('Missing essential fields:', missingFields);
+
                 setSnackbar({
                     open: true,
                     message: `⚠️ AI generated partial data. Missing: ${missingFields.join(', ')}`,
@@ -983,7 +882,7 @@ const Register = () => {
             setRetryCount(0);
         }
         catch (error) {
-            console.error("Auto Generate failed:", error);
+
 
             let errorMessage = "AI failed to extract startup info...";
             let severity = 'error';
@@ -1135,7 +1034,7 @@ const Register = () => {
 
     // Handle image loading errors
     const handleImageError = (e, type) => {
-        console.error(`❌ Failed to load AI-generated ${type}:`, e.target.src);
+
 
         // Check if it's a favicon URL (common issue)
         if (e.target.src.includes('favicon.ico')) {
@@ -1215,7 +1114,7 @@ const Register = () => {
             setSnackbar({ open: true, message: 'Launch saved!', severity: 'success' });
         } catch (error) {
             setSnackbar({ open: true, message: 'Failed to save draft. Please try again.', severity: 'error' });
-            console.error('Supabase error:', error);
+
         }
     };
 
@@ -1315,27 +1214,22 @@ const Register = () => {
                                 lastModified: Date.now()
                             });
 
-                            console.log(
-                                'Original size:', file.size, 'bytes',
-                                'New size:', qualityFile.size, 'bytes',
-                                'Quality maintained:', qualityFile.size >= file.size * 0.9 ? 'Yes' : 'Warning'
-                            );
+                            // Image quality optimization completed
 
                             resolve(qualityFile);
                         } else {
-                            console.warn('⚠️ Blob creation failed, using original file');
+                            // Blob creation failed, using original file
                             resolve(file);
                         }
                     }, outputType, quality);
                 } catch (error) {
-                    console.error('❌ Image processing error:', error);
-                    console.warn('⚠️ Using original file due to processing error');
+                    // Image processing error, using original file
                     resolve(file);
                 }
             };
 
             img.onerror = () => {
-                console.error('❌ Image loading failed, using original file');
+                // Image loading failed, using original file
                 resolve(file);
             };
 
@@ -1380,7 +1274,7 @@ const Register = () => {
 
             return urlData.publicUrl;
         } catch (error) {
-            console.error(`${type} upload error:`, error);
+            // Upload error occurred
             throw error;
         }
     };
@@ -1995,17 +1889,9 @@ const Register = () => {
                                 <button
                                     type="button"
                                     onClick={handleSubmit}
-                                    disabled={isModerating}
-                                    className={`btn-primary ${isModerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className="btn-primary"
                                 >
-                                    {isModerating ? (
-                                        <>
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                            Checking Content...
-                                        </>
-                                    ) : (
-                                        'Submit Launch'
-                                    )}
+                                    Submit Launch
                                 </button>
                             )}
                         </div>

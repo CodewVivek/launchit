@@ -87,7 +87,7 @@ const ProjectDetails = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching project:', error);
+        
       } else {
         setProject(data);
 
@@ -101,7 +101,7 @@ const ProjectDetails = () => {
             .single();
 
           if (userError) {
-            console.error('Error fetching creator:', userError);
+            
           } else {
 
             setCreator(userData);
@@ -255,7 +255,7 @@ const ProjectDetails = () => {
         toast.success(`Following ${creator.full_name || creator.username}`);
       }
     } catch (error) {
-      console.error('Error:', error);
+      
       toast.error(isFollowing ? 'Failed to unfollow' : 'Failed to follow');
     } finally {
       setFollowLoading(false);
@@ -296,7 +296,7 @@ const ProjectDetails = () => {
         toast.success("Project saved!");
       }
     } catch (error) {
-      console.error('Error:', error);
+      
       toast.error(isSaved ? 'Failed to remove from saved' : 'Failed to save project');
     } finally {
       setSaveLoading(false);

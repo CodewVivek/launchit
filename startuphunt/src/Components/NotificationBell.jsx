@@ -100,7 +100,7 @@ export default function NotificationBell() {
             );
             setUnreadCount((prev) => Math.max(0, prev - 1));
         } catch (error) {
-            console.error("Error marking notification as read:", error);
+            
             setSnackbar({
                 open: true,
                 message: "Error marking notification as read",
@@ -122,7 +122,7 @@ export default function NotificationBell() {
             );
             setUnreadCount(0);
         } catch (error) {
-            console.error("Error marking all notifications as read:", error);
+            
             setSnackbar({
                 open: true,
                 message: "Error marking notifications as read",
@@ -153,7 +153,7 @@ export default function NotificationBell() {
                 severity: "success",
             });
         } catch (error) {
-            console.error("Error deleting notification:", error);
+            
             setSnackbar({
                 open: true,
                 message: "Error deleting notification",
@@ -179,7 +179,7 @@ export default function NotificationBell() {
                 severity: "success",
             });
         } catch (error) {
-            console.error("Error deleting all notifications:", error);
+            
             setSnackbar({
                 open: true,
                 message: "Error deleting all notifications",

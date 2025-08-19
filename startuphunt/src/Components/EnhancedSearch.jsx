@@ -30,7 +30,7 @@ const EnhancedSearch = ({
             try {
                 setSearchHistory(JSON.parse(saved));
             } catch (error) {
-                console.error('Failed to parse search history:', error);
+                
             }
         }
     }, []);
@@ -111,17 +111,17 @@ const EnhancedSearch = ({
                 }
             } else {
                 // Fallback to basic search if AI search fails
-                console.warn('AI search failed, trying fallback search:', result);
+                
                 await performFallbackSearch(searchQuery);
             }
         } catch (error) {
-            console.error('Search error:', error);
+            
             
             // Try fallback search if AI search throws an error
             try {
                 await performFallbackSearch(searchQuery);
             } catch (fallbackError) {
-                console.error('Fallback search also failed:', fallbackError);
+                
                 
                 // Provide user-friendly error message
                 let errorMessage = 'Search failed. Please try again.';
@@ -174,7 +174,7 @@ const EnhancedSearch = ({
                 toast.success(`Found ${results.length} results for "${searchQuery}" (using fallback search)`);
             }
         } catch (error) {
-            console.error('Fallback search error:', error);
+            
             throw error;
         }
     };
@@ -233,7 +233,7 @@ const EnhancedSearch = ({
                             try {
                                 setQuery(e.target.value);
                             } catch (error) {
-                                console.error('Error updating search query:', error);
+                                
                                 toast.error('Search input error. Please try again.');
                             }
                         }}
@@ -249,7 +249,7 @@ const EnhancedSearch = ({
                                     try {
                                         clearSearch();
                                     } catch (error) {
-                                        console.error('Error clearing search:', error);
+                                        
                                         toast.error('Error clearing search. Please try again.');
                                     }
                                 }}
@@ -265,7 +265,7 @@ const EnhancedSearch = ({
                                     try {
                                         setShowFiltersPanel(!showFiltersPanel);
                                     } catch (error) {
-                                        console.error('Error toggling filters:', error);
+                                        
                                         toast.error('Error with filters. Please try again.');
                                     }
                                 }}

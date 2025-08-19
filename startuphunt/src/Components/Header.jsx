@@ -55,7 +55,7 @@ const Header = ({ onMenuClick }) => {
             toast.success("Signed out successfully");
             navigate("/");
         } catch (error) {
-            console.error("Error signing out:", error);
+            
             toast.error("Error signing out");
         }
     };
@@ -74,7 +74,7 @@ const Header = ({ onMenuClick }) => {
                 toast.error("Profile not found");
             }
         } catch (error) {
-            console.error("Error fetching profile:", error);
+            
             toast.error("Error loading profile");
         }
         handleClose();
@@ -90,7 +90,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(5);
 
             if (error) {
-                console.error('Fallback search error:', error);
+                
                 return;
             }
 
@@ -101,7 +101,7 @@ const Header = ({ onMenuClick }) => {
                 tags: []
             });
         } catch (error) {
-            console.error('Fallback search failed:', error);
+            
         }
     }, []);
 
@@ -122,7 +122,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (projectsError) {
-                console.error('Projects search error:', projectsError);
+                
             }
 
             // Search users/profiles
@@ -133,7 +133,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (usersError) {
-                console.error('Users search error:', usersError);
+                
             }
 
             // Search categories (from projects)
@@ -144,7 +144,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (categoriesError) {
-                console.error('Categories search error:', categoriesError);
+                
             }
 
             // Search tags (from projects) - tags is ARRAY type in database
@@ -156,7 +156,7 @@ const Header = ({ onMenuClick }) => {
                     .limit(10);
 
                 if (tagError) {
-                    console.error('Tags search error:', tagError);
+                    
                 } else if (tagProjects) {
                     // Filter projects that contain the search query in their tags array
                     tagMatches = tagProjects.filter(project =>
@@ -169,7 +169,7 @@ const Header = ({ onMenuClick }) => {
                     ).slice(0, 3);
                 }
             } catch (tagFilterError) {
-                console.error('Tag filtering error:', tagFilterError);
+                
             }
 
             setSearchSuggestions({
@@ -179,7 +179,7 @@ const Header = ({ onMenuClick }) => {
                 tags: tagMatches
             });
         } catch (error) {
-            console.error('Search error:', error);
+            
             // Try fallback search if main search fails
             await performFallbackSearch(query);
         } finally {
@@ -203,7 +203,7 @@ const Header = ({ onMenuClick }) => {
                 setSearchSuggestions({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
             }
         } catch (error) {
-            console.error('Search input error:', error);
+            
         }
     }, [performSearch]);
 
@@ -213,7 +213,7 @@ const Header = ({ onMenuClick }) => {
                 setShowSearchSuggestions(true);
             }
         } catch (error) {
-            console.error('Search focus error:', error);
+            
         }
     };
 
@@ -224,7 +224,7 @@ const Header = ({ onMenuClick }) => {
                 setShowSearchSuggestions(false);
             }, 200);
         } catch (error) {
-            console.error('Search blur error:', error);
+            
         }
     };
 

@@ -157,7 +157,7 @@ export default function PitchUpload() {
             setTimeout(() => navigate("/"), 2000);
         } catch (err) {
             setError("Error submitting pitch: " + err.message);
-            console.error("Pitch submission error:", err);
+            
         } finally {
             setSubmitting(false);
         }

@@ -20,7 +20,7 @@ const AdminModerationDashboard = () => {
             const result = await getModerationQueue(selectedStatus, 50);
             setModerationRecords(result.records || []);
         } catch (error) {
-            console.error('Failed to load moderation queue:', error);
+            
             toast.error('Failed to load moderation queue');
         } finally {
             setLoading(false);
@@ -53,7 +53,7 @@ const AdminModerationDashboard = () => {
             }
 
         } catch (error) {
-            console.error('Failed to update status:', error);
+            
             toast.error('Failed to update moderation status');
         } finally {
             setUpdating(false);

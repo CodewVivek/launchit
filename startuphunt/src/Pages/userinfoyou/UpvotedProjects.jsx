@@ -50,7 +50,7 @@ const UpvotedProjects = () => {
                 .order('id', { ascending: false });
 
             if (error) {
-                console.error('Error fetching upvoted projects:', error);
+                
                 setError('Failed to load your upvoted projects');
                 toast.error('Failed to load your upvoted projects');
             } else {
@@ -66,7 +66,7 @@ const UpvotedProjects = () => {
                 setUpvotedProjects(validProjects);
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             setError('An error occurred while loading your upvoted projects');
             toast.error('An error occurred while loading your upvoted projects');
         } finally {

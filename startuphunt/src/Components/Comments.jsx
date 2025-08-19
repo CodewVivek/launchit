@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import ReportModal from "./ReportModal";
 import { toast } from "react-hot-toast";
-import { moderateContent } from "../utils/aiApi";
+// Content moderation removed for merge
 
 // Content moderation will be checked on post/reply
 
@@ -70,34 +70,14 @@ const Comments = ({ projectId }) => {
     }
   };
 
-    const handleAddComment = async (e) => {
+  const handleAddComment = async (e) => {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
-    
+
     setIsPostingComment(true);
-    
+
     try {
-      // Content Moderation Check on Post (with timeout)
-      const moderationPromise = moderateContent(newComment, 'comment', user.id);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Moderation timeout')), 10000) // 10 second timeout
-      );
-      
-      const moderationResult = await Promise.race([moderationPromise, timeoutPromise]);
-      
-      if (moderationResult.action === 'reject') {
-        // High severity content (70-100%) - block completely
-        toast.error('🚫 Comment blocked: Contains inappropriate content that violates community guidelines.');
-        setIsPostingComment(false);
-        return; // Don't allow posting
-      } else if (moderationResult.action === 'review') {
-        // Medium severity content (below 70%) - allow posting but warn and auto-report
-        toast.warning('⚠️ Warning: Your comment has been flagged for review. You can post, but it will be monitored by moderators.');
-        // Content will be auto-reported to admin for monitoring
-      }
-      // Clean content (below 70%) - allow posting normally
-      
-      // Post the comment (either clean or medium-level flagged)
+      // Content moderation removed for merge - direct posting enabled
       await supabase.from("comments").insert({
         project_id: projectId,
         user_id: user.id,
@@ -107,10 +87,9 @@ const Comments = ({ projectId }) => {
       });
       setNewComment("");
       fetchComments();
-      
+
     } catch (error) {
-      console.error('Moderation failed:', error);
-      toast.error('⚠️ Content moderation failed. Please try again.');
+      toast.error('Failed to post comment. Please try again.');
     } finally {
       setIsPostingComment(false);
     }
@@ -144,33 +123,13 @@ const Comments = ({ projectId }) => {
     fetchComments();
   };
 
-    const handleReply = async (parentId) => {
+  const handleReply = async (parentId) => {
     if (!user || !replyContent.trim()) return;
-    
+
     setIsPostingReply(true);
-    
+
     try {
-      // Content Moderation Check on Reply (with timeout)
-      const moderationPromise = moderateContent(replyContent, 'comment_reply', user.id);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Moderation timeout')), 10000) // 10 second timeout
-      );
-      
-      const moderationResult = await Promise.race([moderationPromise, timeoutPromise]);
-      
-      if (moderationResult.action === 'reject') {
-        // High severity content (70-100%) - block completely
-        toast.error('🚫 Reply blocked: Contains inappropriate content that violates community guidelines.');
-        setIsPostingReply(false);
-        return; // Don't allow posting
-      } else if (moderationResult.action === 'review') {
-        // Medium severity content (below 70%) - allow posting but warn and auto-report
-        toast.warning('⚠️ Warning: Your reply has been flagged for review. You can post, but it will be monitored by moderators.');
-        // Content will be auto-reported to admin for monitoring
-      }
-      // Clean content (below 70%) - allow posting normally
-      
-      // Post the reply (either clean or medium-level flagged)
+      // Content moderation removed for merge - direct posting enabled
       await supabase.from("comments").insert({
         project_id: projectId,
         user_id: user.id,
@@ -181,10 +140,9 @@ const Comments = ({ projectId }) => {
       setReplyTo(null);
       setReplyContent("");
       fetchComments();
-      
+
     } catch (error) {
-      console.error('Moderation failed:', error);
-      toast.error('⚠️ Content moderation failed. Please try again.');
+      toast.error('Failed to post reply. Please try again.');
     } finally {
       setIsPostingReply(false);
     }
@@ -314,11 +272,10 @@ const Comments = ({ projectId }) => {
                   <button
                     type="submit"
                     disabled={isPostingReply}
-                    className={`text-xs px-4 py-2 rounded-lg transition ${
-                      isPostingReply 
-                        ? 'bg-gray-400 cursor-not-allowed opacity-50 text-white' 
+                    className={`text-xs px-4 py-2 rounded-lg transition ${isPostingReply
+                        ? 'bg-gray-400 cursor-not-allowed opacity-50 text-white'
                         : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
+                      }`}
                   >
                     {isPostingReply ? (
                       <>
@@ -370,24 +327,23 @@ const Comments = ({ projectId }) => {
               placeholder="💡 Share your thoughts, they might spark something big!"
               className="flex-1 bg-transparent text-base placeholder-gray-500 focus:outline-none pr-3 text-gray-900"
             />
-                              <button
-                    type="submit"
-                    disabled={isPostingComment}
-                    className={`font-semibold px-4 py-2 rounded-xl transition-all text-sm ${
-                      isPostingComment 
-                        ? 'bg-gray-400 cursor-not-allowed opacity-50' 
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    {isPostingComment ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline"></div>
-                        Checking...
-                      </>
-                    ) : (
-                      'Post'
-                    )}
-                  </button>
+            <button
+              type="submit"
+              disabled={isPostingComment}
+              className={`font-semibold px-4 py-2 rounded-xl transition-all text-sm ${isPostingComment
+                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+            >
+              {isPostingComment ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline"></div>
+                  Checking...
+                </>
+              ) : (
+                'Post'
+              )}
+            </button>
           </div>
 
           {/* Content Moderation will be checked on post */}

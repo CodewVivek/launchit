@@ -48,7 +48,7 @@ const Settings = () => {
       });
       navigate("/");
     } catch (error) {
-      console.error("Error deleting account:", error);
+      
       setSnackbar({
         open: true,
         message: "Failed to delete account",
@@ -85,7 +85,7 @@ const Settings = () => {
         });
         setAvatarUrl(profileData.avatar_url || "");
       } else {
-        console.error("Error fetching profile:", error);
+        
       }
       setLoading(false);
     };

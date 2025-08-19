@@ -19,12 +19,12 @@ const UserRegister = () => {
       });
 
       if (error) {
-        console.error("Google sign in error:", error);
+        
         setError("Failed to sign in. Please try again.");
         setLoading(false);
       }
     } catch (err) {
-      console.error("Unexpected error:", err);
+      
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }

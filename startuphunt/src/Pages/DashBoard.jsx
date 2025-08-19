@@ -22,7 +22,7 @@ const Dashboard = () => {
         .select("*")
         .neq("status", "draft");
       if (error) {
-        console.error("Error fetching project data", error);
+        
         setError("Failed to load projects. Please try again.");
       } else {
         setProjects(data);

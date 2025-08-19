@@ -26,7 +26,7 @@ const SearchPage = () => {
                 .limit(10);
 
             if (projectsError) {
-                console.error('Projects search error:', projectsError);
+                
             }
 
             // Search users/profiles
@@ -37,7 +37,7 @@ const SearchPage = () => {
                 .limit(5);
 
             if (usersError) {
-                console.error('Users search error:', usersError);
+                
             }
 
             // Search categories
@@ -48,7 +48,7 @@ const SearchPage = () => {
                 .limit(5);
 
             if (categoriesError) {
-                console.error('Categories search error:', categoriesError);
+                
             }
 
             setSearchResults({
@@ -57,7 +57,7 @@ const SearchPage = () => {
                 categories: [...new Set(categories?.map(c => c.category_type).filter(Boolean) || [])]
             });
         } catch (error) {
-            console.error('Search error:', error);
+            
         } finally {
             setIsSearching(false);
         }

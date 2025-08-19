@@ -43,7 +43,6 @@ import {
 import { Link } from "react-router-dom";
 import SortByDateFilter from "../Components/SortByDateFilter";
 import PitchUpload from "./PitchUpload";
-import { getAdminModerationQueue, getAdminNotifications } from "../utils/aiApi";
 
 function sortProjectsByDate(
   projects,
@@ -86,18 +85,17 @@ const AdminDashboard = () => {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [notificationModal, setNotificationModal] = useState({
     open: false,
-    type: "single", // "single" or "all"
-    selectedUserId: "",
-    title: "",
-    message: "",
-    notificationType: "admin_notification"
+    type: 'single', // 'single' or 'all'
+    selectedUserId: null,
+    message: '',
+    title: ''
   });
 
   // 🆕 NEW: Content Moderation State
-  const [moderationQueue, setModerationQueue] = useState([]);
-  const [loadingModeration, setLoadingModeration] = useState(false);
-  const [moderationTab, setModerationTab] = useState('pending_review');
-  const [unreadModerationNotifications, setUnreadModerationNotifications] = useState(0);
+  // const [moderationQueue, setModerationQueue] = useState([]);
+  // const [loadingModeration, setLoadingModeration] = useState(false);
+  // const [moderationTab, setModerationTab] = useState('pending_review');
+  // const [unreadModerationNotifications, setUnreadModerationNotifications] = useState(0);
 
   const [rejectionModal, setRejectionModal] = useState({
     open: false,
@@ -157,7 +155,7 @@ const AdminDashboard = () => {
           fetchAdvertisingInterests();
         }
       } catch (error) {
-        console.error("Error in checkAccess:", error);
+        
 
         setSnackbar({
           open: true,
@@ -221,11 +219,11 @@ const AdminDashboard = () => {
   }, [activeTab]);
 
   // 🆕 NEW: useEffect to fetch moderation queue when moderation tab is selected
-  useEffect(() => {
-    if (activeTab === "moderation") {
-      fetchModerationQueue();
-    }
-  }, [activeTab, moderationTab]);
+  // useEffect(() => {
+  //   if (activeTab === "moderation") {
+  //     fetchModerationQueue();
+  //   }
+  // }, [activeTab, moderationTab]);
 
   // New function to fetch advertising interests
   const fetchAdvertisingInterests = async () => {
@@ -243,7 +241,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       setAdvertisingInterests(data || []);
     } catch (error) {
-      console.error("Error fetching advertising interests:", error);
+      
     } finally {
       setLoadingAdvertisingInterests(false);
     }
@@ -261,7 +259,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       setUsers(data || []);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      
       setSnackbar({
         open: true,
         message: "Failed to fetch users",
@@ -273,66 +271,71 @@ const AdminDashboard = () => {
   };
 
   // 🆕 NEW: Function to fetch content moderation queue
-  const fetchModerationQueue = async () => {
-    setLoadingModeration(true);
-    try {
-      const result = await getAdminModerationQueue(moderationTab, 50);
-      if (result.success) {
-        setModerationQueue(result.records || []);
-        setUnreadModerationNotifications(result.unreadNotifications || 0);
-      }
-    } catch (error) {
-      console.error("Error fetching moderation queue:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to fetch moderation queue",
-        severity: "error",
-      });
-    } finally {
-      setLoadingModeration(false);
-    }
-  };
+  // const fetchModerationQueue = async () => {
+  //   setLoadingModeration(true);
+  //   try {
+  //     const result = await getAdminModerationQueue(moderationTab, 50);
+  //     if (result.success) {
+  //       setModerationQueue(result.records || []);
+  //       setUnreadModerationNotifications(result.unreadNotifications || 0);
+  //     }
+  //   } catch (error) {
+  //     
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Failed to fetch moderation queue",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoadingModeration(false);
+  //   }
+  // };
 
   // 🆕 NEW: Function to update moderation status
-  const updateModerationStatus = async (recordId, action) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'}/api/moderation/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          recordId,
-          action,
-          adminNotes: `Status updated to ${action} by admin`
-        }),
-      });
+  // const updateModerationStatus = async (recordId, action) => {
+  //   try {
+  //     // Use the same API base URL as other functions
+  //     const API_BASE_URL = window.location.hostname === 'localhost'
+  //       ? 'http://localhost:3001'
+  //       : 'https://launchit-ai-backend.onrender.com';
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  //     const response = await fetch(`${API_BASE_URL}/api/moderation/status`, {
+  //       method: 'PUT',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         recordId,
+  //         action,
+  //         adminNotes: `Status updated to ${action} by admin`
+  //       }),
+  //     });
 
-      const result = await response.json();
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
 
-      if (result.success) {
-        setSnackbar({
-          open: true,
-          message: `Content ${action} successfully`,
-          severity: "success",
-        });
+  //     const result = await response.json();
 
-        // Refresh the moderation queue
-        fetchModerationQueue();
-      }
-    } catch (error) {
-      console.error("Error updating moderation status:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to update moderation status",
-        severity: "error",
-      });
-    }
-  };
+  //     if (result.success) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: `Content ${action} successfully`,
+  //         severity: "success",
+  //       });
+
+  //       // Refresh the moderation queue
+  //       fetchModerationQueue();
+  //     }
+  //   } catch (error) {
+  //     
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Failed to update moderation status",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
 
   // New function to send notifications
   const sendNotification = async () => {
@@ -406,7 +409,7 @@ const AdminDashboard = () => {
       });
 
     } catch (error) {
-      console.error("Error sending notification:", error);
+      
       setSnackbar({
         open: true,
         message: "Failed to send notification",
@@ -439,7 +442,7 @@ const AdminDashboard = () => {
 
       fetchAdvertisingInterests();
     } catch (error) {
-      console.error("Error updating interest status:", error);
+      
       setSnackbar({
         open: true,
         message: "Failed to update interest status",
@@ -466,14 +469,14 @@ const AdminDashboard = () => {
         });
 
       if (error) {
-        console.error("Error fetching projects:", error);
+        
         setProjects([]);
       } else {
         // Projects data loaded
         setProjects(data || []);
       }
     } catch (error) {
-      console.error("Error in fetchProjects:", error);
+      
       setProjects([]);
     } finally {
       setLoadingProjects(false);
@@ -507,7 +510,7 @@ const AdminDashboard = () => {
         });
 
       if (reportsError) {
-        console.error("Error fetching reports:", reportsError);
+        
         setReports([]);
         return;
       }
@@ -522,7 +525,7 @@ const AdminDashboard = () => {
           .in("id", userIds);
 
         if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
+          
         } else {
           // Combine the data
           const profilesMap = {};
@@ -542,7 +545,7 @@ const AdminDashboard = () => {
         setReports([]);
       }
     } catch (error) {
-      console.error("Error in fetchReports:", error);
+      
       setReports([]);
     } finally {
       setLoadingReports(false);
@@ -567,7 +570,7 @@ const AdminDashboard = () => {
         .eq("project_id", projectId);
 
       if (likesError) {
-        console.error("Error deleting likes:", likesError);
+        
       }
 
       // 2. Delete media files from storage
@@ -585,7 +588,7 @@ const AdminDashboard = () => {
             .remove(filePaths);
 
           if (storageError) {
-            console.error("Error deleting media files:", storageError);
+            
           }
         }
       }
@@ -607,7 +610,7 @@ const AdminDashboard = () => {
       });
       fetchProjects();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      
 
       setSnackbar({
         open: true,
@@ -630,7 +633,7 @@ const AdminDashboard = () => {
         .eq("id", reportId);
 
       if (error) {
-        console.error("Error updating report:", error);
+        
 
         setSnackbar({
           open: true,
@@ -646,7 +649,7 @@ const AdminDashboard = () => {
         fetchReports();
       }
     } catch (error) {
-      console.error("Error in updateReportStatus:", error);
+      
     }
   };
 
@@ -685,7 +688,7 @@ const AdminDashboard = () => {
         });
 
       if (pitchesError) {
-        console.error("Error fetching pitches:", pitchesError);
+        
         setPitches([]);
         return;
       }
@@ -702,7 +705,7 @@ const AdminDashboard = () => {
           .in("id", userIds);
 
         if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
+          
         } else {
           // Combine the data
           const profilesMap = {};
@@ -723,7 +726,7 @@ const AdminDashboard = () => {
         setPitches([]);
       }
     } catch (err) {
-      console.error("Exception in fetchPitches:", err);
+      
       setPitches([]);
     } finally {
       setLoadingPitches(false);
@@ -781,7 +784,7 @@ const AdminDashboard = () => {
           .insert([notificationData]);
 
         if (notifError) {
-          console.error("Error creating notification:", notifError);
+          
         }
       }
 
@@ -804,7 +807,7 @@ const AdminDashboard = () => {
         reason: "",
       });
     } catch (error) {
-      console.error("Error updating pitch status:", error);
+      
 
       setSnackbar({
         open: true,
@@ -879,7 +882,7 @@ const AdminDashboard = () => {
       });
       fetchPitches();
     } catch (error) {
-      console.error("Error deleting pitch:", error);
+      
 
       setSnackbar({
         open: true,
@@ -986,7 +989,7 @@ const AdminDashboard = () => {
             <span className="text-gray-700 mt-2">Pitches</span>
           </div>
           {/* 🆕 NEW: Content Moderation Stats */}
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+          {/* <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
             <span className="text-2xl font-bold text-yellow-600">
               {moderationQueue.length}
             </span>
@@ -996,7 +999,7 @@ const AdminDashboard = () => {
                 {unreadModerationNotifications} new
               </span>
             )}
-          </div>
+          </div> */}
         </div>
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b border-gray-200">
@@ -1081,7 +1084,8 @@ const AdminDashboard = () => {
               <Bell className="w-4 h-4" /> Notifications ( {pitches.length})
             </div>
           </button>
-          <button
+          {/* Moderation Tab - REMOVED FOR MERGE */}
+          {/* <button
             onClick={() => setActiveTab("moderation")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
                 activeTab==='moderation'
@@ -1091,12 +1095,10 @@ const AdminDashboard = () => {
 
             `}
           >
-
             <div className="flex items-center gap-2">
-
               <HelpCircle className="w-4 h-4" /> Moderation ( {moderationQueue.length})
             </div>
-          </button>
+          </button> */}
         </div>
         {/* Projects Tab */}
         {activeTab === "projects" && (
@@ -1828,6 +1830,9 @@ const AdminDashboard = () => {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -1839,10 +1844,14 @@ const AdminDashboard = () => {
                           {item.id}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {item.type}
+                          {item.content_type}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-700">
-                          {item.content}
+                          <div className="max-w-xs truncate">
+                            {item.content && item.content.length > 100
+                              ? item.content.substring(0, 100) + '...'
+                              : item.content}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span
@@ -1854,6 +1863,16 @@ const AdminDashboard = () => {
                           >
                             {item.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {item.profiles ? (
+                            <div>
+                              <div className="font-medium">{item.profiles.full_name || 'Unknown User'}</div>
+                              <div className="text-xs text-gray-400">{item.profiles.email}</div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">User not found</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex gap-2">
@@ -2497,7 +2516,7 @@ function PitchVideoPlayer({ filePath }) {
           .createSignedUrl(path, 60 * 60);
 
         if (error) {
-          console.error("Error creating signed URL:", error);
+          
           // Fallback to public URL
           setSignedUrl(filePath);
         } else {
@@ -2505,7 +2524,7 @@ function PitchVideoPlayer({ filePath }) {
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {
-        console.error("Error creating signed URL:", error);
+        
         // Fallback to public URL
         setSignedUrl(filePath);
       }
@@ -2538,7 +2557,7 @@ function PitchVideoPlayer({ filePath }) {
       height={150}
       className="rounded border"
       onError={(e) => {
-        console.error("Video error:", e);
+        
         setError("Failed to load video");
       }}
     />

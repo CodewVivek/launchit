@@ -65,7 +65,7 @@ function PitchVideoPlayer({ filePath }) {
           .createSignedUrl(filePath, 60 * 60); // URL valid for 1 hour
 
         if (error) {
-          console.error("Error creating signed URL:", error);
+          
           // Fallback to public URL if signed URL creation fails
           const { data: publicUrlData } = supabase.storage
             .from("pitch-videos")
@@ -75,7 +75,7 @@ function PitchVideoPlayer({ filePath }) {
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {
-        console.error("Error creating signed URL:", error);
+        
         const { data: publicUrlData } = supabase.storage
           .from("pitch-videos")
           .getPublicUrl(filePath);
@@ -128,13 +128,13 @@ const UserProfile = () => {
         .select("*")
         .eq("user_id", profileId);
       if (error) {
-        console.error("Error fetching user projects:", error);
+        
         setProjects([]);
       } else {
         setProjects(userProjects || []);
       }
     } catch (err) {
-      console.error("Exception in fetchUserProjects:", err);
+      
       setProjects([]);
     }
   };
@@ -155,11 +155,11 @@ const UserProfile = () => {
       if (!error) {
         setUserPitches(data || []);
       } else {
-        console.error("Error fetching user pitches:", error);
+        
         setUserPitches([]);
       }
     } catch (err) {
-      console.error("Exception in fetchUserPitches:", err);
+      
       setUserPitches([]);
     }
     setLoadingPitches(false);
@@ -182,7 +182,7 @@ const UserProfile = () => {
           .single();
 
         if (profileError) {
-          console.error("Error fetching profile:", profileError.message);
+          
           setProfile(null);
           setLoading(false);
           return;
@@ -229,7 +229,7 @@ const UserProfile = () => {
           setIsFollowing(!!followData);
         }
       } catch (err) {
-        console.error("Exception fetching profile data:", err);
+        
         setProfile(null);
       } finally {
         setLoading(false);
@@ -274,7 +274,7 @@ const UserProfile = () => {
       setSnackbar({ open: true, message: "Project deleted successfully!", severity: "success" });
       setTimeout(() => fetchUserProjects(profile.id), 500);
     } catch (err) {
-      console.error("Error in handleDeleteConfirm:", err);
+      
       setEditError(err.message || "Failed to delete project.");
     }
   };
@@ -298,7 +298,7 @@ const UserProfile = () => {
       setSnackbar({ open: true, message: "Pitch deleted successfully", severity: "success" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     } catch (error) {
-      console.error("Error deleting pitch:", error);
+      
       setSnackbar({ open: true, message: "Failed to delete pitch: " + error.message, severity: "error" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     }
@@ -319,7 +319,7 @@ const UserProfile = () => {
       setComments(prev => prev.filter(comment => comment.id !== commentId));
       toast.success("Comment deleted successfully!");
     } catch (err) {
-      console.error("Error deleting comment:", err);
+      
       toast.error("Failed to delete comment. Please try again.");
     }
   };
@@ -371,7 +371,7 @@ const UserProfile = () => {
         toast.success(`Following ${profile.full_name || profile.username}`);
       }
     } catch (error) {
-      console.error('Error:', error);
+      
       toast.error(isFollowing ? 'Failed to unfollow' : 'Failed to follow');
     } finally {
       setFollowLoading(false);
