@@ -2263,7 +2263,7 @@ function PitchVideoPlayer({ filePath }) {
           path = filePath.split('/storage/v1/object/public/pitch-videos/')[1];
         }
 
-        console.log("Creating signed URL for path:", path);
+
 
         const { data, error } = await supabase.storage
           .from("pitch-videos")
@@ -2274,7 +2274,7 @@ function PitchVideoPlayer({ filePath }) {
           // Fallback to public URL
           setSignedUrl(filePath);
         } else {
-          console.log("Signed URL created:", data?.signedUrl);
+  
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {
