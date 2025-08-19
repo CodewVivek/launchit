@@ -70,7 +70,7 @@ const ContentModeration = ({
         // This automatically happens in the backend when content is rejected
         // The backend stores the rejection in the content_moderation table
         // Admins can see this in their moderation dashboard
-
+        console.log('Content automatically reported to admin:', {
             content: content.substring(0, 100) + '...',
             contentType,
             userId,
@@ -205,18 +205,6 @@ const ContentModeration = ({
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Moderation Details (for debugging/development) */}
-            {process.env.NODE_ENV === 'development' && moderationResult && (
-                <details className="mt-2 text-xs text-gray-500">
-                    <summary className="cursor-pointer hover:text-gray-700">
-                        Moderation Details (Dev)
-                    </summary>
-                    <pre className="mt-2 bg-gray-100 p-2 rounded text-xs overflow-auto">
-                        {JSON.stringify(moderationResult, null, 2)}
-                    </pre>
-                </details>
             )}
         </div>
     );
