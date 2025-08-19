@@ -748,11 +748,11 @@ const Register = () => {
             // Log submission data for debugging
 
 
-            console.log('🖼️ Logo File State:', logoFile);
+
             console.log('��️ Logo File Type:', typeof logoFile);
-            console.log('🔗 Final Logo URL:', logoUrl);
-            console.log('🔗 Final Thumbnail URL:', thumbnailUrl);
-            console.log('📁 Cover Files:', coverFiles);
+
+
+
             console.log('📁 Final Cover URLs:', coverUrls);
             console.log('📊 Complete Submission Data:', submissionData);
             console.log('🎯 Logo URL in submissionData:', submissionData.logo_url);
