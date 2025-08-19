@@ -41,13 +41,32 @@ const Sidebar = ({ isOpen }) => {
         fetchCategories();
     }, []);
 
-    const handleYouItemClick = (route) => {
+    const handleYouItemClick = async (route) => {
         if (!user) {
             toast.error("Please login to access this feature");
             navigate("/UserRegister");
             return;
         }
-        navigate(route);
+        
+        if (route === "profile") {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', user.id)
+                    .single();
+                if (profile?.username) {
+                    navigate(`/profile/${profile.username}`);
+                } else {
+                    toast.error("Profile not found");
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+                toast.error("Error loading profile");
+            }
+        } else {
+            navigate(route);
+        }
     };
 
     const mainItems = [
@@ -58,7 +77,7 @@ const Sidebar = ({ isOpen }) => {
     ];
 
     const youItems = [
-        { title: "Profile", icon: User, route: `/profile/${user?.email?.split('@')[0] || user?.id || 'profile'}` },
+        { title: "Profile", icon: User, route: "profile" },
         { title: "Your Launches", icon: Rocket, route: "/my-launches" },
         { title: "Saved Launches", icon: Bookmark, route: "/saved-projects" },
         { title: "Upvoted Launches", icon: ThumbsUp, route: "/upvoted-projects" },
@@ -146,13 +165,27 @@ const Sidebar = ({ isOpen }) => {
                 {/* You Section */}
                 <div className="space-y-1">
                     <button
-                        onClick={() => {
+                        onClick={async () => {
                             if (!user) {
                                 toast.error("Please login to access your profile");
                                 navigate("/UserRegister");
                                 return;
                             }
-                            navigate(`/profile/${user.email?.split('@')[0] || user.id}`);
+                            try {
+                                const { data: profile } = await supabase
+                                    .from('profiles')
+                                    .select('username')
+                                    .eq('id', user.id)
+                                    .single();
+                                if (profile?.username) {
+                                    navigate(`/profile/${profile.username}`);
+                                } else {
+                                    toast.error("Profile not found");
+                                }
+                            } catch (error) {
+                                console.error("Error fetching profile:", error);
+                                toast.error("Error loading profile");
+                            }
                         }}
                         className="w-full flex items-center px-3 py-2 text-black font-medium text-base hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
                     >
