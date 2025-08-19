@@ -509,7 +509,7 @@ app.get('/api/moderation/queue', rateLimitMiddleware, async (req, res) => {
   }
 });
 
-// 5. UPDATE MODERATION STATUS (Admin only)
+// 5. UPDATE MODERATION STATUS (Admin only) - Enhanced with Soft Removal
 app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => {
   try {
     const { recordId, action, adminNotes } = req.body;
@@ -523,7 +523,19 @@ app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => {
 
     // TODO: Add admin authentication check
 
-    const { error } = await supabase
+    // First, get the moderation record to understand what content was flagged
+    const { data: moderationRecord, error: fetchError } = await supabase
+      .from('content_moderation')
+      .select('*')
+      .eq('id', recordId)
+      .single();
+
+    if (fetchError || !moderationRecord) {
+      throw new Error('Moderation record not found');
+    }
+
+    // Update moderation status
+    const { error: updateError } = await supabase
       .from('content_moderation')
       .update({
         status: action,
@@ -533,15 +545,27 @@ app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => {
       })
       .eq('id', recordId);
 
-    if (error) {
-      throw new Error('Failed to update moderation status: ' + error.message);
+    if (updateError) {
+      throw new Error('Failed to update moderation status: ' + updateError.message);
+    }
+
+    // 🚨 HARD DELETION: If content is rejected, delete it completely and notify user
+    if (action === 'rejected') {
+      await handleContentHardDeletion(moderationRecord, adminNotes);
+    }
+
+    // ✅ APPROVAL: If content is approved, mark it as approved
+    if (action === 'approved') {
+      await handleContentApproval(moderationRecord, adminNotes);
     }
 
     res.json({
       success: true,
-      message: 'Moderation status updated successfully',
+      message: `Content ${action} successfully`,
       recordId: recordId,
-      action: action
+      action: action,
+      contentDeleted: action === 'rejected',
+      contentApproved: action === 'approved'
     });
 
   } catch (error) {
@@ -549,6 +573,228 @@ app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => {
     res.status(500).json({
       error: true,
       message: 'Failed to update moderation status: ' + error.message
+    });
+  }
+});
+
+// 🚨 NEW: Handle hard deletion of rejected content
+async function handleContentHardDeletion(moderationRecord, adminNotes) {
+  try {
+    const { content_type, user_id, content } = moderationRecord;
+
+    // Find the project that contains this flagged content
+    let { data: projects, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('user_id', user_id);
+
+    if (fetchError || !projects || projects.length === 0) {
+      console.warn('No projects found for user:', user_id);
+      return;
+    }
+
+    // Find the project with matching content
+    const targetProject = projects.find(project => {
+      switch (content_type) {
+        case 'project_name':
+          return project.name === content;
+        case 'project_tagline':
+          return project.tagline === content;
+        case 'project_description':
+          return project.description === content;
+        default:
+          return false;
+      }
+    });
+
+    if (!targetProject) {
+      console.warn('No matching project found for content:', content);
+      return;
+    }
+
+    // 🚨 HARD DELETE: Completely remove the project from database
+    const { error: deleteError } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', targetProject.id);
+
+    if (deleteError) {
+      console.error('Failed to delete project:', deleteError);
+    } else {
+      console.log(`✅ Project deleted: ${targetProject.id} - ${content_type} rejected`);
+
+      // 🚨 SEND USER NOTIFICATION: Create notification record
+      await sendUserNotification(user_id, {
+        type: 'content_rejected',
+        title: '🚫 Your launch has been deleted',
+        message: `Your launch "${targetProject.name}" has been deleted due to inappropriate content.\n\nReason: ${adminNotes || 'Content violates community guidelines'}\n\nPlease relaunch with corrected content.`,
+        project_id: targetProject.id,
+        project_name: targetProject.name,
+        admin_reason: adminNotes || 'Content violates community guidelines'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error in hard deletion:', error);
+  }
+}
+
+// ✅ NEW: Handle approval of content
+async function handleContentApproval(moderationRecord, adminNotes) {
+  try {
+    const { content_type, user_id, content } = moderationRecord;
+
+    // Find the project that contains this content
+    let { data: projects, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('user_id', user_id);
+
+    if (fetchError || !projects || projects.length === 0) {
+      console.warn('No projects found for user:', user_id);
+      return;
+    }
+
+    // Find the project with matching content
+    const targetProject = projects.find(project => {
+      switch (content_type) {
+        case 'project_name':
+          return project.name === content;
+        case 'project_tagline':
+          return project.tagline === content;
+        case 'project_description':
+          return project.description === content;
+        default:
+          return false;
+      }
+    });
+
+    if (!targetProject) {
+      console.warn('No project found for content:', content);
+      return;
+    }
+
+    // ✅ APPROVE: Mark content as approved
+    const updateData = {
+      moderation_status: 'approved',
+      moderation_reason: adminNotes || 'Content approved by admin',
+      moderation_date: new Date().toISOString(),
+      moderation_type: content_type
+    };
+
+    const { error: projectUpdateError } = await supabase
+      .from('projects')
+      .update(updateData)
+      .eq('id', targetProject.id);
+
+    if (projectUpdateError) {
+      console.error('Failed to approve project content:', projectUpdateError);
+    } else {
+      console.log(`✅ Content approved for project ${targetProject.id}: ${content_type}`);
+
+      // ✅ SEND USER NOTIFICATION: Content approved
+      await sendUserNotification(user_id, {
+        type: 'content_approved',
+        title: '✅ Your launch has been approved',
+        message: `Your launch "${targetProject.name}" has been approved by our moderators. It's now visible to the community!`,
+        project_id: targetProject.id,
+        project_name: targetProject.name
+      });
+    }
+
+  } catch (error) {
+    console.error('Error in content approval:', error);
+  }
+}
+
+// 🚨 NEW: Send user notifications for moderation actions
+async function sendUserNotification(userId, notificationData) {
+  try {
+    const { error } = await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: userId,
+        type: notificationData.type,
+        title: notificationData.title,
+        message: notificationData.message,
+        project_id: notificationData.project_id,
+        project_name: notificationData.project_name,
+        admin_reason: notificationData.admin_reason,
+        created_at: new Date().toISOString(),
+        read: false
+      });
+
+    if (error) {
+      console.error('Failed to create user notification:', error);
+    } else {
+      console.log(`✅ User notification sent to ${userId}: ${notificationData.type}`);
+    }
+  } catch (error) {
+    console.error('Error sending user notification:', error);
+  }
+}
+
+// 6. GET USER NOTIFICATIONS (User only) - For viewing moderation notifications
+app.get('/api/notifications/:userId', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { limit = 50 } = req.query;
+
+    // TODO: Add user authentication check
+
+    // Get user notifications
+    const { data: notifications, error } = await supabase
+      .from('user_notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(parseInt(limit));
+
+    if (error) {
+      throw new Error('Failed to fetch notifications: ' + error.message);
+    }
+
+    res.json({
+      success: true,
+      notifications: notifications || [],
+      total: notifications ? notifications.length : 0
+    });
+
+  } catch (error) {
+    console.error('❌ Notifications fetch error:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Failed to fetch notifications: ' + error.message
+    });
+  }
+});
+
+// 7. MARK NOTIFICATION AS READ (User only)
+app.put('/api/notifications/:notificationId/read', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+
+    // TODO: Add user authentication check
+
+    const { error } = await supabase
+      .from('user_notifications')
+      .update({ read: true, read_at: new Date().toISOString() })
+      .eq('id', notificationId);
+
+    if (error) {
+      throw new Error('Failed to mark notification as read: ' + error.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Notification marked as read'
+    });
+
+  } catch (error) {
+    console.error('❌ Mark notification as read error:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Failed to mark notification as read: ' + error.message
     });
   }
 });

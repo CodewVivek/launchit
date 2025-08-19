@@ -1,7 +1,7 @@
 // AI API utility functions
 // Temporarily hardcode production backend for dev site
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3001' 
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3001'
   : 'https://launchit-ai-backend.onrender.com';
 
 // Content Moderation API
@@ -174,5 +174,49 @@ export const getModerationIcon = (level) => {
       return '❌';
     default:
       return '❓';
+  }
+};
+
+// 🚨 NEW: Get User Notifications
+export const getUserNotifications = async (userId, limit = 50) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/notifications/${userId}?limit=${limit}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Get user notifications error:', error);
+    throw error;
+  }
+};
+
+// 🚨 NEW: Mark Notification as Read
+export const markNotificationAsRead = async (notificationId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Mark notification as read error:', error);
+    throw error;
   }
 }; 
