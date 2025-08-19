@@ -43,7 +43,15 @@ const ContentModeration = ({
             } else if (result.action === 'review') {
                 // Content flagged for review
                 if (showAlert) {
-                    toast('Content flagged for review - will be checked shortly', { icon: '⚠️' });
+                    toast('🚀 Your launch is live but will be reviewed by our team shortly!', {
+                        icon: '⚠️',
+                        duration: 5000,
+                        style: {
+                            background: '#fef3c7',
+                            color: '#92400e',
+                            border: '1px solid #f59e0b'
+                        }
+                    });
                 }
 
             } else if (result.action === 'approve') {
@@ -70,12 +78,7 @@ const ContentModeration = ({
         // This automatically happens in the backend when content is rejected
         // The backend stores the rejection in the content_moderation table
         // Admins can see this in their moderation dashboard
-            content: content.substring(0, 100) + '...',
-            contentType,
-            userId,
-            reason: result.moderationResult.issues.join(', '),
-            timestamp: new Date().toISOString()
-        });
+        console.log('Content automatically reported to admin for review');
     };
 
     const getModerationStatus = () => {
@@ -94,7 +97,7 @@ const ContentModeration = ({
                     status: 'review',
                     color: 'text-yellow-600',
                     icon: '⚠️',
-                    message: 'Content under review'
+                    message: 'Content under review - will be checked shortly'
                 };
             case 'reject':
                 return {

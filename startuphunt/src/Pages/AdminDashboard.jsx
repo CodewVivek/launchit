@@ -43,6 +43,7 @@ import {
 import { Link } from "react-router-dom";
 import SortByDateFilter from "../Components/SortByDateFilter";
 import PitchUpload from "./PitchUpload";
+import { getAdminModerationQueue, getAdminNotifications } from "../utils/aiApi";
 
 function sortProjectsByDate(
   projects,
@@ -91,6 +92,12 @@ const AdminDashboard = () => {
     message: "",
     notificationType: "admin_notification"
   });
+
+  // 🆕 NEW: Content Moderation State
+  const [moderationQueue, setModerationQueue] = useState([]);
+  const [loadingModeration, setLoadingModeration] = useState(false);
+  const [moderationTab, setModerationTab] = useState('pending_review');
+  const [unreadModerationNotifications, setUnreadModerationNotifications] = useState(0);
 
   const [rejectionModal, setRejectionModal] = useState({
     open: false,
@@ -213,6 +220,13 @@ const AdminDashboard = () => {
     }
   }, [activeTab]);
 
+  // 🆕 NEW: useEffect to fetch moderation queue when moderation tab is selected
+  useEffect(() => {
+    if (activeTab === "moderation") {
+      fetchModerationQueue();
+    }
+  }, [activeTab, moderationTab]);
+
   // New function to fetch advertising interests
   const fetchAdvertisingInterests = async () => {
     setLoadingAdvertisingInterests(true);
@@ -255,6 +269,68 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoadingUsers(false);
+    }
+  };
+
+  // 🆕 NEW: Function to fetch content moderation queue
+  const fetchModerationQueue = async () => {
+    setLoadingModeration(true);
+    try {
+      const result = await getAdminModerationQueue(moderationTab, 50);
+      if (result.success) {
+        setModerationQueue(result.records || []);
+        setUnreadModerationNotifications(result.unreadNotifications || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching moderation queue:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch moderation queue",
+        severity: "error",
+      });
+    } finally {
+      setLoadingModeration(false);
+    }
+  };
+
+  // 🆕 NEW: Function to update moderation status
+  const updateModerationStatus = async (recordId, action) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'}/api/moderation/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recordId,
+          action,
+          adminNotes: `Status updated to ${action} by admin`
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSnackbar({
+          open: true,
+          message: `Content ${action} successfully`,
+          severity: "success",
+        });
+
+        // Refresh the moderation queue
+        fetchModerationQueue();
+      }
+    } catch (error) {
+      console.error("Error updating moderation status:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to update moderation status",
+        severity: "error",
+      });
     }
   };
 
@@ -878,47 +954,48 @@ const AdminDashboard = () => {
           </p>
         </div>
         {/* Analytics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-blue-600">
-
               {userCount}
             </span>
             <span className="text-gray-700 mt-2">Users</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-green-600">
-
               {projectCount}
             </span>
             <span className="text-gray-700 mt-2">Projects</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-purple-600">
-
               {commentCount}
             </span>
             <span className="text-gray-700 mt-2">Comments</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-red-600">
-
               {reportCount}
             </span>
             <span className="text-gray-700 mt-2">Reports</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-orange-600">
-
               {pitches.length}
             </span>
             <span className="text-gray-700 mt-2">Pitches</span>
+          </div>
+          {/* 🆕 NEW: Content Moderation Stats */}
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+            <span className="text-2xl font-bold text-yellow-600">
+              {moderationQueue.length}
+            </span>
+            <span className="text-gray-700 mt-2">Pending Review</span>
+            {unreadModerationNotifications > 0 && (
+              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 mt-1">
+                {unreadModerationNotifications} new
+              </span>
+            )}
           </div>
         </div>
         {/* Tabs */}
@@ -1002,6 +1079,22 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-2">
 
               <Bell className="w-4 h-4" /> Notifications ( {pitches.length})
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab("moderation")}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
+                activeTab==='moderation'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }
+
+            `}
+          >
+
+            <div className="flex items-center gap-2">
+
+              <HelpCircle className="w-4 h-4" /> Moderation ( {moderationQueue.length})
             </div>
           </button>
         </div>
@@ -1676,6 +1769,140 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+        {/* Moderation Tab */}
+        {activeTab === "moderation" && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Content Moderation Queue
+              </h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="outlined"
+                  onClick={() => setModerationTab('pending_review')}
+                  className={`${moderationTab === 'pending_review' ? 'bg-blue-600 text-white' : ''}`}
+                >
+                  Pending Review ({moderationQueue.filter(item => item.status === 'pending_review').length})
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setModerationTab('approved')}
+                  className={`${moderationTab === 'approved' ? 'bg-green-600 text-white' : ''}`}
+                >
+                  Approved ({moderationQueue.filter(item => item.status === 'approved').length})
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setModerationTab('rejected')}
+                  className={`${moderationTab === 'rejected' ? 'bg-red-600 text-white' : ''}`}
+                >
+                  Rejected ({moderationQueue.filter(item => item.status === 'rejected').length})
+                </Button>
+              </div>
+            </div>
+            {loadingModeration ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading moderation queue...</p>
+              </div>
+            ) : moderationQueue.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <HelpCircle className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No items in the moderation queue.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Content
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {moderationQueue.map((item) => (
+                      <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {item.id}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {item.type}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {item.content}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'pending_review' ? 'bg-yellow-100 text-yellow-800' :
+                              item.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                item.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                              }`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            {item.status === 'pending_review' && (
+                              <>
+                                <button
+                                  onClick={() => updateModerationStatus(item.id, 'approved')}
+                                  className="text-green-600 hover:text-green-800"
+                                  title="Approve"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => updateModerationStatus(item.id, 'rejected')}
+                                  className="text-red-600 hover:text-red-800"
+                                  title="Reject"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                            {item.status === 'approved' && (
+                              <button
+                                onClick={() => updateModerationStatus(item.id, 'rejected')}
+                                className="text-red-600 hover:text-red-800"
+                                title="Reject"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                            {item.status === 'rejected' && (
+                              <button
+                                onClick={() => updateModerationStatus(item.id, 'approved')}
+                                className="text-green-600 hover:text-green-800"
+                                title="Approve"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       {/* Interest Details Modal */}
       <Dialog
@@ -2274,7 +2501,7 @@ function PitchVideoPlayer({ filePath }) {
           // Fallback to public URL
           setSignedUrl(filePath);
         } else {
-  
+
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {

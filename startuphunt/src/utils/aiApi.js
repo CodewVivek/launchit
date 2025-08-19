@@ -100,7 +100,29 @@ export const getModerationQueue = async (status = 'pending_review', limit = 50) 
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('Get moderation queue error:', error);
+    console.error('Moderation queue error:', error);
+    throw error;
+  }
+};
+
+// 🆕 NEW: Get Admin Moderation Queue with Notifications
+export const getAdminModerationQueue = async (status = 'pending_review', limit = 50) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/moderation/queue?status=${status}&limit=${limit}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Admin moderation queue error:', error);
     throw error;
   }
 };
@@ -177,7 +199,7 @@ export const getModerationIcon = (level) => {
   }
 };
 
-// 🚨 NEW: Get User Notifications
+// 🆕 NEW: Get User Notifications
 export const getUserNotifications = async (userId, limit = 50) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/notifications/${userId}?limit=${limit}`, {
@@ -194,12 +216,34 @@ export const getUserNotifications = async (userId, limit = 50) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('Get user notifications error:', error);
+    console.error('User notifications error:', error);
     throw error;
   }
 };
 
-// 🚨 NEW: Mark Notification as Read
+// 🆕 NEW: Get Admin Notifications
+export const getAdminNotifications = async (limit = 100) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/notifications?limit=${limit}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Admin notifications error:', error);
+    throw error;
+  }
+};
+
+// 🆕 NEW: Mark Notification as Read
 export const markNotificationAsRead = async (notificationId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {

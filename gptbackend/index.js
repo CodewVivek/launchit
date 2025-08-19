@@ -282,6 +282,24 @@ app.post('/api/moderate', async (req, res) => {
       console.error('Database error:', dbError);
     }
 
+    // 🔔 SEND NOTIFICATIONS BASED ON MODERATION ACTION
+    try {
+      if (action === 'review') {
+        // 1. Notify user that their content is pending review
+        await notifyUserContentPendingReview(userId, contentType, content);
+
+        // 2. Notify all admins about new content requiring review
+        await notifyAdminsContentNeedsReview(contentType, content, userId);
+
+      } else if (action === 'reject') {
+        // Notify user that their content was rejected
+        await notifyUserContentRejected(userId, contentType, content, moderationResult.issues);
+      }
+    } catch (notificationError) {
+      console.error('Notification error:', notificationError);
+      // Don't fail the moderation if notifications fail
+    }
+
     res.json({
       success: true,
       action: action,
@@ -734,6 +752,91 @@ async function sendUserNotification(userId, notificationData) {
   }
 }
 
+// 🚨 NEW: Notify user when their content is pending review
+async function notifyUserContentPendingReview(userId, contentType, content) {
+  try {
+    const { error } = await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: userId,
+        type: 'content_pending_review',
+        title: '🔔 Your launch is pending review',
+        message: `Your launch "${content}" (type: ${contentType}) is pending review by our moderators. Please check the moderation queue for updates.`,
+        created_at: new Date().toISOString(),
+        read: false
+      });
+
+    if (error) {
+      console.error('Failed to send user pending review notification:', error);
+    } else {
+      console.log(`✅ User pending review notification sent to ${userId}`);
+    }
+  } catch (error) {
+    console.error('Error sending user pending review notification:', error);
+  }
+}
+
+// 🚨 NEW: Notify all admins about new content requiring review
+async function notifyAdminsContentNeedsReview(contentType, content, userId) {
+  try {
+    const { data: admins, error: fetchAdminsError } = await supabase
+      .from('users')
+      .select('id, email')
+      .eq('is_admin', true);
+
+    if (fetchAdminsError || !admins || admins.length === 0) {
+      console.warn('No admin users found to notify.');
+      return;
+    }
+
+    for (const admin of admins) {
+      const { error: notificationError } = await supabase
+        .from('user_notifications')
+        .insert({
+          user_id: admin.id,
+          type: 'content_needs_review',
+          title: '🔔 New content needs review',
+          message: `New content of type "${contentType}" with content "${content}" from user ${userId} is pending review. Please moderate it.`,
+          created_at: new Date().toISOString(),
+          read: false
+        });
+
+      if (notificationError) {
+        console.error(`Failed to send admin review notification to ${admin.email}:`, notificationError);
+      } else {
+        console.log(`✅ Admin review notification sent to ${admin.email}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error sending admin review notifications:', error);
+  }
+}
+
+// 🚨 NEW: Notify user when their content is rejected
+async function notifyUserContentRejected(userId, contentType, content, issues) {
+  try {
+    const rejectionReason = issues && issues.length > 0 ? issues.join(', ') : 'Content violates community guidelines';
+    const { error } = await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: userId,
+        type: 'content_rejected',
+        title: '🚫 Your launch has been rejected',
+        message: `Your launch "${content}" (type: ${contentType}) has been rejected by our moderators.\n\nReason: ${rejectionReason}\n\nPlease revise your content and resubmit for review.`,
+        created_at: new Date().toISOString(),
+        read: false
+      });
+
+    if (error) {
+      console.error('Failed to send user rejection notification:', error);
+    } else {
+      console.log(`✅ User rejection notification sent to ${userId}`);
+    }
+  } catch (error) {
+    console.error('Error sending user rejection notification:', error);
+  }
+}
+
 // 6. GET USER NOTIFICATIONS (User only) - For viewing moderation notifications
 app.get('/api/notifications/:userId', rateLimitMiddleware, async (req, res) => {
   try {
@@ -799,7 +902,85 @@ app.put('/api/notifications/:notificationId/read', rateLimitMiddleware, async (r
   }
 });
 
+// 8. GET ADMIN NOTIFICATIONS (Admin only) - For content review notifications
+app.get('/api/admin/notifications', rateLimitMiddleware, async (req, res) => {
+  try {
+    // TODO: Add admin authentication check
+
+    // Get all admin notifications
+    const { data: notifications, error } = await supabase
+      .from('user_notifications')
+      .select('*')
+      .eq('type', 'content_needs_review')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      throw new Error('Failed to fetch admin notifications: ' + error.message);
+    }
+
+    res.json({
+      success: true,
+      notifications: notifications || [],
+      total: notifications ? notifications.length : 0
+    });
+
+  } catch (error) {
+    console.error('❌ Admin notifications fetch error:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Failed to fetch admin notifications: ' + error.message
+    });
+  }
+});
+
+// 9. GET MODERATION QUEUE WITH NOTIFICATIONS (Admin only)
+app.get('/api/admin/moderation/queue', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { status = 'pending_review', limit = 50 } = req.query;
+
+    // TODO: Add admin authentication check
+
+    // Get moderation queue with user details
+    const { data: moderationRecords, error } = await supabase
+      .from('content_moderation')
+      .select(`
+        *,
+        profiles:user_id (id, full_name, email, username)
+      `)
+      .eq('status', status)
+      .order('created_at', { ascending: false })
+      .limit(parseInt(limit));
+
+    if (error) {
+      throw new Error('Failed to fetch moderation queue: ' + error.message);
+    }
+
+    // Get unread admin notifications count
+    const { count: unreadNotifications } = await supabase
+      .from('user_notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('type', 'content_needs_review')
+      .eq('read', false);
+
+    res.json({
+      success: true,
+      records: moderationRecords || [],
+      total: moderationRecords ? moderationRecords.length : 0,
+      status: status,
+      unreadNotifications: unreadNotifications || 0
+    });
+
+  } catch (error) {
+    console.error('❌ Admin moderation queue error:', error);
+    res.status(500).json({
+      error: true,
+      message: 'Failed to fetch admin moderation queue: ' + error.message
+    });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>
-  console.log(`�� AI backend running on port ${PORT}`)
+  console.log(`🚀 AI backend running on port ${PORT}`)
 );
