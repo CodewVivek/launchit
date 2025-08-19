@@ -724,7 +724,7 @@ const Register = () => {
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                             coverUrls.push(coverUrlData.publicUrl);
-                            console.log(`✅ Cover image ${i + 1} uploaded with quality preservation`);
+        
                         } catch (error) {
                             console.error(`Cover image ${i + 1} quality preservation failed, uploading original:`, error);
                             // Fallback to original file if quality preservation fails
@@ -736,7 +736,7 @@ const Register = () => {
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                             coverUrls.push(coverUrlData.publicUrl);
-                            console.log(`✅ Cover image ${i + 1} uploaded with original file (fallback)`);
+        
                         }
                     } else if (typeof file === 'string') {
                         coverUrls.push(file);
@@ -746,8 +746,8 @@ const Register = () => {
             submissionData.cover_urls = coverUrls;
 
             // Log submission data for debugging
-            console.log('🔍 FINAL SUBMISSION DATA DEBUG:');
-            console.log('📝 Form Data:', formData);
+
+
             console.log('🖼️ Logo File State:', logoFile);
             console.log('��️ Logo File Type:', typeof logoFile);
             console.log('🔗 Final Logo URL:', logoUrl);
