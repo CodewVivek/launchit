@@ -125,6 +125,7 @@ function PageFade({ children }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.4 }}
+      className="w-full max-w-full overflow-x-hidden"
       style={{ minHeight: "100%" }}
     >
       {children}

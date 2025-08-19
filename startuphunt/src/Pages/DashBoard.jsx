@@ -99,14 +99,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen pt-4">
+    <div className="min-h-screen pt-4 overflow-x-hidden">
       {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
         <div key={dateLabel}>
-          <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-800">
+          <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-3 sm:mx-4 lg:mx-10 text-gray-800">
             {dateLabel}
           </h3>
-          <div className="p-6 pl-8 lg:pl-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 gap-4">
+          <div className="px-3 sm:px-6 lg:px-8 xl:pl-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 gap-3 sm:gap-4">
               {projects.map((project) => (
                 <ProjectCard
                   key={project.id}
@@ -125,7 +125,7 @@ const Dashboard = () => {
 // ProjectCard component with VideoCard styling
 const ProjectCard = ({ project, onProjectClick }) => {
   return (
-    <div className="group cursor-pointer" onClick={() => onProjectClick(project)}>
+    <div className="group cursor-pointer w-full overflow-hidden" onClick={() => onProjectClick(project)}>
       {/* Thumbnail */}
       <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden mb-3">
         {project.thumbnail_url ? (

@@ -406,7 +406,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="flex bg-gray-50 min-h-screen font-sans transition-colors duration-300 pt-16">
+    <div className="flex bg-white min-h-screen font-sans transition-colors duration-300 pt-4">
       {/* Main Content */}
       <main className="w-full flex-1 p-4 sm:p-6 md:p-8">
         {/* Profile Info */}
@@ -465,8 +465,8 @@ const UserProfile = () => {
                   onClick={handleFollow}
                   disabled={followLoading}
                   className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md ${isFollowing
-                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {followLoading ? (
@@ -529,7 +529,7 @@ const UserProfile = () => {
         </div>
         {activeTab === "projects" && (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 mt-4">
               <div className="flex flex-wrap gap-2 text-sm font-medium">
                 <button
                   onClick={() => setProjectFilter("all")}
