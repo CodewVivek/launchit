@@ -274,22 +274,22 @@ const Header = ({ onMenuClick }) => {
         (searchSuggestions?.tags?.length || 0);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 bg-white ">
+        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 py-2 bg-white overflow-x-hidden">
 
             {/* Left side with menu button and logo */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
                 <button
-                    className="p-2 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none"
+                    className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none"
                     onClick={onMenuClick}
                     aria-label="Toggle sidebar menu"
                 >
-                    <Menu className="w-6 h-6" />
+                    <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
-                <Link to="/" className="flex items-center space-x-2 group">
+                <Link to="/" className="flex items-center space-x-1 sm:space-x-2 group">
                     <div className="rounded flex items-center justify-center">
-                        <img className="w-8 h-8 text-white" src="/images/r6_circle_optimized.png" alt="L" />
+                        <img className="w-6 h-6 sm:w-8 sm:h-8 text-white" src="/images/r6_circle_optimized.png" alt="L" />
                     </div>
-                    <span className="text-xl font-bold tracking-wide hidden sm:block">
+                    <span className="text-lg sm:text-xl font-bold tracking-wide hidden sm:block">
                         <span className="text-gray-800">launchit</span>
                     </span>
                 </Link>
@@ -593,15 +593,15 @@ const Header = ({ onMenuClick }) => {
             </nav>
 
             {/* Mobile Navigation - Right Side */}
-            <div className="md:hidden flex items-center space-x-2">
+            <div className="md:hidden flex items-center space-x-1 sm:space-x-2">
                 {/* + Launch Dropdown Mobile */}
                 <div className="relative launch-dropdown">
                     <button
                         onClick={handleLaunchDropdownToggle}
-                        className="flex items-center gap-1 px-3 py-2 text-black rounded-full hover:bg-gray-100 transition-colors"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-black rounded-full hover:bg-gray-100 transition-colors"
                     >
-                        <CirclePlus className="w-4 h-4" />
-                        <span className="text-sm">Launch</span>
+                        <CirclePlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="text-xs sm:text-sm">Launch</span>
                     </button>
 
                     {launchDropdownOpen && (
@@ -631,15 +631,15 @@ const Header = ({ onMenuClick }) => {
 
                 {/* User Dropdown Mobile */}
                 <div className="user-dropdown relative">
-                    <button className="p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
+                    <button className="p-1.5 sm:p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
                         {user ? (
                             <img
                                 src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
                                 alt="profile"
-                                className="w-6 h-6 rounded-full"
+                                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full"
                             />
                         ) : (
-                            <CircleUserRound className="w-6 h-6 text-white" />
+                            <CircleUserRound className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         )}
                     </button>
 
@@ -694,18 +694,18 @@ const Header = ({ onMenuClick }) => {
 
                 <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="p-2 rounded-lg hover:bg-white/20 text-white"
+                    className="p-1.5 sm:p-2 rounded-lg hover:bg-white/20 text-white"
                 >
-                    {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
                 </button>
             </div>
             {/* Mobile Search Bar */}
-            <div className="block md:hidden px-4 pb-2 bg-blue-500">
+            <div className="block md:hidden absolute top-full left-0 right-0 px-3 sm:px-4 py-2 bg-blue-500 border-t border-blue-400">
                 <div className="relative w-full max-w-full mx-auto">
                     <input
                         type="text"
                         placeholder="Search startups, users, categories, tags..."
-                        className="w-full pl-12 pr-12 py-2 rounded-full border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-black/20 placeholder-gray-500 bg-white shadow"
+                        className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-black/20 placeholder-gray-500 bg-white shadow text-sm"
                         value={search}
                         onChange={handleSearchChange}
                         onFocus={handleSearchFocus}
@@ -716,13 +716,13 @@ const Header = ({ onMenuClick }) => {
                             }
                         }}
                     />
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        <Search className="w-5 h-5" />
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        <Search className="w-4 h-4" />
                     </span>
                     {search && (
                         <button
                             type="button"
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg"
                             onClick={() => {
                                 setSearch("");
                                 setShowSearchSuggestions(false);
@@ -738,24 +738,24 @@ const Header = ({ onMenuClick }) => {
             {/* Mobile Menu */}
             {
                 mobileMenuOpen && (
-                    <div className="md:hidden bg-blue-500 border-t border-blue-400">
-                        <div className="px-4 py-2 space-y-2">
-                            <Link to="/submit" className="block text-gray-800 text-gray-800font-medium flex items-center gap-2 py-2">
+                    <div className="md:hidden absolute top-full left-0 right-0 bg-blue-500 border-t border-blue-400 z-40">
+                        <div className="px-3 sm:px-4 py-2 space-y-1">
+                            <Link to="/submit" className="block text-gray-800 font-medium flex items-center gap-2 py-2 px-2 rounded hover:bg-blue-400 transition-colors">
                                 <CirclePlus className="w-4 h-4" />
                                 Submit
                             </Link>
                             {user && (
-                                <Link to="/upload-pitch" className="block text-gray-800 text-gray-800font-medium flex items-center gap-2 py-2">
+                                <Link to="/upload-pitch" className="block text-gray-800 font-medium flex items-center gap-2 py-2 px-2 rounded hover:bg-blue-400 transition-colors">
                                     <Video className="w-4 h-4" />
                                     Pitch
                                 </Link>
                             )}
-                            <Link to="/coming-soon" className="block text-/90 text-gray-800font-medium flex items-center gap-2 py-2">
+                            <Link to="/coming-soon" className="block text-gray-800 font-medium flex items-center gap-2 py-2 px-2 rounded hover:bg-blue-400 transition-colors">
                                 <Rocket className="w-4 h-4" />
                                 Coming Soon
                             </Link>
                             {userRole === "admin" && (
-                                <Link to="/admin" className="block text-gray-800 text-gray-800 font-medium py-2">Admin</Link>
+                                <Link to="/admin" className="block text-gray-800 font-medium py-2 px-2 rounded hover:bg-blue-400 transition-colors">Admin</Link>
                             )}
                         </div>
                     </div>

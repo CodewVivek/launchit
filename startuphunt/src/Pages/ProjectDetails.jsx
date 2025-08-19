@@ -493,7 +493,7 @@ const ProjectDetails = () => {
                         className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-700 hover:text-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <UserPlus className="h-4 w-4" />
-                        <span className="text-sm">
+                        <span className="text-sm truncate">
                           {isFollowing
                             ? 'Following'
                             : `Follow ${creator?.full_name || creator?.username || 'User'}`}
@@ -510,7 +510,7 @@ const ProjectDetails = () => {
                     className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-700 hover:text-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Bookmark className="h-4 w-4" />
-                    <span className="text-sm">
+                    <span className="text-sm truncate">
                       {isSaved ? 'Saved' : 'Add to collection'}
                     </span>
                   </button>
@@ -521,7 +521,7 @@ const ProjectDetails = () => {
                     className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-700 hover:text-orange-600 transition-colors"
                   >
                     <Flag className="h-4 w-4" />
-                    <span className="text-sm">Report</span>
+                    <span className="text-sm truncate">Report</span>
                   </button>
                 )}
               </div>
@@ -529,9 +529,9 @@ const ProjectDetails = () => {
               {project.built_with && project.built_with.length > 0 && (
                 <div className="mb-4">
                   <span className="font-semibold text-sm">Built With:</span>
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 mt-1">
                     {project.built_with.map((tech, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{tech}</span>
+                      <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium break-words">{tech}</span>
                     ))}
                   </div>
                 </div>
@@ -540,9 +540,9 @@ const ProjectDetails = () => {
               {project.tags && project.tags.length > 0 && (
                 <div className="mb-4">
                   <span className="font-semibold text-sm">Tags:</span>
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 mt-1">
                     {project.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{tag}</span>
+                      <span key={idx} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium break-words">{tag}</span>
                     ))}
                   </div>
                 </div>
@@ -551,15 +551,15 @@ const ProjectDetails = () => {
               {project.links && project.links.length > 0 && (
                 <div className="mb-4">
                   <span className="font-semibold text-sm">Links:</span>
-                  <div className="mt-1 gap-3 flex flex-wrap">
+                  <div className="mt-1 gap-2 sm:gap-3 flex flex-wrap">
                     {project.links.map((link, idx) => (
-                      <div key={idx} className=" flex  items-center gap-1 ">
-                        <ExternalLink className="w-3 h-3 text-gray-500" />
+                      <div key={idx} className="flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3 text-gray-500 flex-shrink-0" />
                         <a
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-700 hover:underline text-xs truncate max-w-[150px]"
+                          className="text-blue-700 hover:underline text-xs truncate max-w-[120px] sm:max-w-[150px]"
                         >
                           {getLinkLabel(link)}
                         </a>
