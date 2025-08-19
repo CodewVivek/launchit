@@ -27,6 +27,7 @@ import MyComments from "./Pages/userinfoyou/MyComments.jsx";
 import FollowersFollowing from "./Pages/userinfoyou/FollowersFollowing.jsx";
 import CategoryProjects from "./Pages/CategoryProjects.jsx";
 import Community from "./Pages/Community.jsx";
+import SearchBar from "./Components/SearchBar.jsx";
 import ScrollToTop from "./Components/ScrollToTop";
 import ErrorBoundary from "./Components/ErrorBoundary";
 
@@ -119,6 +120,8 @@ function AppRoutes() {
                 } />
                 <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
                 <Route path="/launchit-community" element={<PageFade><Community /></PageFade>} />
+                <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />
+                <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />
               </Routes>
             </AnimatePresence>
           </main>
