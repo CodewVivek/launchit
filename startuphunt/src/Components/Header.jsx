@@ -465,7 +465,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[80]">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[130]">
                             <button
                                 onClick={() => handleLaunchItemClick('submit')}
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -512,7 +512,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {open && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[70]">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[130]">
                             {user ? (
                                 <>
                                     <div className="px-4 py-2 border-b border-gray-200">
@@ -574,7 +574,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[130]">
                             <button
                                 onClick={() => handleLaunchItemClick('submit')}
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -618,7 +618,7 @@ const Header = ({ onMenuClick }) => {
                         )}
                     </button>
                     {open && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[130]">
                             {user ? (
                                 <>
                                     <div className="px-4 py-2 border-b border-gray-200">
