@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
-import fetch from "node-fetch";
+// fetch is built-in to Node.js 18+
 import cors from "cors";
 import { semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
 
@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 // Simple in-memory rate limiting
 const requestCounts = new Map();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS_PER_WINDOW = 50; // 50 requests per 15 minutes (increased for content moderation)
+const MAX_REQUESTS_PER_WINDOW = 50; // 50 requests per 15 minutes
 
 const rateLimitMiddleware = (req, res, next) => {
   const clientId = req.ip || req.connection.remoteAddress;
@@ -403,6 +403,32 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
 
 // 9. GET MODERATION QUEUE WITH NOTIFICATIONS (Admin only) - REMOVED FOR MERGE
 // app.get('/api/admin/moderation/queue', rateLimitMiddleware, async (req, res) => { ... });
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    service: 'launchit-ai-backend'
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    error: true,
+    message: 'Internal server error'
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: true,
+    message: 'Endpoint not found'
+  });
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
