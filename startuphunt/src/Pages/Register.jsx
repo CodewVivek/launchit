@@ -432,15 +432,22 @@ const Register = () => {
             built_with: builtWith.map(item => item.value),
             tags: tags,
             media_urls: [], // Required NOT NULL field - empty array for now
-            created_at: new Date().toISOString(),
             user_id: user.id,
             updated_at: new Date().toISOString(),
             status: 'launched',
         };
 
-        const baseSlug = slugify(formData.name);
-        const uniqueSlug = `${baseSlug}-${nanoid(6)}`;
-        submissionData.slug = uniqueSlug;
+        // Only set created_at for new projects, not when editing
+        if (!isEditing) {
+            submissionData.created_at = new Date().toISOString();
+        }
+
+        // Only generate new slug for new projects, not when editing
+        if (!isEditing) {
+            const baseSlug = slugify(formData.name);
+            const uniqueSlug = `${baseSlug}-${nanoid(6)}`;
+            submissionData.slug = uniqueSlug;
+        }
 
         try {
             let fileUrls = [...existingMediaUrls];
@@ -667,16 +674,19 @@ const Register = () => {
                 finalSubmissionData = data;
             }
 
-            setSnackbar({ open: true, message: 'Launch submitted successfully!', severity: 'success' });
+            const message = isEditing ? 'Project updated successfully!' : 'Launch submitted successfully!';
+            setSnackbar({ open: true, message, severity: 'success' });
 
-            // Show admin approval alert
-            setTimeout(() => {
-                setSnackbar({
-                    open: true,
-                    message: '⏳ Your launch is now pending admin approval. You will be notified once it\'s approved and visible to the community!',
-                    severity: 'info'
-                });
-            }, 2000);
+            // Show admin approval alert only for new launches
+            if (!isEditing) {
+                setTimeout(() => {
+                    setSnackbar({
+                        open: true,
+                        message: '⏳ Your launch is now pending admin approval. You will be notified once it\'s approved and visible to the community!',
+                        severity: 'info'
+                    });
+                }, 2000);
+            }
 
             setTimeout(() => {
                 navigate(`/launches/${finalSubmissionData.slug}`);
