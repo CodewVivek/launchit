@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import {
     Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User, Menu, X, Video, Search, ChevronDown, Monitor, Tag
@@ -275,7 +274,7 @@ const Header = ({ onMenuClick }) => {
         (searchSuggestions?.tags?.length || 0);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 py-3 sm:py-4 bg-white overflow-x-hidden min-h-[64px] sm:min-h-[72px]">
+        <header className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-3 sm:px-4 py-3 sm:py-4 bg-white overflow-x-hidden min-h-[64px] sm:min-h-[72px]">
 
             {/* Left side with menu button and logo */}
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -340,7 +339,7 @@ const Header = ({ onMenuClick }) => {
                         </button>
                     )}
                     {showSearchSuggestions && totalSuggestions > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[70]">
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[130]">
                             {isSearching ? (
                                 <div className="p-4 text-center">
                                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
