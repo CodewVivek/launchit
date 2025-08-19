@@ -639,7 +639,7 @@ const Register = () => {
             if (thumbnailFile && typeof thumbnailFile !== 'string') {
                 // User uploaded file - preserve quality and upload
                 try {
-                    console.log('🔄 Processing user uploaded thumbnail for quality preservation...');
+
                     const qualityFile = await preserveImageQuality(thumbnailFile);
 
                     // Verify quality was maintained
@@ -656,7 +656,7 @@ const Register = () => {
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                     thumbnailUrl = thumbUrlData.publicUrl;
-                    console.log('✅ Thumbnail uploaded with quality preservation');
+
                 } catch (error) {
                     console.error('Thumbnail quality preservation failed, uploading original:', error);
                     // Fallback to original file if quality preservation fails
@@ -668,12 +668,12 @@ const Register = () => {
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                     thumbnailUrl = thumbUrlData.publicUrl;
-                    console.log('✅ Thumbnail uploaded with original file (fallback)');
+
                 }
             } else if (thumbnailFile && typeof thumbnailFile === 'string') {
                 // AI-generated thumbnail URL - download and upload to our storage
                 try {
-                    console.log('Processing AI-generated thumbnail:', thumbnailFile);
+
                     const response = await fetch(thumbnailFile);
                     if (!response.ok) {
                         throw new Error(`Failed to fetch AI thumbnail: ${response.status}`);
