@@ -343,7 +343,7 @@ const ProjectDetails = () => {
               </div>
             </div>
           </div>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-6 whitespace-pre-line px-2">{project.description}</p>
+          <p className="text-sm sm:text-md lg:text-lg text-gray-700 mb-6 whitespace-pre-line px-2">{project.description}</p>
           {/* Images */}
           {project.cover_urls && project.cover_urls.length > 0 && (
             <div className="mb-6 sm:mb-10 relative px-2">
@@ -408,7 +408,7 @@ const ProjectDetails = () => {
                       onClick={prevModal}
                       aria-label="Previous image"
                     >
-                      <ArrowBigLeft className="w-8 h-8 text-gray-700" />
+                      <ArrowBigLeft className="w-4 h-4 text-gray-700" />
                     </button>
                   )}
 
@@ -426,7 +426,7 @@ const ProjectDetails = () => {
                       onClick={nextModal}
                       aria-label="Next image"
                     >
-                      <ArrowBigRight className="w-8 h-8 text-gray-700" />
+                      <ArrowBigRight className="w-4 h-4 text-gray-700" />
                     </button>
                   )}
                 </div>
@@ -439,12 +439,18 @@ const ProjectDetails = () => {
             <h2 className="text-lg font-bold mb-4">Comments</h2>
             <Comments projectId={project.id} className="mt-10" />
           </div>
-          <RelatedProjects categoryType={project.category_type} excludeProjectId={project.id} />
-          <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} projectId={project.id} projectName={project.name} />
+          <RelatedProjects
+            categoryType={project.category_type} excludeProjectId={project.id} />
+          <ReportModal
+            isOpen={isReportModalOpen}
+            onClose={() => setIsReportModalOpen(false)} projectId={project.id}
+            projectName={project.name}
+          />
         </div>
         {/* Right/Sidebar Section */}
         <aside className="w-full lg:w-80 flex-shrink-0">
-          <div className="p-[2px] rounded-xl bg-gradient-to-r from-blue-400 to-sky-300 mb-4 sm:mb-6 shadow">
+          <div className="p-[2px] rounded-xl bg-gradient-to-r from-blue-600 via-sky-400 to-cyan-300 mb-4 sm:mb-6 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-shadow duration-300">
+
             <div className="bg-white rounded-xl shadow p-3 sm:p-4 lg:p-6 border border-gray-100">
               {/* launch Info */}
               <h2 className="text-lg font-bold mb-4">Launch Info</h2>

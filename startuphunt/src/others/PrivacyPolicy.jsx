@@ -240,14 +240,14 @@ const PrivacyPolicy = () => (
           <div className="space-y-2">
             <p className="text-gray-700">
               <strong>Email:</strong>{" "}
-              <a href="mailto:privacy@launchit.site" className="text-blue-600 underline hover:text-blue-800">
-                privacy@launchit.site
+              <a href="mailto:skypher206@gmail.com" className="text-blue-600 underline hover:text-blue-800">
+                skypher206@gmail.com
               </a>
             </p>
             <p className="text-gray-700">
               <strong>Support Email:</strong>{" "}
-              <a href="mailto:support@launchit.site" className="text-blue-600 underline hover:text-blue-800">
-                support@launchit.site
+              <a href="mailto:skypher206@gmail.com" className="text-blue-600 underline hover:text-blue-800">
+                skypher206@gmail.com
               </a>
             </p>
             <p className="text-gray-700">

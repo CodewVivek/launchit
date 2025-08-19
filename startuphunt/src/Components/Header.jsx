@@ -613,7 +613,7 @@ const Header = ({ onMenuClick }) => {
                                 className="w-6 h-6 sm:w-7 sm:h-7 rounded-full"
                             />
                         ) : (
-                            <CircleUserRound className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                            <CircleUserRound className="w-6 h-6 sm:w-7 sm:h-7 text-black" />
                         )}
                     </button>
                     {open && (
@@ -664,41 +664,7 @@ const Header = ({ onMenuClick }) => {
                     )}
                 </div>
             </div>
-            {/* Mobile Search Bar */}
-            <div className="block md:hidden absolute top-full left-0 right-0 px-3 sm:px-4 py-2 bg-white border-t border-gray-200 z-30">
-                <div className="relative w-full max-w-full mx-auto">
-                    <input
-                        type="text"
-                        placeholder="Search startups, users, categories, tags..."
-                        className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-black/20 placeholder-gray-500 bg-white shadow text-sm"
-                        value={search}
-                        onChange={handleSearchChange}
-                        onFocus={handleSearchFocus}
-                        onBlur={handleSearchBlur}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                                setShowSearchSuggestions(false);
-                            }
-                        }}
-                    />
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        <Search className="w-4 h-4" />
-                    </span>
-                    {search && (
-                        <button
-                            type="button"
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg"
-                            onClick={() => {
-                                setSearch("");
-                                setShowSearchSuggestions(false);
-                            }}
-                            aria-label="Clear search"
-                        >
-                            &times;
-                        </button>
-                    )}
-                </div>
-            </div>
+
         </header >
     );
 };

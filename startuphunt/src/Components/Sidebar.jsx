@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-    Home, Scissors, Monitor, Clock, Download, Clipboard, History, PlaySquare, User, ChevronRight, Search
+    Home, Scissors, Monitor, Clock, Download, Clipboard, History, PlaySquare, User, ChevronRight
 } from "lucide-react";
 import { Rocket, Bookmark, ThumbsUp, Trophy, MessageSquare, Users } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -149,15 +149,7 @@ const Sidebar = ({ isOpen }) => {
         <aside className={`fixed left-0 top-[72px] w-60 h-[calc(100vh-72px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'}`}>
             {/* Main sidebar content */}
             <div className="py-4 px-2">
-                <div className="block lg:hidden px-2 mb-4">
-                    <Link
-                        to="/search"
-                        className="w-full flex items-center justify-center p-3 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                    >
-                        <Search className="w-6 h-6" />
-                        <span className="ml-3 text-sm font-medium">Search</span>
-                    </Link>
-                </div>
+
 
                 {/* Main Navigation */}
                 <div className="space-y-1">

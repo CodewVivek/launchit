@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { ExternalLink, Calendar, Tag, Search, Rocket, MoreVertical } from "lucide-react";
+import { ExternalLink, Tag, Search, Rocket } from "lucide-react";
 import Like from "../Components/Like";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isYesterday } from "date-fns";
@@ -84,11 +84,41 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-700 pt-16">
-        Loading projects...
+      <div className="min-h-screen pt-4 overflow-x-hidden">
+        <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-3 sm:mx-4 lg:mx-10 text-gray-800">
+          Loading Projects...
+        </h3>
+        <div className="px-3 sm:px-6 lg:px-8 xl:pl-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-3 sm:gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse w-full mb-2 sm:mb-1 border border-gray-200 rounded-lg bg-white shadow-sm"
+              >
+                {/* Thumbnail skeleton */}
+                <div className="relative aspect-video bg-gray-200 rounded-t-lg" />
+
+                {/* Project Info skeleton */}
+                <div className="flex gap-3 p-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  </div>
+                </div>
+
+                {/* Button/like skeleton */}
+                <div className="px-3 pb-3">
+                  <div className="h-6 w-12 bg-gray-200 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
+
 
   if (error) {
     return (
@@ -125,7 +155,9 @@ const Dashboard = () => {
 // ProjectCard component with VideoCard styling
 const ProjectCard = ({ project, onProjectClick }) => {
   return (
-    <div className="group cursor-pointer w-full overflow-hidden" onClick={() => onProjectClick(project)}>
+    <div className="
+    group cursor-pointer w-full overflow-hidden mb-2 sm:mb-1  border border-gray-200 rounded-lg bg-white  sm:border-0 sm:bg-transparent  "
+      onClick={() => onProjectClick(project)}>
       {/* Thumbnail */}
       <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden mb-3">
         {project.thumbnail_url ? (

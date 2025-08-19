@@ -235,12 +235,12 @@ const TermsOfService = () => (
           </ul>
         </div>
         <p className="text-gray-700 mt-4">
-            To the maximum extent permitted by law, launchit shall not be liable for any indirect, incidental,
-            special, consequential, or punitive damages arising from your use of the platform.
+          To the maximum extent permitted by law, launchit shall not be liable for any indirect, incidental,
+          special, consequential, or punitive damages arising from your use of the platform.
         </p>
         <p className="text-gray-700 mt-4">
-            You agree to indemnify and hold harmless launchit, its officers, directors, employees, and agents from any claims,
-            damages, or expenses arising from:
+          You agree to indemnify and hold harmless launchit, its officers, directors, employees, and agents from any claims,
+          damages, or expenses arising from:
         </p>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Your content submissions</li>
@@ -252,13 +252,13 @@ const TermsOfService = () => (
 
       <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">11. Liability and Indemnification</h2>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">11.1 Limitation of Liability</h3>
         <p className="text-gray-700 mb-3">
           In no event shall launchit be liable for any damages beyond the amount you paid for our services, if any.
           Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim.
         </p>
-        
+
         <h3 className="text-xl font-medium mb-3 text-gray-700">11.2 Indemnification</h3>
         <p className="text-gray-700 mb-3">
           You agree to defend, indemnify, and hold harmless launchit from and against any claims, damages,
@@ -326,14 +326,14 @@ const TermsOfService = () => (
           <div className="space-y-2">
             <p className="text-gray-700">
               <strong>Legal Inquiries:</strong>{" "}
-              <a href="mailto:legal@launchit.site" className="text-blue-600 underline hover:text-blue-800">
-                legal@launchit.site
+              <a href="mailto:skypher206@gmail.com" className="text-blue-600 underline hover:text-blue-800">
+                skypher206@gmail.com
               </a>
             </p>
             <p className="text-gray-700">
               <strong>Support:</strong>{" "}
-              <a href="mailto:support@launchit.site" className="text-blue-600 underline hover:text-blue-800">
-                support@launchit.site
+              <a href="mailto:skypher206@gmail.com" className="text-blue-600 underline hover:text-blue-800">
+                skypher206@gmail.com
               </a>
             </p>
             <p className="text-gray-700">

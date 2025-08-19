@@ -1587,28 +1587,6 @@ const Register = () => {
                             Additional Details
                         </button>
                     </nav>
-
-                    {/* Content Moderation Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <div className="flex items-start gap-3">
-                            <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
-                                <span className="text-blue-600 text-xs">ℹ️</span>
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-blue-800 mb-2">Content Guidelines</h4>
-                                <p className="text-blue-700 text-sm mb-2">
-                                    Your content will be automatically checked for inappropriate material. Please ensure your project description is:
-                                </p>
-                                <ul className="text-blue-700 text-sm space-y-1">
-                                    <li>• Professional and business-focused</li>
-                                    <li>• Free of profanity or offensive language</li>
-                                    <li>• Clear and descriptive about your project</li>
-                                    <li>• Appropriate for all audiences</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Step-specific content */}

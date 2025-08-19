@@ -14,9 +14,9 @@ const CommunityComingSoon = () => {
           <Sunrise className="h-8 w-8 sm:h-12 sm:w-12 lg:h-16 lg:w-16 text-yellow-500 animate-pulse-slow" />
         </div>
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold text-gray-900 leading-tight tracking-tighter mt-6 sm:mt-8 animate-fade-in-up px-2">
-          Our New Community
+          Our New Community is
           <br className="hidden md:block" />
-          is <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Coming Soon.</span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Coming Soon.</span>
         </h1>
         <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 mt-4 sm:mt-6 animate-fade-in-up-delay px-2">
           We are crafting a new digital space for you to connect, collaborate, and grow.
