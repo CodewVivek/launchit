@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-    Home, Scissors, Monitor, Clock, Download, Clipboard, History, PlaySquare, User, ChevronRight, Search
+    Home, Scissors, Monitor, Clock, Download, Clipboard, History, PlaySquare, User, ChevronRight
 } from "lucide-react";
 import { Rocket, Bookmark, ThumbsUp, Trophy, MessageSquare, Users } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -22,11 +22,8 @@ const Sidebar = ({ isOpen }) => {
         };
         getUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => subscription.unsubscribe();
+        // Remove real-time auth subscription to reduce database load
+        // Auth state will be checked on-demand when needed
     }, []);
 
     useEffect(() => {
@@ -44,20 +41,39 @@ const Sidebar = ({ isOpen }) => {
         fetchCategories();
     }, []);
 
-    const handleYouItemClick = (route) => {
+    const handleYouItemClick = async (route) => {
         if (!user) {
             toast.error("Please login to access this feature");
             navigate("/UserRegister");
             return;
         }
-        navigate(route);
+
+        if (route === "profile") {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', user.id)
+                    .single();
+                if (profile?.username) {
+                    navigate(`/profile/${profile.username}`);
+                } else {
+                    toast.error("Profile not found");
+                }
+            } catch (error) {
+                
+                toast.error("Error loading profile");
+            }
+        } else {
+            navigate(route);
+        }
     };
 
     const mainItems = [
         { title: "Home", icon: Home, active: true, to: "/" },
-        { title: "Shorts", icon: Scissors, to: "/shorts" },
+        { title: "pitch", icon: Scissors, to: "/approved-pitches" },
         { title: "Community", icon: Users, to: "/launchit-community" },
-        { title: "You", icon: User, to: "/explore" },
+        { title: "You", icon: User, isProfile: true },
     ];
 
     const youItems = [
@@ -73,21 +89,54 @@ const Sidebar = ({ isOpen }) => {
 
     if (!isOpen) {
         return (
-            <aside className={`fixed left-0 top-[72px] w-16 h-[calc(100vh-72px)] bg-white overflow-y-auto shadow-lg ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
+            <aside className={`fixed left-0 top-[75px] w-16 h-[calc(100vh-75px)] bg-white overflow-y-auto shadow-lg ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
+                {/* Main Navigation */}
                 <div className="p-2">
                     <div className="space-y-2">
                         {mainItems.map((item) => (
-                            <Link
-                                key={item.title}
-                                to={item.to}
-                                className={`w-full flex items-center justify-center p-3 rounded-lg text-sm font-medium transition-colors ${item.active
-                                    ? "bg-gray-100 text-black"
-                                    : "text-black hover:bg-gray-100"
-                                    }`}
-                                title={item.title}
-                            >
-                                <item.icon className="w-5 h-5" />
-                            </Link>
+                            item.isProfile ? (
+                                <button
+                                    key={item.title}
+                                    onClick={async () => {
+                                        if (!user) {
+                                            toast.error("Please login to access your profile");
+                                            navigate("/UserRegister");
+                                            return;
+                                        }
+                                        try {
+                                            const { data: profile } = await supabase
+                                                .from('profiles')
+                                                .select('username')
+                                                .eq('id', user.id)
+                                                .single();
+                                            if (profile?.username) {
+                                                navigate(`/profile/${profile.username}`);
+                                            } else {
+                                                toast.error("Profile not found");
+                                            }
+                                        } catch (error) {
+                                            
+                                            toast.error("Error loading profile");
+                                        }
+                                    }}
+                                    className={`w-full flex items-center justify-center p-3 rounded-lg text-sm font-medium transition-colors text-black hover:bg-gray-100`}
+                                    title={item.title}
+                                >
+                                    <item.icon className="w-5 h-5 mb-1" />
+                                </button>
+                            ) : (
+                                <Link
+                                    key={item.title}
+                                    to={item.to}
+                                    className={`w-full flex items-center justify-center p-3 rounded-lg text-sm font-medium transition-colors ${item.active
+                                        ? "bg-gray-100 text-black"
+                                        : "text-black hover:bg-gray-100"
+                                        }`}
+                                    title={item.title}
+                                >
+                                    <item.icon className="w-5 h-5 mb-1" />
+                                </Link>
+                            )
                         ))}
                     </div>
                 </div>
@@ -96,49 +145,55 @@ const Sidebar = ({ isOpen }) => {
     }
 
     return (
-        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white overflow-y-auto shadow-xl ${isProjectDetails ? 'z-50' : 'z-40'}`}>
-            <div className="">
-                {/* Mobile Search Bar - Only visible when sidebar is open */}
-                <div className="block lg:hidden p-4 border-b border-gray-200">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search startups, users, categories, tags..."
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            onChange={(e) => {
-                                // Add AI search suggestions here
-                                const query = e.target.value;
-                                if (query.length >= 2) {
-                                    // Generate AI suggestions
-                                    const suggestions = [
-                                        `Find ${query} alternatives`,
-                                        `Best ${query} tools`,
-                                        `${query} for startups`,
-                                        `${query} solutions`
-                                    ];
-                                    // You can display these suggestions without changing existing logic
-                                    console.log('AI suggestions:', suggestions);
-                                }
-                            }}
-                        />
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    </div>
-                </div>
-
+        <aside className={`fixed left-0 top-[82px] w-60 h-[calc(100vh-82px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'}`}>
+            {/* Main sidebar content */}
+            <div className="py-4 px-2">
                 {/* Main Navigation */}
-                <div className="space-y-1 p-2">
+                <div className="space-y-1">
                     {mainItems.map((item) => (
-                        <Link
-                            key={item.title}
-                            to={item.to}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${item.active
-                                ? "bg-gray-100 text-black"
-                                : "text-black hover:bg-gray-100"
-                                }`}
-                        >
-                            <item.icon className="w-6 h-6" />
-                            <span>{item.title}</span>
-                        </Link>
+                        item.isProfile ? (
+                            <button
+                                key={item.title}
+                                onClick={async () => {
+                                    if (!user) {
+                                        toast.error("Please login to access your profile");
+                                        navigate("/UserRegister");
+                                        return;
+                                    }
+                                    try {
+                                        const { data: profile } = await supabase
+                                            .from('profiles')
+                                            .select('username')
+                                            .eq('id', user.id)
+                                            .single();
+                                        if (profile?.username) {
+                                            navigate(`/profile/${profile.username}`);
+                                        } else {
+                                            toast.error("Profile not found");
+                                        }
+                                    } catch (error) {
+                                        
+                                        toast.error("Error loading profile");
+                                    }
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-black hover:bg-gray-100"
+                            >
+                                <item.icon className="w-6 h-6" />
+                                <span>{item.title}</span>
+                            </button>
+                        ) : (
+                            <Link
+                                key={item.title}
+                                to={item.to}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${item.active
+                                    ? "bg-gray-100 text-black"
+                                    : "text-black hover:bg-gray-100"
+                                    }`}
+                            >
+                                <item.icon className="w-6 h-6" />
+                                <span>{item.title}</span>
+                            </Link>
+                        )
                     ))}
                 </div>
 
@@ -147,10 +202,34 @@ const Sidebar = ({ isOpen }) => {
 
                 {/* You Section */}
                 <div className="space-y-1">
-                    <div className="flex items-center px-3 py-2 text-black font-medium text-base">
+                    <button
+                        onClick={async () => {
+                            if (!user) {
+                                toast.error("Please login to access your profile");
+                                navigate("/UserRegister");
+                                return;
+                            }
+                            try {
+                                const { data: profile } = await supabase
+                                    .from('profiles')
+                                    .select('username')
+                                    .eq('id', user.id)
+                                    .single();
+                                if (profile?.username) {
+                                    navigate(`/profile/${profile.username}`);
+                                } else {
+                                    toast.error("Profile not found");
+                                }
+                            } catch (error) {
+                                
+                                toast.error("Error loading profile");
+                            }
+                        }}
+                        className="w-full flex items-center px-3 py-2 text-black font-medium text-base hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                    >
                         You
                         <ChevronRight className="ml-1 text-gray-500 w-4 h-4" />
-                    </div>
+                    </button>
                     {youItems.map((item) => (
                         <button
                             key={item.title}
@@ -203,10 +282,10 @@ const Sidebar = ({ isOpen }) => {
 
                         </div>
                         <div className="px-3">
-                            <a href="/launchitguide" className="hover:text-gray-800">How LaunchIT works</a>
+                            <a href="/launchitguide" className="hover:text-gray-800">How launchit works</a>
                         </div>
                         <div className="px-3 pt-2 text-xs text-gray-500">
-                            © 2025 LaunchIT LLC
+                            © 2025 launchit LLC
                         </div>
                     </div>
                 </div>
@@ -215,4 +294,4 @@ const Sidebar = ({ isOpen }) => {
     );
 };
 
-export default Sidebar; 
+export default Sidebar;

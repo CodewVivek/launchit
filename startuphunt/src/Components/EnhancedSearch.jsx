@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { semanticSearch } from '../utils/aiApi';
 import { Search, Filter, X, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../supabaseClient';
 
 const EnhancedSearch = ({
     onSearchResults,
@@ -29,7 +30,7 @@ const EnhancedSearch = ({
             try {
                 setSearchHistory(JSON.parse(saved));
             } catch (error) {
-                console.error('Failed to parse search history:', error);
+                
             }
         }
     }, []);
@@ -92,29 +93,89 @@ const EnhancedSearch = ({
 
         setIsSearching(true);
         try {
+            // Try AI search first
             const result = await semanticSearch(searchQuery, 20, filters);
 
-            if (result.success) {
-                setSearchResults(result.results);
+            if (result && result.success) {
+                setSearchResults(result.results || []);
                 saveSearchHistory(searchQuery);
 
                 if (onSearchResults) {
-                    onSearchResults(result.results, searchQuery);
+                    onSearchResults(result.results || [], searchQuery);
                 }
 
-                if (result.results.length === 0) {
+                if ((result.results || []).length === 0) {
                     toast.info('No results found. Try different keywords or filters.');
                 } else {
-                    toast.success(`Found ${result.results.length} results for "${searchQuery}"`);
+                    toast.success(`Found ${(result.results || []).length} results for "${searchQuery}"`);
                 }
             } else {
-                toast.error('Search failed. Please try again.');
+                // Fallback to basic search if AI search fails
+                
+                await performFallbackSearch(searchQuery);
             }
         } catch (error) {
-            console.error('Search error:', error);
-            toast.error('Search failed. Please try again.');
+            
+            
+            // Try fallback search if AI search throws an error
+            try {
+                await performFallbackSearch(searchQuery);
+            } catch (fallbackError) {
+                
+                
+                // Provide user-friendly error message
+                let errorMessage = 'Search failed. Please try again.';
+                
+                if (error.message) {
+                    if (error.message.includes('fetch')) {
+                        errorMessage = 'Network error. Please check your connection.';
+                    } else if (error.message.includes('HTTP')) {
+                        errorMessage = 'Service temporarily unavailable. Please try again later.';
+                    }
+                }
+                
+                toast.error(errorMessage);
+                
+                // Set empty results and notify parent component
+                setSearchResults([]);
+                if (onSearchResults) {
+                    onSearchResults([], searchQuery);
+                }
+            }
         } finally {
             setIsSearching(false);
+        }
+    };
+
+    // Fallback search using Supabase directly
+    const performFallbackSearch = async (searchQuery) => {
+        try {
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*')
+                .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,tagline.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`)
+                .limit(20);
+
+            if (error) {
+                throw error;
+            }
+
+            const results = data || [];
+            setSearchResults(results);
+            saveSearchHistory(searchQuery);
+
+            if (onSearchResults) {
+                onSearchResults(results, searchQuery);
+            }
+
+            if (results.length === 0) {
+                toast.info('No results found. Try different keywords or filters.');
+            } else {
+                toast.success(`Found ${results.length} results for "${searchQuery}" (using fallback search)`);
+            }
+        } catch (error) {
+            
+            throw error;
         }
     };
 
@@ -168,7 +229,14 @@ const EnhancedSearch = ({
                     <input
                         type="text"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => {
+                            try {
+                                setQuery(e.target.value);
+                            } catch (error) {
+                                
+                                toast.error('Search input error. Please try again.');
+                            }
+                        }}
                         placeholder={placeholder}
                         className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         disabled={isSearching}
@@ -177,7 +245,14 @@ const EnhancedSearch = ({
                         {query && (
                             <button
                                 type="button"
-                                onClick={clearSearch}
+                                onClick={() => {
+                                    try {
+                                        clearSearch();
+                                    } catch (error) {
+                                        
+                                        toast.error('Error clearing search. Please try again.');
+                                    }
+                                }}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
                                 <X className="h-5 w-5" />
@@ -186,10 +261,17 @@ const EnhancedSearch = ({
                         {showFilters && (
                             <button
                                 type="button"
-                                onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+                                onClick={() => {
+                                    try {
+                                        setShowFiltersPanel(!showFiltersPanel);
+                                    } catch (error) {
+                                        
+                                        toast.error('Error with filters. Please try again.');
+                                    }
+                                }}
                                 className={`p-1 rounded transition-colors ${hasActiveFilters
-                                        ? 'bg-blue-100 text-blue-600'
-                                        : 'text-gray-400 hover:text-gray-600'
+                                    ? 'bg-blue-100 text-blue-600'
+                                    : 'text-gray-400 hover:text-gray-600'
                                     }`}
                             >
                                 <Filter className="h-5 w-5" />
@@ -198,12 +280,12 @@ const EnhancedSearch = ({
                         <button
                             type="submit"
                             disabled={isSearching || !query.trim()}
-                            className="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {isSearching ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                                'Search'
+                                <Search className="h-5 w-5" />
                             )}
                         </button>
                     </div>

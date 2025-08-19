@@ -1,6 +1,8 @@
-import React, { useState, Suspense, lazy } from "react";
+import React, { useState, Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { supabase } from "./supabaseClient";
+import { markSubscriptionFixesApplied, logPageSpeedImprovements } from "./utils/performanceMonitor";
 import Header from "./Components/Header";
 import Sidebar from "./Components/Sidebar";
 import Register from "./Pages/Register";
@@ -25,6 +27,7 @@ import MyComments from "./Pages/userinfoyou/MyComments.jsx";
 import FollowersFollowing from "./Pages/userinfoyou/FollowersFollowing.jsx";
 import CategoryProjects from "./Pages/CategoryProjects.jsx";
 import Community from "./Pages/Community.jsx";
+import SearchBar from "./Components/SearchBar.jsx";
 import ScrollToTop from "./Components/ScrollToTop";
 import ErrorBoundary from "./Components/ErrorBoundary";
 
@@ -52,67 +55,79 @@ function AppRoutes() {
 
   const isProjectDetailsPage = location.pathname.startsWith("/launches/");
 
+  // Auto-close sidebar on mobile when navigating to a new page
+  useEffect(() => {
+    // Only auto-close on mobile devices (screen width < 1024px)
+    if (window.innerWidth < 1024 && sidebarOpen) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
   // The main content container will have a left margin ONLY IF the sidebar is open AND it's NOT the ProjectDetails page
   const mainContentMargin = sidebarOpen && !isProjectDetailsPage ? 'lg:ml-60' : 'lg:ml-10';
 
   return (
-    <div className="flex min-h-screen transition-colors duration-300">
-      {!hideHeaderFooter && (
-        <Sidebar isOpen={sidebarOpen} isProjectDetails={isProjectDetailsPage} />
-      )}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${mainContentMargin}`}>
-        {!hideHeaderFooter && <Header onMenuClick={handleSidebarToggle} />}
-        <main className="flex-grow pt-16" style={{ minHeight: "100%" }}>
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              <Route path="/admin" element={
-                <PageFade>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <LazyAdminDashboard />
-                  </Suspense>
-                </PageFade>
-              } />
-              <Route path="/" element={<PageFade><DashBoard /></PageFade>} />
-              <Route path="/UserRegister" element={<PageFade><UserRegister /></PageFade>} />
-              <Route path="/submit" element={<PageFade><Register /></PageFade>} />
-              <Route path="/launches/:slug" element={<PageFade><ProjectDetails /></PageFade>} />
-              <Route path="/settings" element={<PageFade><Settings /></PageFade>} />
-              <Route path="/profile/:username" element={<PageFade><UserProfile /></PageFade>} />
-              <Route path="/terms" element={<PageFade><TermsOfService /></PageFade>} />
-              <Route path="/privacy" element={<PageFade><PrivacyPolicy /></PageFade>} />
-              <Route path="/aboutus" element={<PageFade><Aboutus /></PageFade>} />
-              <Route path="/suggestions" element={<PageFade><Suggestions /></PageFade>} />
-              <Route path="/launchitguide" element={<PageFade><LaunchItGuide /></PageFade>} />
-              <Route path="/upload-pitch" element={
-                <PageFade>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <LazyPitchUpload />
-                  </Suspense>
-                </PageFade>
-              } />
-              <Route path="/coming-soon" element={<PageFade><ComingSoon /></PageFade>} />
-              <Route path="/my-launches" element={<PageFade><MyLaunches /></PageFade>} />
-              <Route path="/saved-projects" element={<PageFade><SavedProjects /></PageFade>} />
-              <Route path="/upvoted-projects" element={<PageFade><UpvotedProjects /></PageFade>} />
-              <Route path="/viewed-history" element={<PageFade><ComingSoon /></PageFade>} />
-              <Route path="/launch-challenges" element={<PageFade><ComingSoon /></PageFade>} />
-              <Route path="/my-comments" element={<PageFade><MyComments /></PageFade>} />
-              <Route path="/downloads" element={<PageFade><ComingSoon /></PageFade>} />
-              <Route path="/followers-following" element={<PageFade><FollowersFollowing /></PageFade>} />
-              <Route path="/approved-pitches" element={
-                <PageFade>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <LazyApprovedPitches />
-                  </Suspense>
-                </PageFade>
-              } />
-              <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
-              <Route path="/launchit-community" element={<PageFade><Community /></PageFade>} />
-            </Routes>
-          </AnimatePresence>
-        </main>
+    <>
+      <div className="flex min-h-screen transition-colors duration-300">
+        {!hideHeaderFooter && (
+          <Sidebar isOpen={sidebarOpen} isProjectDetails={isProjectDetailsPage} />
+        )}
+        <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-hidden ${mainContentMargin}`}>
+          {!hideHeaderFooter && <Header onMenuClick={handleSidebarToggle} />}
+          <main className="flex-grow pt-20 sm:pt-16 w-full max-w-full overflow-x-hidden" style={{ minHeight: "100%" }}>
+            <AnimatePresence mode="wait">
+              <Routes location={location} key={location.pathname}>
+                <Route path="/admin" element={
+                  <PageFade>
+                    <Suspense fallback={<LoadingFallback />}>
+                      <LazyAdminDashboard />
+                    </Suspense>
+                  </PageFade>
+                } />
+                <Route path="/" element={<PageFade><DashBoard /></PageFade>} />
+                <Route path="/UserRegister" element={<PageFade><UserRegister /></PageFade>} />
+                <Route path="/submit" element={<PageFade><Register /></PageFade>} />
+                <Route path="/launches/:slug" element={<PageFade><ProjectDetails /></PageFade>} />
+                <Route path="/settings" element={<PageFade><Settings /></PageFade>} />
+                <Route path="/profile/:username" element={<PageFade><UserProfile /></PageFade>} />
+                <Route path="/terms" element={<PageFade><TermsOfService /></PageFade>} />
+                <Route path="/privacy" element={<PageFade><PrivacyPolicy /></PageFade>} />
+                <Route path="/aboutus" element={<PageFade><Aboutus /></PageFade>} />
+                <Route path="/suggestions" element={<PageFade><Suggestions /></PageFade>} />
+                <Route path="/launchitguide" element={<PageFade><LaunchItGuide /></PageFade>} />
+                <Route path="/upload-pitch" element={
+                  <PageFade>
+                    <Suspense fallback={<LoadingFallback />}>
+                      <LazyPitchUpload />
+                    </Suspense>
+                  </PageFade>
+                } />
+                <Route path="/coming-soon" element={<PageFade><ComingSoon /></PageFade>} />
+                <Route path="/my-launches" element={<PageFade><MyLaunches /></PageFade>} />
+                <Route path="/saved-projects" element={<PageFade><SavedProjects /></PageFade>} />
+                <Route path="/upvoted-projects" element={<PageFade><UpvotedProjects /></PageFade>} />
+                <Route path="/viewed-history" element={<PageFade><ComingSoon /></PageFade>} />
+                <Route path="/launch-challenges" element={<PageFade><ComingSoon /></PageFade>} />
+                <Route path="/my-comments" element={<PageFade><MyComments /></PageFade>} />
+                <Route path="/downloads" element={<PageFade><ComingSoon /></PageFade>} />
+                <Route path="/followers-following" element={<PageFade><FollowersFollowing /></PageFade>} />
+                <Route path="/approved-pitches" element={
+                  <PageFade>
+                    <Suspense fallback={<LoadingFallback />}>
+                      <LazyApprovedPitches />
+                    </Suspense>
+                  </PageFade>
+                } />
+                <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
+                <Route path="/launchit-community" element={<PageFade><Community /></PageFade>} />
+                <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />
+                <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />
+              </Routes>
+            </AnimatePresence>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -123,6 +138,7 @@ function PageFade({ children }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.4 }}
+      className="w-full max-w-full overflow-x-hidden"
       style={{ minHeight: "100%" }}
     >
       {children}
@@ -131,10 +147,23 @@ function PageFade({ children }) {
 }
 
 function App() {
+  // Global cleanup for all Supabase real-time subscriptions
+  useEffect(() => {
+    // Mark subscription fixes as applied
+    markSubscriptionFixesApplied();
+
+    logPageSpeedImprovements();
+
+    return () => {
+      // Clean up all channels when app unmounts
+      supabase.removeAllChannels();
+    };
+  }, []);
+
   return (
     <BrowserRouter>
-      <ScrollToTop />
       <ErrorBoundary>
+        <ScrollToTop />
         <AppRoutes />
       </ErrorBoundary>
     </BrowserRouter>

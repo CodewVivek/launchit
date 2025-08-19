@@ -39,7 +39,7 @@ const FollowersFollowing = () => {
                 .eq('follower_id', userId);
 
             if (followingError) {
-                console.error('Error fetching following:', followingError);
+                
                 toast.error('Failed to load following data');
             } else {
                 // Get the user profiles for the following IDs
@@ -51,7 +51,7 @@ const FollowersFollowing = () => {
                         .in('id', followingIds);
 
                     if (profilesError) {
-                        console.error('Error fetching profiles:', profilesError);
+                        
                     } else {
                         setFollowing(profilesData || []);
                     }
@@ -67,7 +67,7 @@ const FollowersFollowing = () => {
                 .eq('following_id', userId);
 
             if (followersError) {
-                console.error('Error fetching followers:', followersError);
+                
                 toast.error('Failed to load followers data');
             } else {
                 // Get the user profiles for the follower IDs
@@ -79,7 +79,7 @@ const FollowersFollowing = () => {
                         .in('id', followerIds);
 
                     if (profilesError) {
-                        console.error('Error fetching profiles:', profilesError);
+                        
                     } else {
                         setFollowers(profilesData || []);
                     }
@@ -89,7 +89,7 @@ const FollowersFollowing = () => {
             }
 
         } catch (error) {
-            console.error('Error:', error);
+            
             setError('An error occurred while loading data');
             toast.error('An error occurred while loading data');
         } finally {
@@ -106,14 +106,14 @@ const FollowersFollowing = () => {
                 .eq('following_id', followingId);
 
             if (error) {
-                console.error('Error unfollowing:', error);
+                
                 toast.error('Failed to unfollow');
             } else {
                 setFollowing(prev => prev.filter(item => item.following_id !== followingId));
                 toast.success(`Unfollowed ${userName}`);
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             toast.error('An error occurred while unfollowing');
         }
     };

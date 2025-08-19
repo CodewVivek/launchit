@@ -29,9 +29,9 @@ import {
 
 const guideSections = [
   {
-    heading: "What is LaunchIT?",
+    heading: "What is launchit?",
     icon: <Info className="w-6 h-6 text-blue-500" />,
-    content: `LaunchIT is a platform for makers, founders, and startups to showcase their projects, connect with the community, and get feedback before and after launch. You can submit your project, update it, and interact with other users.`,
+    content: `launchit is a platform for makers, founders, and startups to showcase their projects, connect with the community, and get feedback before and after launch. You can submit your project, update it, and interact with other users.`,
   },
   {
     heading: "How do I sign up and onboard?",
@@ -151,19 +151,21 @@ const LaunchItGuide = () => {
           <Search className="w-5 h-5 text-blue-500" />
           <input
             type="text"
-            placeholder="Search LaunchIT Guide..."
+            placeholder="Search launchit Guide..."
             className="flex-1 bg-transparent outline-none text-lg text-gray-800 placeholder-gray-400"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <h1 className="text-4xl font-extrabold text-blue-700 mb-6 text-center drop-shadow-sm">
-          LaunchIT Guide & FAQ
-        </h1>
-        <p className="text-lg text-gray-600 mb-10 text-center">
-          Your complete resource for using LaunchIT. Search or browse below for
-          answers, tips, and platform walkthroughs.
-        </p>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            launchit Guide & FAQ
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Your complete resource for using launchit. Search or browse below for
+            answers, tips, and platform walkthroughs.
+          </p>
+        </div>
         {filteredSections.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
             <HelpCircle className="w-12 h-12 text-blue-300 mb-4 animate-bounce" />

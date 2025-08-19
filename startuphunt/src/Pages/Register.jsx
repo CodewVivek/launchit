@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plus, X, Upload, User, Star, Rocket, Link as LinkIcon, Edit3, Image, Layout, Layers, Hash, Eye } from 'lucide-react';
+import { Plus, X, Upload, User, Star, Rocket, Link as LinkIcon, Edit3, Image, Layout, Layers, Hash, Eye, Wand2, CheckCircle } from 'lucide-react';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -14,6 +14,8 @@ import Button from '@mui/material/Button';
 import categoryOptions from '../Components/categoryOptions';
 import BuiltWithSelect from '../Components/BuiltWithSelect';
 import { config } from '../config';
+// Content moderation removed for merge
+import { optimizeImage, formatFileSize } from '../utils/imageOptimizer';
 
 // Custom styles for the react-select component to match the new UI
 const customSelectStyles = {
@@ -58,15 +60,17 @@ const isValidUrl = (string) => {
     }
 };
 
-const slugify = (text) =>
-    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+const slugify = (text) => {
+    if (!text || typeof text !== 'string') return '';
+    return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+};
 
 const sanitizeFileName = (fileName) => {
-    // Remove spaces, special characters, and keep only alphanumeric, dots, hyphens, underscores
+    if (!fileName || typeof fileName !== 'string') return 'file';
     return fileName
         .replace(/\s+/g, '-') // Replace spaces with hyphens
         .replace(/[^a-zA-Z0-9.-_]/g, '') // Remove special characters except dots, hyphens, underscores
-        .toLowerCase(); // Convert to lowercase
+        .toLowerCase();
 };
 
 const Register = () => {
@@ -88,10 +92,19 @@ const Register = () => {
     const [tags, setTags] = useState([]);
     const [dynamicCategoryOptions, setDynamicCategoryOptions] = useState(categoryOptions);
 
-    // Smart Fill Dialog States
     const [showSmartFillDialog, setShowSmartFillDialog] = useState(false);
     const [pendingAIData, setPendingAIData] = useState(null);
     const [isAILoading, setIsAILoading] = useState(false);
+
+    // Content moderation removed for merge
+
+    // Add retry state
+    const [retryCount, setRetryCount] = useState(0);
+    const [isRetrying, setIsRetrying] = useState(false);
+
+    // Add fallback URL preview functionality
+    const [urlPreview, setUrlPreview] = useState(null);
+    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
     const handleUrlBlur = (e) => {
         const { value } = e.target;
@@ -132,22 +145,46 @@ const Register = () => {
     const [thumbnailFile, setThumbnailFile] = useState(null);
     const [coverFiles, setCoverFiles] = useState([null, null, null, null]);
 
-    const handleLogoChange = (e) => {
+    const handleLogoChange = async (e) => {
         const file = e.target.files[0];
-        if (file) setLogoFile(file);
+        if (file) {
+            try {
+                const optimizedFile = await optimizeImage(file, 'logo');
+                setLogoFile(optimizedFile);
+            } catch (error) {
+                // Image optimization failed, fallback to original file
+                setLogoFile(file);
+            }
+        }
     };
     const removeLogo = () => setLogoFile(null);
 
-    const handleThumbnailChange = (e) => {
+    const handleThumbnailChange = async (e) => {
         const file = e.target.files[0];
-        if (file) setThumbnailFile(file);
+        if (file) {
+            try {
+                // Optimize thumbnail image before setting
+                const optimizedFile = await optimizeImage(file, 'thumbnail');
+                setThumbnailFile(optimizedFile);
+            } catch (error) {
+                // Image optimization failed, fallback to original file
+                setThumbnailFile(file);
+            }
+        }
     };
     const removeThumbnail = () => setThumbnailFile(null);
 
-    const handleCoverChange = (e, idx) => {
+    const handleCoverChange = async (e, idx) => {
         const file = e.target.files[0];
         if (file) {
-            setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
+            try {
+                // Optimize cover image before setting
+                const optimizedFile = await optimizeImage(file, 'cover');
+                setCoverFiles(prev => prev.map((f, i) => (i === idx ? optimizedFile : f)));
+            } catch (error) {
+                // Image optimization failed, fallback to original file
+                setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
+            }
         }
     };
     const removeCover = (idx) => {
@@ -210,7 +247,7 @@ const Register = () => {
                         .single();
 
                     if (error) {
-                        console.error('Error loading project:', error);
+
                         setSnackbar({ open: true, message: 'Project not found or access denied.', severity: 'error' });
                         return;
                     }
@@ -241,7 +278,7 @@ const Register = () => {
                         setCoverFiles(project.cover_urls || [null, null, null, null]);
                     }
                 } catch (error) {
-                    console.error('Error loading project for editing:', error);
+
                     setSnackbar({ open: true, message: 'Failed to load project for editing.', severity: 'error' });
                 } finally {
                     setLoadingProject(false);
@@ -306,36 +343,70 @@ const Register = () => {
     };
 
     const validateForm = () => {
-        // Step 1: All basic fields are required
-        if (!formData.name || !formData.websiteUrl || !formData.tagline || !selectedCategory || !formData.description) {
-            setSnackbar({ open: true, message: 'Please fill in all required fields in Step 1.', severity: 'error' });
-            setStep(1);
+        const errors = [];
+
+        // STEP 1: Fully Required Fields
+        if (!formData.name || formData.name.trim().length === 0) {
+            errors.push('Startup name is required');
+        } else if (formData.name.trim().length < 3) {
+            errors.push('Startup name must be at least 3 characters long');
+        }
+
+        if (!formData.websiteUrl || formData.websiteUrl.trim().length === 0) {
+            errors.push('Website URL is required');
+        } else if (!isValidUrl(formData.websiteUrl)) {
+            errors.push('Please enter a valid website URL (e.g., https://example.com)');
+        }
+
+        if (!formData.description || formData.description.trim().length === 0) {
+            errors.push('Description is required');
+        } else if (formData.description.trim().length < 20) {
+            errors.push('Description must be at least 20 characters long');
+        }
+
+        if (!formData.tagline || formData.tagline.trim().length === 0) {
+            errors.push('Tagline is required');
+        } else if (formData.tagline.trim().length < 10) {
+            errors.push('Tagline must be at least 10 characters long');
+        }
+
+        if (!selectedCategory) {
+            errors.push('Please select a category for your startup');
+        }
+
+
+        // Check cover images - require at least 2
+        const validCoverFiles = coverFiles.filter(file => file !== null);
+        if (validCoverFiles.length < 2) {
+            errors.push('Please upload at least 2 cover images for your startup');
+        }
+
+        const hasAIGeneratedImages = urlPreview && (urlPreview.logo || urlPreview.screenshot);
+        const hasUserUploadedImages = logoFile || thumbnailFile;
+
+        if (!hasAIGeneratedImages && !hasUserUploadedImages) {
+            errors.push('Please provide either a logo or thumbnail image (AI generation failed, manual upload required)');
+        }
+
+        // STEP 3: Optional Fields (no validation required)
+        // - tags
+        // - links
+
+        if (errors.length > 0) {
+            const errorMessage = `Please fix the following issues:\n${errors.join('\n')}`;
+            setSnackbar({
+                open: true,
+                message: errorMessage,
+                severity: 'error'
+            });
             return false;
         }
 
-        // Step 2: Logo, Thumbnail, and at least 1 cover image are required
-        if (!logoFile) {
-            setSnackbar({ open: true, message: 'Please upload a logo image in Step 2.', severity: 'error' });
-            setStep(2);
-            return false;
-        }
-
-        if (!thumbnailFile) {
-            setSnackbar({ open: true, message: 'Please upload a thumbnail image in Step 2.', severity: 'error' });
-            setStep(2);
-            return false;
-        }
-
-        const hasCover = coverFiles && coverFiles.some(f => !!f);
-        if (!hasCover) {
-            setSnackbar({ open: true, message: 'Please upload at least one cover image in Step 2.', severity: 'error' });
-            setStep(2);
-            return false;
-        }
-
-        // Step 3: All fields are optional (no validation needed)
         return true;
     };
+
+    // Content Moderation Function
+    // Content moderation removed for merge - direct submission enabled
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -348,6 +419,9 @@ const Register = () => {
             return;
         }
 
+        // Content Moderation Check
+        // Content moderation removed for merge - direct submission enabled
+
         const submissionData = {
             name: formData.name,
             website_url: formData.websiteUrl,
@@ -358,15 +432,22 @@ const Register = () => {
             built_with: builtWith.map(item => item.value),
             tags: tags,
             media_urls: [], // Required NOT NULL field - empty array for now
-            created_at: new Date().toISOString(),
             user_id: user.id,
             updated_at: new Date().toISOString(),
             status: 'launched',
         };
 
-        const baseSlug = slugify(formData.name);
-        const uniqueSlug = `${baseSlug}-${nanoid(6)}`;
-        submissionData.slug = uniqueSlug;
+        // Only set created_at for new projects, not when editing
+        if (!isEditing) {
+            submissionData.created_at = new Date().toISOString();
+        }
+
+        // Only generate new slug for new projects, not when editing
+        if (!isEditing) {
+            const baseSlug = slugify(formData.name);
+            const uniqueSlug = `${baseSlug}-${nanoid(6)}`;
+            submissionData.slug = uniqueSlug;
+        }
 
         try {
             let fileUrls = [...existingMediaUrls];
@@ -374,21 +455,148 @@ const Register = () => {
             let thumbnailUrl = typeof thumbnailFile === 'string' ? thumbnailFile : '';
             let coverUrls = [];
 
+            // Validate required fields before submission
+            if (!formData.name || !formData.websiteUrl || !formData.description || !formData.tagline) {
+                throw new Error('Missing required fields: name, website URL, description, or tagline');
+            }
+
+            if (!selectedCategory) {
+                throw new Error('Please select a category for your startup');
+            }
+
             if (logoFile && typeof logoFile !== 'string') {
-                const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
-                const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, logoFile);
-                if (logoErrorUpload) throw logoErrorUpload;
-                const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
-                logoUrl = logoUrlData.publicUrl;
+                // User uploaded file - preserve quality and upload
+                try {
+
+                    const qualityFile = await preserveImageQuality(logoFile);
+
+                    // Verify quality was maintained
+                    if (qualityFile.size < logoFile.size * 0.8) {
+
+                        throw new Error('Quality preservation resulted in significant size reduction');
+                    }
+
+                    const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
+                    const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
+                    if (logoErrorUpload) {
+
+                        throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
+                    }
+                    const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
+                    logoUrl = logoUrlData.publicUrl;
+
+                } catch (error) {
+
+                    // Fallback to original file if quality preservation fails
+                    const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
+                    const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, logoFile);
+                    if (logoErrorUpload) {
+
+                        throw new Error(`Logo upload failed: ${logoErrorUpload.message}`);
+                    }
+                    const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
+                    logoUrl = logoUrlData.publicUrl;
+
+                }
+            } else if (logoFile && typeof logoFile === 'string') {
+                try {
+
+
+                    const response = await fetch(logoFile);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch AI logo: ${response.status}`);
+                    }
+
+                    const blob = await response.blob();
+
+                    const aiLogoFile = new File([blob], 'ai-generated-logo.png', { type: blob.type || 'image/png' });
+
+
+                    // Preserve quality and upload
+                    const qualityFile = await preserveImageQuality(aiLogoFile);
+
+                    const logoPath = `${Date.now()}-ai-logo-${nanoid(6)}.png`;
+                    const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
+
+                    if (logoErrorUpload) {
+
+                        throw new Error(`AI logo upload failed: ${logoErrorUpload.message}`);
+                    }
+
+
+                    const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
+                    logoUrl = logoUrlData.publicUrl;
+
+                } catch (error) {
+
+
+                    logoUrl = logoFile;
+                }
             }
             submissionData.logo_url = logoUrl;
 
             if (thumbnailFile && typeof thumbnailFile !== 'string') {
-                const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
-                const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, thumbnailFile);
-                if (thumbError) throw thumbError;
-                const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
-                thumbnailUrl = thumbUrlData.publicUrl;
+                // User uploaded file - preserve quality and upload
+                try {
+
+                    const qualityFile = await preserveImageQuality(thumbnailFile);
+
+                    // Verify quality was maintained
+                    if (qualityFile.size < thumbnailFile.size * 0.8) {
+
+                        throw new Error('Quality preservation resulted in significant size reduction');
+                    }
+
+                    const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
+                    const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
+                    if (thumbError) {
+
+                        throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
+                    }
+                    const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
+                    thumbnailUrl = thumbUrlData.publicUrl;
+
+                } catch (error) {
+
+                    // Fallback to original file if quality preservation fails
+                    const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
+                    const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, thumbnailFile);
+                    if (thumbError) {
+
+                        throw new Error(`Thumbnail upload failed: ${thumbError.message}`);
+                    }
+                    const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
+                    thumbnailUrl = thumbUrlData.publicUrl;
+
+                }
+            } else if (thumbnailFile && typeof thumbnailFile === 'string') {
+                // AI-generated thumbnail URL - download and upload to our storage
+                try {
+
+                    const response = await fetch(thumbnailFile);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch AI thumbnail: ${response.status}`);
+                    }
+
+                    const blob = await response.blob();
+                    const aiThumbnailFile = new File([blob], 'ai-generated-thumbnail.png', { type: blob.type || 'image/png' });
+
+                    // Preserve quality and upload
+                    const qualityFile = await preserveImageQuality(aiThumbnailFile);
+                    const thumbPath = `${Date.now()}-ai-thumbnail-${nanoid(6)}.png`;
+                    const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, qualityFile);
+                    if (thumbError) {
+
+                        throw new Error(`AI thumbnail upload failed: ${thumbError.message}`);
+                    }
+                    const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
+                    thumbnailUrl = thumbUrlData.publicUrl;
+
+                } catch (error) {
+
+                    // Keep the original AI thumbnail URL as fallback
+                    thumbnailUrl = thumbnailFile;
+                }
             }
             submissionData.thumbnail_url = thumbnailUrl;
 
@@ -396,11 +604,39 @@ const Register = () => {
                 for (let i = 0; i < coverFiles.length; i++) {
                     const file = coverFiles[i];
                     if (file && typeof file !== 'string') {
-                        const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
-                        const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
-                        if (coverErrorUpload) throw coverErrorUpload;
-                        const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
-                        coverUrls.push(coverUrlData.publicUrl);
+                        // User uploaded file - preserve quality and upload
+                        try {
+
+                            const qualityFile = await preserveImageQuality(file);
+
+                            // Verify quality was maintained
+                            if (qualityFile.size < file.size * 0.8) {
+
+                                throw new Error('Quality preservation resulted in significant size reduction');
+                            }
+
+                            const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
+                            const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, qualityFile);
+                            if (coverErrorUpload) {
+
+                                throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
+                            }
+                            const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
+                            coverUrls.push(coverUrlData.publicUrl);
+
+                        } catch (error) {
+
+                            // Fallback to original file if quality preservation fails
+                            const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
+                            const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
+                            if (coverErrorUpload) {
+
+                                throw new Error(`Cover file upload failed: ${coverErrorUpload.message}`);
+                            }
+                            const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
+                            coverUrls.push(coverUrlData.publicUrl);
+
+                        }
                     } else if (typeof file === 'string') {
                         coverUrls.push(file);
                     }
@@ -408,23 +644,55 @@ const Register = () => {
             }
             submissionData.cover_urls = coverUrls;
 
+
+
+
+
+
+
+
+
+
+
+
+
             let finalSubmissionData;
             if (isEditing && editingProjectId) {
                 submissionData.status = 'launched';
                 const { data, error } = await supabase.from('projects').update(submissionData).eq('id', editingProjectId).select().single();
-                if (error) throw error;
+                if (error) {
+
+                    throw new Error(`Update failed: ${error.message}`);
+                }
                 finalSubmissionData = data;
             } else {
                 const { data, error } = await supabase.from('projects').insert([submissionData]).select().single();
-                if (error) throw error;
+                if (error) {
+
+                    throw new Error(`Insert failed: ${error.message}`);
+                }
                 finalSubmissionData = data;
             }
-            setSnackbar({ open: true, message: 'Launch submitted successfully!', severity: 'success' });
+
+            const message = isEditing ? 'Project updated successfully!' : 'Launch submitted successfully!';
+            setSnackbar({ open: true, message, severity: 'success' });
+
+            // Show admin approval alert only for new launches
+            if (!isEditing) {
+                setTimeout(() => {
+                    setSnackbar({
+                        open: true,
+                        message: '⏳ Your launch is now pending admin approval. You will be notified once it\'s approved and visible to the community!',
+                        severity: 'info'
+                    });
+                }, 2000);
+            }
 
             setTimeout(() => {
                 navigate(`/launches/${finalSubmissionData.slug}`);
             }, 1000);
 
+            // Complete form reset
             setFormData({ name: '', websiteUrl: '', description: '', tagline: '' });
             setSelectedCategory(null);
             setLinks(['']);
@@ -433,64 +701,246 @@ const Register = () => {
             setThumbnailFile(null);
             setCoverFiles([null, null, null, null]);
             setEditingProjectId(null);
+            setUrlPreview(null);
+            setPendingAIData(null);
+            setShowSmartFillDialog(false);
+            setRetryCount(0);
+            setIsAILoading(false);
+            setIsRetrying(false);
+            setIsGeneratingPreview(false);
         } catch (error) {
-            console.error('Error submitting form:', error);
-            setSnackbar({ open: true, message: 'Failed to register startup. Please try again.', severity: 'error' });
+
+
+            // Provide more specific error messages
+            let errorMessage = 'Failed to register startup. Please try again.';
+            let severity = 'error';
+
+            if (error.message) {
+                if (error.message.includes('Missing required fields')) {
+                    errorMessage = `❌ ${error.message}`;
+                } else if (error.message.includes('upload failed')) {
+                    errorMessage = `📁 ${error.message}`;
+                } else if (error.message.includes('Insert failed') || error.message.includes('Update failed')) {
+                    errorMessage = `💾 Database error: ${error.message}`;
+                } else if (error.message.includes('duplicate key')) {
+                    errorMessage = '⚠️ A startup with this name already exists. Please choose a different name.';
+                    severity = 'warning';
+                } else if (error.message.includes('violates')) {
+                    errorMessage = '⚠️ Some data is invalid. Please check your inputs and try again.';
+                    severity = 'warning';
+                } else {
+                    errorMessage = `❌ ${error.message}`;
+                }
+            }
+
+            setSnackbar({ open: true, message: errorMessage, severity });
         }
     };
 
-    const handleGenerateLaunchData = async () => {
+    const generateBasicPreview = async (url) => {
+        setIsGeneratingPreview(true);
+        try {
+            // Try to get basic metadata from the URL
+            const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&meta=true&screenshot=true&embed=screenshot.url`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                const preview = {
+                    title: data.data.title || 'Website Title',
+                    description: data.data.description || 'No description available',
+                    logo: data.data.logo?.url || null,
+                    screenshot: data.data.screenshot?.url || null,
+                    domain: new URL(url).hostname
+                };
+                setUrlPreview(preview);
+
+                // Auto-fill basic fields with preview data
+                setFormData(prev => ({
+                    ...prev,
+                    name: prev.name || preview.title,
+                    description: prev.description || preview.description
+                }));
+
+                if (preview.logo && !logoFile) {
+                    setLogoFile(preview.logo);
+                }
+
+                if (preview.screenshot && !thumbnailFile) {
+                    setThumbnailFile(preview.screenshot);
+                }
+
+                setSnackbar({
+                    open: true,
+                    message: `📱 Basic preview generated from ${preview.domain}`,
+                    severity: 'success'
+                });
+            }
+        } catch (error) {
+        } finally {
+            setIsGeneratingPreview(false);
+        }
+    };
+
+    const handleGenerateLaunchData = async (isRetry = false) => {
         if (!formData.websiteUrl) {
             setSnackbar({ open: true, message: "Please enter a website URL first.", severity: 'warning' });
             return;
         }
 
-        setIsAILoading(true); // Start loading
+        if (isRetry) {
+            setIsRetrying(true);
+            setRetryCount(prev => prev + 1);
+        } else {
+            setIsAILoading(true);
+            setRetryCount(0);
+        }
+
+        const startTime = Date.now();
+        const loadingMessage = isRetry
+            ? 'Generating...'
+            : "🤖 AI is analyzing your website... This may take up to 25 seconds.";
+
+        setSnackbar({ open: true, message: loadingMessage, severity: 'info' });
+
+        // Add progress updates
+        const progressInterval = setInterval(() => {
+            if (isAILoading || isRetrying) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                if (elapsed < 25) {
+                    setSnackbar({
+                        open: true,
+                        message: `🤖 AI is analyzing your website... (${elapsed}s/25s)`,
+                        severity: 'info'
+                    });
+                }
+            }
+        }, 2000);
 
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
-            const res = await fetch(config.API_URL + "/generatelaunchdata", {
+
+            // Create AbortController for timeout handling
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout (reduced from 45)
+
+            const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     url: formData.websiteUrl,
                     user_id,
                 }),
+                signal: controller.signal
             });
-            const gptData = await res.json();
-            if (gptData.err || gptData.error) throw new Error(gptData.message);
 
-            // Process AI response
-            // AI Response processed successfully
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+
+            const gptData = await res.json();
+
+            if (gptData.err || gptData.error) {
+                throw new Error(gptData.message || 'AI generation failed');
+            }
+
+            // Validate that we got the essential data
+            const essentialFields = ['name', 'description', 'tagline'];
+            const missingFields = essentialFields.filter(field => !gptData[field]);
+
+            if (missingFields.length > 0) {
+
+                setSnackbar({
+                    open: true,
+                    message: `⚠️ AI generated partial data. Missing: ${missingFields.join(', ')}`,
+                    severity: 'warning'
+                });
+            }
+
+            // Process AI response with better error handling
+            const processedData = {
+                name: gptData.name || '',
+                website_url: gptData.website_url || formData.websiteUrl,
+                tagline: gptData.tagline || '',
+                description: gptData.description || '',
+                logo_url: gptData.logo_url || null,
+                thumbnail_url: gptData.thumbnail_url || null,
+                features: gptData.features || [],
+                category: gptData.category || null,
+                links: gptData.links || []
+            };
 
             // Check how many fields are already filled
             const filledCount = getFilledFieldsCount();
+
             if (filledCount < 4) {
                 // If less than 4 fields filled, directly apply AI data
-                applyAIData(gptData, false); // Fill all fields
-                setSnackbar({ open: true, message: "🤖 All fields auto-filled with AI data!", severity: 'success' });
+                applyAIData(processedData, false); // Fill all fields
+                setSnackbar({
+                    open: true,
+                    message: `🤖 AI generated data successfully! ${processedData.name ? `Found: ${processedData.name}` : ''}`,
+                    severity: 'success'
+                });
             } else {
-                // If 4+ fields filled, show dialog for user choice
-                setPendingAIData(gptData);
+                setPendingAIData(processedData);
                 setShowSmartFillDialog(true);
             }
+
+            // Reset retry count on success
+            setRetryCount(0);
         }
         catch (error) {
-            console.error("Auto Generate failed :", error);
 
-            // Check if it's a specific error and provide better feedback
+
             let errorMessage = "AI failed to extract startup info...";
+            let severity = 'error';
+            let showRetry = false;
 
-            if (error.message && error.message.includes("Microlink")) {
-                errorMessage = "AI extracted text data but failed to generate logo/thumbnail. You can upload them manually!";
+            if (error.name === 'AbortError') {
+                errorMessage = "⏰ AI generation timed out. The website might be complex or slow.";
+                severity = 'warning';
+                showRetry = retryCount < 2; // Allow up to 2 retries
+            } else if (error.message && error.message.includes("Microlink")) {
+                errorMessage = "🖼️ AI extracted text but failed to generate logo/thumbnail. You can upload them manually!";
+                severity = 'warning';
             } else if (error.message && error.message.includes("OpenAI")) {
-                errorMessage = "AI service temporarily unavailable. Please try again later.";
+                errorMessage = "🤖 AI service temporarily unavailable. Please try again in a few minutes.";
+                severity = 'warning';
+                showRetry = retryCount < 1; // Allow 1 retry for service issues
+            } else if (error.message && error.message.includes("HTTP")) {
+                errorMessage = "🌐 Backend service error. Please try again later.";
+                severity = 'error';
+                showRetry = retryCount < 1;
+            } else if (error.message && error.message.includes("fetch")) {
+                errorMessage = "🌐 Network error. Please check your connection and try again.";
+                severity = 'error';
+                showRetry = retryCount < 2;
             }
 
-            setSnackbar({ open: true, message: errorMessage, severity: 'warning' });
+            // Try to generate basic preview as fallback
+            if (!urlPreview && !isGeneratingPreview) {
+                generateBasicPreview(formData.websiteUrl);
+            }
+
+            setSnackbar({
+                open: true,
+                message: errorMessage,
+                severity,
+                action: showRetry ? (
+                    <button
+                        onClick={() => handleGenerateLaunchData(true)}
+                        className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                        Retry
+                    </button>
+                ) : undefined
+            });
         } finally {
-            setIsAILoading(false); // Stop loading
+            setIsAILoading(false);
+            setIsRetrying(false);
+            clearInterval(progressInterval);
         }
     }
 
@@ -510,7 +960,6 @@ const Register = () => {
             setLinks(gptData.links);
         }
 
-        // Set AI-extracted logo URL (only if user doesn't have logo or onlyEmptyFields is false)
         if (gptData.logo_url && (!onlyEmptyFields || !logoFile)) {
             setLogoFile(gptData.logo_url);
         }
@@ -537,12 +986,11 @@ const Register = () => {
             // If no existing category found, create a new one and add it to options
             if (!categoryOption) {
                 categoryOption = {
-                    value: gptData.category.toLowerCase().replace(/\s+/g, '-'),
-                    label: gptData.category,
+                    value: gptData.category ? gptData.category.toLowerCase().replace(/\s+/g, '-') : '',
+                    label: gptData.category || '',
                     isNew: true
                 };
 
-                // Add the new category to the "🧪 Emerging Technologies" group
                 const updatedCategoryOptions = [...dynamicCategoryOptions];
                 const emergingTechIndex = updatedCategoryOptions.findIndex(
                     group => group.label === "🧪 Emerging Technologies"
@@ -551,7 +999,6 @@ const Register = () => {
                 if (emergingTechIndex !== -1) {
                     updatedCategoryOptions[emergingTechIndex].options.push(categoryOption);
                 } else {
-                    // If no Emerging Technologies group, create a new group
                     updatedCategoryOptions.push({
                         label: "🤖 AI-Detected Categories",
                         options: [categoryOption]
@@ -597,7 +1044,7 @@ const Register = () => {
 
     // Handle image loading errors
     const handleImageError = (e, type) => {
-        console.error(`❌ Failed to load AI-generated ${type}:`, e.target.src);
+
 
         // Check if it's a favicon URL (common issue)
         if (e.target.src.includes('favicon.ico')) {
@@ -677,7 +1124,7 @@ const Register = () => {
             setSnackbar({ open: true, message: 'Launch saved!', severity: 'success' });
         } catch (error) {
             setSnackbar({ open: true, message: 'Failed to save draft. Please try again.', severity: 'error' });
-            console.error('Supabase error:', error);
+
         }
     };
 
@@ -686,6 +1133,160 @@ const Register = () => {
     };
     const handleRemoveExistingLogo = () => {
         setExistingLogoUrl('');
+    };
+
+    // Image quality preservation functions
+    const validateImageQuality = (file) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            img.onload = () => {
+                // Check minimum dimensions
+                if (img.width < 200 || img.height < 200) {
+                    reject(new Error('Image dimensions too small. Minimum size: 200x200px'));
+                    return;
+                }
+
+                const aspectRatio = img.width / img.height;
+                if (aspectRatio < 0.5 || aspectRatio > 2) {
+                    reject(new Error('Logo/thumbnail should have a reasonable aspect ratio (not too wide or tall)'));
+                    return;
+                }
+
+                resolve(true);
+            };
+
+            img.onerror = () => reject(new Error('Invalid image file'));
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
+    const preserveImageQuality = (file) => {
+        return new Promise((resolve, reject) => {
+            // For maximum quality preservation, we'll use different strategies based on file type
+            const fileType = file.type.toLowerCase();
+
+            // If it's already a high-quality format and small enough, don't process
+            if (file.size < 5 * 1024 * 1024 && (fileType.includes('png') || fileType.includes('webp'))) {
+                resolve(file);
+                return;
+            }
+
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            img.onload = () => {
+                try {
+
+                    // Set canvas size to match image dimensions (no resizing)
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+
+                    // Use highest quality rendering settings
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+
+                    // Set composite operation for better quality
+                    ctx.globalCompositeOperation = 'source-over';
+
+                    // Clear canvas with transparent background
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    // Draw image at original size with high quality
+                    ctx.drawImage(img, 0, 0);
+
+                    // Determine best output format for quality
+                    let outputType = 'image/png'; // PNG for maximum quality
+                    let quality = 1.0; // Maximum quality
+
+                    // For JPEG images, use WebP if supported, otherwise PNG
+                    if (fileType.includes('jpeg') || fileType.includes('jpg')) {
+                        // Try WebP first for better compression with quality
+                        if (canvas.toDataURL('image/webp', 1.0)) {
+                            outputType = 'image/webp';
+                            quality = 1.0;
+                        } else {
+                            outputType = 'image/png';
+                            quality = 1.0;
+                        }
+                    }
+
+
+                    // Convert to blob with maximum quality
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            // Create new file with preserved quality
+                            const qualityFile = new File([blob], file.name, {
+                                type: outputType,
+                                lastModified: Date.now()
+                            });
+
+                            // Image quality optimization completed
+
+                            resolve(qualityFile);
+                        } else {
+                            // Blob creation failed, using original file
+                            resolve(file);
+                        }
+                    }, outputType, quality);
+                } catch (error) {
+                    // Image processing error, using original file
+                    resolve(file);
+                }
+            };
+
+            img.onerror = () => {
+                // Image loading failed, using original file
+                resolve(file);
+            };
+
+            // Create object URL for image loading
+            const objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
+
+            // Clean up object URL after loading
+            img.onload = () => {
+                URL.revokeObjectURL(objectUrl);
+                img.onload(); // Call the original onload
+            };
+        });
+    };
+
+    const handleImageUpload = async (file, type) => {
+        try {
+            // Validate image quality first
+            await validateImageQuality(file);
+
+            // Preserve image quality
+            const qualityFile = await preserveImageQuality(file);
+
+            // Upload the quality-preserved file
+            const timestamp = Date.now();
+            const fileName = `${timestamp}-${type}-${sanitizeFileName(file.name)}`;
+
+            const { data, error } = await supabase.storage
+                .from('startup-media')
+                .upload(fileName, qualityFile, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (error) {
+                throw new Error(`Upload failed: ${error.message}`);
+            }
+
+            const { data: urlData } = supabase.storage
+                .from('startup-media')
+                .getPublicUrl(fileName);
+
+            return urlData.publicUrl;
+        } catch (error) {
+            // Upload error occurred
+            throw error;
+        }
     };
 
     if (loadingProject) {
@@ -810,6 +1411,14 @@ const Register = () => {
                     font-weight: 500;
                     font-size: 0.875rem;
                 }
+                .btn-text-icon-secondary {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    color: #6b7280;
+                    font-weight: 500;
+                    font-size: 0.875rem;
+                }
                 .text-error {
                     color: #ef4444;
                     font-size: 0.875rem;
@@ -848,7 +1457,7 @@ const Register = () => {
                             className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 2 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                         >
-                            Media
+                            Media & Images
                         </button>
                         <button
                             type="button"
@@ -856,18 +1465,20 @@ const Register = () => {
                             className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 3 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                         >
-                            Details
+                            Additional Details
                         </button>
                     </nav>
-
-                    <form onSubmit={handleSubmit}>
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Step-specific content */}
                         {step === 1 && (
                             <div className="form-tab-panel active">
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="name">Name of the launch</label>
+                                            <label className="form-label" htmlFor="name">
+                                                Name of the launch <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 id="name"
                                                 name="name"
@@ -876,12 +1487,16 @@ const Register = () => {
                                                 className="form-input"
                                                 maxLength={30}
                                                 disabled={editingLaunched}
-                                                placeholder='e.g LaunchIT'
+                                                placeholder='e.g launchit'
                                             />
                                             <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
+
+                                            {/* Content Moderation will be checked on submit */}
                                         </div>
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="websiteUrl">Website URL</label>
+                                            <label className="form-label" htmlFor="websiteUrl">
+                                                Website URL <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 id="websiteUrl"
                                                 name="websiteUrl"
@@ -893,27 +1508,72 @@ const Register = () => {
                                                 disabled={editingLaunched}
                                             />
                                             {urlError && <p className="text-red-500 text-sm mt-1">{urlError}</p>}
-                                            <button
-                                                type="button"
-                                                onClick={handleGenerateLaunchData}
-                                                disabled={isAILoading}
-                                                className={`btn-text-icon ${isAILoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                {isAILoading ? (
-                                                    <>
-                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                                                        Generating...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Rocket className="w-4 h-4" />
-                                                        Auto-generate from URL
-                                                    </>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleGenerateLaunchData}
+                                                    disabled={isAILoading || isRetrying}
+                                                    className={`btn-text-icon ${isAILoading || isRetrying ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                >
+                                                    {isAILoading || isRetrying ? (
+                                                        <>
+                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                                            {isRetrying ? 'Generating...' : 'Generating...'}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Wand2 className="w-4 h-4" />
+                                                            Auto-generate from URL
+                                                        </>
+                                                    )}
+                                                </button>
+
+                                                {/* Fallback basic preview button */}
+                                                {!urlPreview && !isGeneratingPreview && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => generateBasicPreview(formData.websiteUrl)}
+                                                        disabled={isGeneratingPreview || !formData.websiteUrl}
+                                                        className="btn-text-icon-secondary"
+                                                        title="Generate basic preview if AI fails"
+                                                    >
+                                                        {isGeneratingPreview ? (
+                                                            <>
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                                                                Preview...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Eye className="w-4 h-4" />
+                                                                Basic Preview
+                                                            </>
+                                                        )}
+                                                    </button>
                                                 )}
-                                            </button>
+                                            </div>
+
+                                            {/* Show preview data if available */}
+                                            {urlPreview && (
+                                                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                                        <span className="text-sm font-medium text-green-800">
+                                                            Basic preview available from {urlPreview.domain}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs text-green-700">
+                                                        <p><strong>Title:</strong> {urlPreview.title}</p>
+                                                        <p><strong>Description:</strong> {urlPreview.description}</p>
+                                                        {urlPreview.logo && <p><strong>Logo:</strong> ✓ Found</p>}
+                                                        {urlPreview.screenshot && <p><strong>Screenshot:</strong> ✓ Found</p>}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="tagline">Tagline</label>
+                                            <label className="form-label" htmlFor="tagline">
+                                                Tagline <span className="text-red-500">*</span>
+                                            </label>
                                             <input
                                                 id="tagline"
                                                 name="tagline"
@@ -924,9 +1584,13 @@ const Register = () => {
                                                 placeholder="catchy tagline of what the launch does."
                                             />
                                             <div className="text-xs text-gray-400 text-right mt-1">{taglineCharCount} / 60</div>
+
+                                            {/* Content Moderation will be checked on submit */}
                                         </div>
                                         <div className="form-field-group">
-                                            <label className="form-label" htmlFor="category">Category(ies)</label>
+                                            <label className="form-label" htmlFor="category">
+                                                Category(ies) <span className="text-red-500">*</span>
+                                            </label>
                                             <Select
                                                 options={dynamicCategoryOptions}
                                                 isClearable={true}
@@ -938,7 +1602,9 @@ const Register = () => {
                                             />
                                         </div>
                                         <div className="form-field-group md:col-span-2">
-                                            <label className="form-label" htmlFor="description">Description</label>
+                                            <label className="form-label" htmlFor="description">
+                                                Description <span className="text-red-500">*</span>
+                                            </label>
                                             <textarea
                                                 id="description"
                                                 name="description"
@@ -949,6 +1615,8 @@ const Register = () => {
                                                 placeholder="Describe your launch in detail. What problem does it solve? What makes it unique?"
                                             />
                                             <div className="text-xs text-gray-400 text-right mt-1">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
+
+                                            {/* Content Moderation will be checked on submit */}
                                         </div>
                                     </div>
                                 </div>
@@ -965,7 +1633,15 @@ const Register = () => {
                                     </div>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="form-label">Logo</label>
+                                            <label className="form-label">
+                                                Logo
+                                                {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                    <span className="text-red-500">*</span>
+                                                )}
+                                                {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
+                                                    <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
+                                                )}
+                                            </label>
                                             <div className="flex items-center gap-6 mt-2">
                                                 <div className="relative">
                                                     <label className="w-24 h-24 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
@@ -999,6 +1675,9 @@ const Register = () => {
                                                 </div>
                                                 <div className="text-sm text-gray-500">
                                                     Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
+                                                    {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                        <div className="text-red-600 font-medium">Required if AI generation fails</div>
+                                                    )}
                                                     {logoFile && (
                                                         <div className="mt-2 space-y-1">
                                                             <button type="button" onClick={removeLogo} className="block text-red-600 hover:text-red-800">Remove</button>
@@ -1014,7 +1693,15 @@ const Register = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="form-label">Thumbnail (Dashboard)</label>
+                                            <label className="form-label">
+                                                Thumbnail (Dashboard)
+                                                {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                    <span className="text-red-500">*</span>
+                                                )}
+                                                {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
+                                                    <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
+                                                )}
+                                            </label>
                                             <div className="flex items-center gap-6 mt-2">
                                                 <div className="relative">
                                                     <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
@@ -1063,7 +1750,9 @@ const Register = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="form-label">Cover image(s)</label>
+                                            <label className="form-label">
+                                                Cover image(s) <span className="text-red-500">*</span>
+                                            </label>
                                             <div className="flex flex-wrap gap-4 mt-2">
                                                 {coverFiles.map((file, idx) => (
                                                     <div key={idx} className="relative">
@@ -1088,6 +1777,7 @@ const Register = () => {
                                                 ))}
                                             </div>
                                             <div className="text-sm text-gray-500 mt-2">
+                                                <span className="text-red-600 font-medium">Required: At least 2 cover images</span><br />
                                                 Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
                                             </div>
                                         </div>

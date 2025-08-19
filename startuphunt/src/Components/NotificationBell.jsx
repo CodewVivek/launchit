@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Bell, Check, X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Bell, Check, X, Trash2 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { Snackbar, Alert } from "@mui/material";
 
@@ -13,6 +13,9 @@ export default function NotificationBell() {
         message: "",
         severity: "success",
     });
+    
+    // Add ref for click outside detection
+    const notificationRef = useRef(null);
 
     useEffect(() => {
         async function fetchUser() {
@@ -22,12 +25,30 @@ export default function NotificationBell() {
         fetchUser();
     }, []);
 
+    // Add click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
     useEffect(() => {
         if (user) {
             fetchNotifications();
             // Set up real-time subscription for new notifications
-            const subscription = supabase
-                .channel("notifications")
+            const channel = supabase.channel(`notifications-${user.id}`);
+
+            const subscription = channel
                 .on(
                     "postgres_changes",
                     {
@@ -43,7 +64,9 @@ export default function NotificationBell() {
                 )
                 .subscribe();
 
-            return () => subscription.unsubscribe();
+            return () => {
+                channel.unsubscribe();
+            };
         }
     }, [user]);
 
@@ -77,7 +100,7 @@ export default function NotificationBell() {
             );
             setUnreadCount((prev) => Math.max(0, prev - 1));
         } catch (error) {
-            console.error("Error marking notification as read:", error);
+            
             setSnackbar({
                 open: true,
                 message: "Error marking notification as read",
@@ -99,10 +122,67 @@ export default function NotificationBell() {
             );
             setUnreadCount(0);
         } catch (error) {
-            console.error("Error marking all notifications as read:", error);
+            
             setSnackbar({
                 open: true,
                 message: "Error marking notifications as read",
+                severity: "error",
+            });
+        }
+    };
+
+    // Add delete notification function
+    const deleteNotification = async (notificationId) => {
+        try {
+            await supabase
+                .from("notifications")
+                .delete()
+                .eq("id", notificationId);
+
+            setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+            
+            // Update unread count if deleted notification was unread
+            const deletedNotification = notifications.find(n => n.id === notificationId);
+            if (deletedNotification && !deletedNotification.read) {
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+            }
+
+            setSnackbar({
+                open: true,
+                message: "Notification deleted successfully",
+                severity: "success",
+            });
+        } catch (error) {
+            
+            setSnackbar({
+                open: true,
+                message: "Error deleting notification",
+                severity: "error",
+            });
+        }
+    };
+
+    // Add delete all notifications function
+    const deleteAllNotifications = async () => {
+        try {
+            await supabase
+                .from("notifications")
+                .delete()
+                .eq("user_id", user.id);
+
+            setNotifications([]);
+            setUnreadCount(0);
+
+            setSnackbar({
+                open: true,
+                message: "All notifications deleted successfully",
+                severity: "success",
+            });
+        } catch (error) {
+            
+            setSnackbar({
+                open: true,
+                message: "Error deleting all notifications",
                 severity: "error",
             });
         }
@@ -142,7 +222,7 @@ export default function NotificationBell() {
 
     return (
         <>
-            <div className="relative">
+            <div className="relative" ref={notificationRef}>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="relative p-2 text-gray-600 hover:text-gray-800 transition-colors"
@@ -160,14 +240,26 @@ export default function NotificationBell() {
                         <div className="p-4 border-b border-gray-200">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold">Notifications</h3>
-                                {unreadCount > 0 && (
-                                    <button
-                                        onClick={markAllAsRead}
-                                        className="text-sm text-blue-600 hover:text-blue-800"
-                                    >
-                                        Mark all read
-                                    </button>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {notifications.length > 0 && (
+                                        <button
+                                            onClick={deleteAllNotifications}
+                                            className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
+                                            title="Delete all notifications"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                            Clear All
+                                        </button>
+                                    )}
+                                    {unreadCount > 0 && (
+                                        <button
+                                            onClick={markAllAsRead}
+                                            className="text-sm text-blue-600 hover:text-blue-800"
+                                        >
+                                            Mark all read
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -200,14 +292,24 @@ export default function NotificationBell() {
                                                     ).toLocaleDateString()}
                                                 </p>
                                             </div>
-                                            {!notification.read && (
+                                            <div className="flex items-center gap-2">
+                                                {!notification.read && (
+                                                    <button
+                                                        onClick={() => markAsRead(notification.id)}
+                                                        className="text-gray-400 hover:text-gray-600"
+                                                        title="Mark as read"
+                                                    >
+                                                        <Check className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                                 <button
-                                                    onClick={() => markAsRead(notification.id)}
-                                                    className="text-gray-400 hover:text-gray-600"
+                                                    onClick={() => deleteNotification(notification.id)}
+                                                    className="text-gray-400 hover:text-red-600 transition-colors"
+                                                    title="Delete notification"
                                                 >
-                                                    <Check className="w-4 h-4" />
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))

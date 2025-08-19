@@ -1,0 +1,395 @@
+// Cache for embeddings to reduce API calls
+const embeddingsCache = new Map();
+const moderationCache = new Map();
+
+// Generate embeddings for text
+async function generateEmbedding(text) {
+    try {
+        const cacheKey = text.toLowerCase().trim();
+        if (embeddingsCache.has(cacheKey)) {
+            return embeddingsCache.get(cacheKey);
+        }
+
+        const response = await getOpenAIClient().embeddings.create({
+            model: "text-embedding-3-small",
+            input: text,
+        });
+
+        const embedding = response.data[0].embedding;
+
+        embeddingsCache.set(cacheKey, embedding);
+        return embedding;
+    } catch (error) {
+        console.error('Error generating embedding:', error);
+        throw new Error('Failed to generate embedding');
+    }
+}
+
+// Calculate cosine similarity between two vectors
+function cosineSimilarity(vecA, vecB) {
+    if (vecA.length !== vecB.length) {
+        throw new Error('Vectors must have same length');
+    }
+
+    let dotProduct = 0, normA = 0, normB = 0;
+
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
+    }
+
+    normA = Math.sqrt(normA);
+    normB = Math.sqrt(normB);
+
+    if (normA === 0 || normB === 0) return 0;
+
+    return dotProduct / (normA * normB);
+}
+
+// 🔍 Semantic search with embeddings
+async function semanticSearch(query, projects, limit = 10) {
+    try {
+        const queryEmbedding = await generateEmbedding(query);
+
+        const scoredProjects = projects.map(project => {
+            let similarity = 0;
+            const projectText = [
+                project.title || '',
+                project.description || '',
+                project.category || '',
+                project.tags ? project.tags.join(' ') : ''
+            ].join(' ').trim();
+
+            if (projectText && project.embedding) {
+                similarity = cosineSimilarity(queryEmbedding, project.embedding);
+            }
+
+            return { ...project, similarity, searchScore: similarity };
+        });
+
+        scoredProjects.sort((a, b) => b.similarity - a.similarity);
+        return scoredProjects.slice(0, limit);
+
+    } catch (error) {
+        console.error('Error in semantic search:', error);
+        throw new Error('Semantic search failed');
+    }
+}
+
+// 🔎 Enhanced content moderation using OpenAI with intelligent categorization
+async function moderateContent(content) {
+    try {
+        const cacheKey = content.toLowerCase().trim();
+        if (moderationCache.has(cacheKey)) {
+            return moderationCache.get(cacheKey);
+        }
+
+        const response = await getOpenAIClient().moderations.create({
+            model: "omni-moderation-latest",
+            input: content,
+        });
+
+        const result = response.results[0];
+        const scores = result.category_scores;
+
+        let action = 'approve';
+        let message = 'Content is clean ✅';
+        let reason = '';
+
+        // 🚫 ZERO TOLERANCE - Hard reject with high confidence
+        if (scores.hate > 0.8 || scores.self_harm > 0.8 || scores.violence > 0.8) {
+            action = 'reject';
+            if (scores.hate > 0.8) reason = 'hate speech';
+            else if (scores.self_harm > 0.8) reason = 'self-harm content';
+            else if (scores.violence > 0.8) reason = 'violent content';
+            message = `🚫 Content blocked: Contains ${reason}`;
+        }
+        // 🚫 Sexual content - Intelligent categorization
+        else if (scores.sexual > 0.1) {
+            const sexualContext = analyzeSexualContext(content);
+            if (sexualContext.category === 'explicit' || sexualContext.category === 'minors') {
+                action = 'reject';
+                reason = sexualContext.reason;
+                message = `🚫 Content blocked: ${reason}`;
+            } else if (sexualContext.category === 'health_education') {
+                action = 'review';
+                reason = 'sexual health/education content';
+                message = `⚠️ Content flagged for review: ${reason}`;
+            } else {
+                action = 'review';
+                reason = 'potentially sensitive sexual content';
+                message = `⚠️ Content flagged for review: ${reason}`;
+            }
+        }
+        // ⚠️ Medium risk - Review with moderate confidence
+        else if (scores.harassment > 0.5 || scores.violence > 0.3 || scores.hate > 0.3) {
+            action = 'review';
+            if (scores.harassment > 0.5) reason = 'potential harassment';
+            else if (scores.violence > 0.3) reason = 'potentially violent content';
+            else if (scores.hate > 0.3) reason = 'potentially hateful content';
+            message = `⚠️ Content flagged for review: ${reason}`;
+        }
+        // ⚠️ OpenAI flagged but low scores - Review for context
+        else if (result.flagged) {
+            action = 'review';
+            reason = 'flagged by OpenAI for review';
+            message = `⚠️ Content flagged for review: ${reason}`;
+        }
+
+        // Additional custom checks
+        const customIssues = checkCustomIssues(content);
+        if (customIssues.issues.length > 0) {
+            if (action === 'approve') {
+                action = 'review';
+                reason = customIssues.issues.join(', ');
+                message = `⚠️ Content flagged for review: ${reason}`;
+            } else {
+                message += ` | Additional issues: ${customIssues.issues.join(', ')}`;
+            }
+        }
+
+        const analysis = {
+            action,
+            message,
+            reason,
+            categories: result.categories,
+            categoryScores: scores,
+            issues: customIssues.issues,
+            recommendations: customIssues.recommendations
+        };
+
+        moderationCache.set(cacheKey, analysis);
+        return analysis;
+
+    } catch (error) {
+        console.error('Error moderating content:', error);
+
+        // 🚨 CRITICAL: When moderation fails, check for adult content locally FIRST
+        const adultContentCheck = checkAdultContent(content);
+        if (adultContentCheck.isAdult) {
+            return {
+                action: 'reject',
+                message: '❌ Moderation failed but adult content detected - REJECTED',
+                reason: 'adult content detected during moderation failure',
+                issues: adultContentCheck.issues,
+                recommendations: ['Remove all adult/sexual content', 'Keep content professional']
+            };
+        }
+
+        // 🚨 CRITICAL: For other failures, be conservative and REJECT, not approve
+        return {
+            action: 'reject',
+            message: '❌ Moderation system failed - content blocked for safety',
+            reason: 'moderation system error - blocking for safety',
+            issues: ['Moderation system error'],
+            recommendations: ['Content blocked due to moderation system failure', 'Please try again later']
+        };
+    }
+}
+
+// 🧠 NEW: Intelligent sexual content categorization
+function analyzeSexualContext(content) {
+    const lowerContent = content.toLowerCase();
+
+    // 🚫 EXPLICIT - Porn, adult services, explicit content
+    const explicitPatterns = [
+        /porn(ography)?/i,
+        /adult\s+(entertainment|content|material|services)/i,
+        /explicit\s+(sexual|content|material)/i,
+        /sexual\s+(services|entertainment)/i,
+        /escort|prostitution|hooker|call\s*girl/i,
+        /strip\s*club|gentlemen\s*club|adult\s*club/i,
+        /adult\s+(website|site|portal|platform)/i,
+        /adult\s+(toys|products|merchandise)/i,
+        /porn\s+distribution|adult\s+distribution/i
+    ];
+
+    if (explicitPatterns.some(pattern => pattern.test(content))) {
+        return {
+            category: 'explicit',
+            reason: 'explicit adult content or services',
+            confidence: 'high'
+        };
+    }
+
+    // 🚫 MINORS - Sexual content involving minors
+    const minorPatterns = [
+        /sexual.*(minor|teen|child|underage|under\s*age)/i,
+        /(minor|teen|child|underage).*sexual/i,
+        /teen.*porn|child.*porn|minor.*content/i
+    ];
+
+    if (minorPatterns.some(pattern => pattern.test(content))) {
+        return {
+            category: 'minors',
+            reason: 'sexual content involving minors',
+            confidence: 'high'
+        };
+    }
+
+    // ⚠️ HEALTH/EDUCATION - Legitimate sexual health/education content
+    const healthEducationPatterns = [
+        /sexual\s+(health|education|wellness|therapy)/i,
+        /(health|education|wellness|therapy).*sexual/i,
+        /reproductive\s+health/i,
+        /family\s+planning/i,
+        /std\s+(prevention|testing|treatment)/i,
+        /contraception|birth\s+control/i,
+        /sexual\s+(awareness|safety|consent)/i,
+        /teen.*(health|education|awareness)/i,
+        /adolescent.*(health|education)/i
+    ];
+
+    if (healthEducationPatterns.some(pattern => pattern.test(content))) {
+        return {
+            category: 'health_education',
+            reason: 'sexual health or educational content',
+            confidence: 'high'
+        };
+    }
+
+    // ⚠️ SUGGESTIVE - Potentially sensitive but not explicit
+    const suggestivePatterns = [
+        /adult.*(user|audience|market|industry)/i,
+        /(user|audience|market|industry).*adult/i,
+        /sexual.*(content|material|context)/i,
+        /mature.*content/i,
+        /adult.*(oriented|focused|targeted)/i
+    ];
+
+    if (suggestivePatterns.some(pattern => pattern.test(content))) {
+        return {
+            category: 'suggestive',
+            reason: 'potentially sensitive adult content',
+            confidence: 'medium'
+        };
+    }
+
+    // ✅ CLEAN - No sexual content detected
+    return {
+        category: 'clean',
+        reason: 'no sexual content detected',
+        confidence: 'high'
+    };
+}
+
+// 🚨 ENHANCED: Comprehensive adult content detection with better patterns
+function checkAdultContent(content) {
+    const lowerContent = content.toLowerCase();
+    const issues = [];
+    let isAdult = false;
+
+    // 🚫 Explicit sexual terms with word boundaries
+    const explicitSexualTerms = [
+        'porn', 'pornography', 'explicit', 'nude', 'nudity',
+        'escort', 'prostitution', 'hooker', 'call girl'
+    ];
+
+    const explicitRegex = new RegExp(`\\b(${explicitSexualTerms.join("|")})\\b`, "i");
+    if (explicitRegex.test(content)) {
+        isAdult = true;
+        const foundTerms = explicitSexualTerms.filter(term =>
+            new RegExp(`\\b${term}\\b`, "i").test(content)
+        );
+        issues.push(`Explicit terms detected: ${foundTerms.join(', ')}`);
+    }
+
+    // 🚫 Adult services and entertainment patterns
+    const adultServicePatterns = [
+        /adult\s+(entertainment|content|material|services)/i,
+        /(entertainment|content|material|services)\s+(for\s+)?adults?/i,
+        /adult\s+(website|site|portal|platform)/i,
+        /(website|site|portal|platform)\s+(for\s+)?adults?/i,
+        /adult\s+(industry|business|market|sector)/i,
+        /(industry|business|market|sector)\s+(for\s+)?adults?/i
+    ];
+
+    const foundServicePatterns = adultServicePatterns.filter(pattern => pattern.test(content));
+    if (foundServicePatterns.length > 0) {
+        isAdult = true;
+        issues.push('Adult services or entertainment patterns detected');
+    }
+
+    // 🚫 Sexual content distribution patterns
+    const distributionPatterns = [
+        /(porn|adult|sexual)\s+distribution/i,
+        /distribution\s+(of\s+)?(porn|adult|sexual)/i,
+        /(porn|adult|sexual)\s+(content|material)\s+(creation|production|hosting)/i,
+        /(creation|production|hosting)\s+(of\s+)?(porn|adult|sexual)/i
+    ];
+
+    const foundDistributionPatterns = distributionPatterns.filter(pattern => pattern.test(content));
+    if (foundDistributionPatterns.length > 0) {
+        isAdult = true;
+        issues.push('Adult content distribution patterns detected');
+    }
+
+    return {
+        isAdult,
+        issues,
+        recommendations: isAdult ? [
+            'Remove all adult/sexual content immediately',
+            'Keep content professional and business-focused',
+            'Avoid any references to adult entertainment or sexual services',
+            'Focus on legitimate business offerings only'
+        ] : []
+    };
+}
+
+// 🛠️ ENHANCED: Custom content checks with word boundaries
+function checkCustomIssues(content) {
+    const issues = [];
+    const recommendations = [];
+    const lowerContent = content.toLowerCase();
+
+    // Excessive exclamation marks
+    const exclamationCount = (content.match(/!/g) || []).length;
+    if (exclamationCount > 3) {
+        issues.push(`Too many exclamation marks (${exclamationCount})`);
+        recommendations.push('Reduce promotional style');
+    }
+
+    // Excessive capitalization
+    const upperCaseCount = (content.match(/[A-Z]/g) || []).length;
+    const totalLetters = (content.match(/[A-Za-z]/g) || []).length;
+    if (totalLetters > 0 && (upperCaseCount / totalLetters) > 0.7) {
+        issues.push('Excessive capitalization');
+        recommendations.push('Use normal case formatting');
+    }
+
+    // 🚫 Inappropriate words with word boundaries (fixes Scunthorpe problem)
+    const inappropriateWords = [
+        'fuck', 'shit', 'bitch', 'ass', 'cunt', 'whore', 'slut',
+        'bastard', 'motherfucker', 'fucker'
+    ];
+
+    const profanityRegex = new RegExp(`\\b(${inappropriateWords.join("|")})\\b`, "i");
+    if (profanityRegex.test(content)) {
+        const foundBadWords = inappropriateWords.filter(word =>
+            new RegExp(`\\b${word}\\b`, "i").test(content)
+        );
+        issues.push(`Inappropriate language: ${foundBadWords.join(', ')}`);
+        recommendations.push('Remove profanity to comply with guidelines');
+    }
+
+    // Spam indicators
+    const spamWords = ['buy now', 'limited time', 'act fast', 'click here', 'guaranteed success'];
+    const foundSpam = spamWords.filter(word => lowerContent.includes(word));
+    if (foundSpam.length > 0) {
+        issues.push(`Possible spam: ${foundSpam.join(', ')}`);
+        recommendations.push('Avoid promotional/spammy phrases');
+    }
+
+    return { issues, recommendations };
+}
+
+export {
+    generateEmbedding,
+    cosineSimilarity,
+    moderateContent,
+    semanticSearch,
+    checkCustomIssues,
+    analyzeSexualContext,
+    checkAdultContent
+}; 

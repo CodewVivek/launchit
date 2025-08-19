@@ -13,6 +13,11 @@ import {
   DialogActions,
   TextField,
   Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
 } from "@mui/material";
 
 import {
@@ -29,6 +34,10 @@ import {
   Mail,
   Phone,
   Calendar,
+  Bell,
+  Send,
+  Users,
+  User,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -70,6 +79,23 @@ const AdminDashboard = () => {
   const [loadingAdvertisingInterests, setLoadingAdvertisingInterests] = useState(true);
   const [selectedInterest, setSelectedInterest] = useState(null);
   const [showInterestModal, setShowInterestModal] = useState(false);
+
+  // New state for notifications
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [notificationModal, setNotificationModal] = useState({
+    open: false,
+    type: 'single', // 'single' or 'all'
+    selectedUserId: null,
+    message: '',
+    title: ''
+  });
+
+  // 🆕 NEW: Content Moderation State
+  // const [moderationQueue, setModerationQueue] = useState([]);
+  // const [loadingModeration, setLoadingModeration] = useState(false);
+  // const [moderationTab, setModerationTab] = useState('pending_review');
+  // const [unreadModerationNotifications, setUnreadModerationNotifications] = useState(0);
 
   const [rejectionModal, setRejectionModal] = useState({
     open: false,
@@ -129,7 +155,7 @@ const AdminDashboard = () => {
           fetchAdvertisingInterests();
         }
       } catch (error) {
-        console.error("Error in checkAccess:", error);
+        
 
         setSnackbar({
           open: true,
@@ -185,6 +211,20 @@ const AdminDashboard = () => {
     fetchCounts();
   }, []);
 
+  // New useEffect to fetch users when notifications tab is selected
+  useEffect(() => {
+    if (activeTab === "notifications") {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
+  // 🆕 NEW: useEffect to fetch moderation queue when moderation tab is selected
+  // useEffect(() => {
+  //   if (activeTab === "moderation") {
+  //     fetchModerationQueue();
+  //   }
+  // }, [activeTab, moderationTab]);
+
   // New function to fetch advertising interests
   const fetchAdvertisingInterests = async () => {
     setLoadingAdvertisingInterests(true);
@@ -198,17 +238,183 @@ const AdminDashboard = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching advertising interests:", error);
-        setAdvertisingInterests([]);
-      } else {
-        setAdvertisingInterests(data || []);
-      }
+      if (error) throw error;
+      setAdvertisingInterests(data || []);
     } catch (error) {
-      console.error("Error in fetchAdvertisingInterests:", error);
-      setAdvertisingInterests([]);
+      
     } finally {
       setLoadingAdvertisingInterests(false);
+    }
+  };
+
+  // New function to fetch users for notifications
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, username")
+        .order("full_name", { ascending: true });
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch users",
+        severity: "error",
+      });
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // 🆕 NEW: Function to fetch content moderation queue
+  // const fetchModerationQueue = async () => {
+  //   setLoadingModeration(true);
+  //   try {
+  //     const result = await getAdminModerationQueue(moderationTab, 50);
+  //     if (result.success) {
+  //       setModerationQueue(result.records || []);
+  //       setUnreadModerationNotifications(result.unreadNotifications || 0);
+  //     }
+  //   } catch (error) {
+  //     
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Failed to fetch moderation queue",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoadingModeration(false);
+  //   }
+  // };
+
+  // 🆕 NEW: Function to update moderation status
+  // const updateModerationStatus = async (recordId, action) => {
+  //   try {
+  //     // Use the same API base URL as other functions
+  //     const API_BASE_URL = window.location.hostname === 'localhost'
+  //       ? 'http://localhost:3001'
+  //       : 'https://launchit-ai-backend.onrender.com';
+
+  //     const response = await fetch(`${API_BASE_URL}/api/moderation/status`, {
+  //       method: 'PUT',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         recordId,
+  //         action,
+  //         adminNotes: `Status updated to ${action} by admin`
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+
+  //     const result = await response.json();
+
+  //     if (result.success) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: `Content ${action} successfully`,
+  //         severity: "success",
+  //       });
+
+  //       // Refresh the moderation queue
+  //       fetchModerationQueue();
+  //     }
+  //   } catch (error) {
+  //     
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Failed to update moderation status",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // New function to send notifications
+  const sendNotification = async () => {
+    try {
+      if (notificationModal.type === "single" && !notificationModal.selectedUserId) {
+        setSnackbar({
+          open: true,
+          message: "Please select a user",
+          severity: "error",
+        });
+        return;
+      }
+
+      if (!notificationModal.message || !notificationModal.title) {
+        setSnackbar({
+          open: true,
+          message: "Please fill in all fields",
+          severity: "error",
+        });
+        return;
+      }
+
+      let notificationsToSend = [];
+
+      if (notificationModal.type === "single") {
+        // Send to specific user
+        notificationsToSend.push({
+          user_id: notificationModal.selectedUserId,
+          type: notificationModal.notificationType,
+          title: notificationModal.title,
+          message: notificationModal.message,
+          read: false,
+        });
+      } else {
+        // Send to all users
+        const { data: allUsers, error: usersError } = await supabase
+          .from("profiles")
+          .select("id");
+
+        if (usersError) throw usersError;
+
+        notificationsToSend = allUsers.map(user => ({
+          user_id: user.id,
+          type: notificationModal.notificationType,
+          title: notificationModal.title,
+          message: notificationModal.message,
+          read: false,
+        }));
+      }
+
+      const { error } = await supabase
+        .from("notifications")
+        .insert(notificationsToSend);
+
+      if (error) throw error;
+
+      setSnackbar({
+        open: true,
+        message: `Notification sent to ${notificationModal.type === "single" ? "selected user" : "all users"} successfully!`,
+        severity: "success",
+      });
+
+      // Reset form
+      setNotificationModal({
+        open: false,
+        type: "single",
+        selectedUserId: "",
+        title: "",
+        message: "",
+        notificationType: "admin_notification"
+      });
+
+    } catch (error) {
+      
+      setSnackbar({
+        open: true,
+        message: "Failed to send notification",
+        severity: "error",
+      });
     }
   };
 
@@ -236,7 +442,7 @@ const AdminDashboard = () => {
 
       fetchAdvertisingInterests();
     } catch (error) {
-      console.error("Error updating interest status:", error);
+      
       setSnackbar({
         open: true,
         message: "Failed to update interest status",
@@ -263,14 +469,14 @@ const AdminDashboard = () => {
         });
 
       if (error) {
-        console.error("Error fetching projects:", error);
+        
         setProjects([]);
       } else {
         // Projects data loaded
         setProjects(data || []);
       }
     } catch (error) {
-      console.error("Error in fetchProjects:", error);
+      
       setProjects([]);
     } finally {
       setLoadingProjects(false);
@@ -304,7 +510,7 @@ const AdminDashboard = () => {
         });
 
       if (reportsError) {
-        console.error("Error fetching reports:", reportsError);
+        
         setReports([]);
         return;
       }
@@ -319,7 +525,7 @@ const AdminDashboard = () => {
           .in("id", userIds);
 
         if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
+          
         } else {
           // Combine the data
           const profilesMap = {};
@@ -339,7 +545,7 @@ const AdminDashboard = () => {
         setReports([]);
       }
     } catch (error) {
-      console.error("Error in fetchReports:", error);
+      
       setReports([]);
     } finally {
       setLoadingReports(false);
@@ -364,7 +570,7 @@ const AdminDashboard = () => {
         .eq("project_id", projectId);
 
       if (likesError) {
-        console.error("Error deleting likes:", likesError);
+        
       }
 
       // 2. Delete media files from storage
@@ -382,7 +588,7 @@ const AdminDashboard = () => {
             .remove(filePaths);
 
           if (storageError) {
-            console.error("Error deleting media files:", storageError);
+            
           }
         }
       }
@@ -404,7 +610,7 @@ const AdminDashboard = () => {
       });
       fetchProjects();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      
 
       setSnackbar({
         open: true,
@@ -427,7 +633,7 @@ const AdminDashboard = () => {
         .eq("id", reportId);
 
       if (error) {
-        console.error("Error updating report:", error);
+        
 
         setSnackbar({
           open: true,
@@ -443,7 +649,7 @@ const AdminDashboard = () => {
         fetchReports();
       }
     } catch (error) {
-      console.error("Error in updateReportStatus:", error);
+      
     }
   };
 
@@ -482,7 +688,7 @@ const AdminDashboard = () => {
         });
 
       if (pitchesError) {
-        console.error("Error fetching pitches:", pitchesError);
+        
         setPitches([]);
         return;
       }
@@ -499,7 +705,7 @@ const AdminDashboard = () => {
           .in("id", userIds);
 
         if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
+          
         } else {
           // Combine the data
           const profilesMap = {};
@@ -520,7 +726,7 @@ const AdminDashboard = () => {
         setPitches([]);
       }
     } catch (err) {
-      console.error("Exception in fetchPitches:", err);
+      
       setPitches([]);
     } finally {
       setLoadingPitches(false);
@@ -578,7 +784,7 @@ const AdminDashboard = () => {
           .insert([notificationData]);
 
         if (notifError) {
-          console.error("Error creating notification:", notifError);
+          
         }
       }
 
@@ -601,7 +807,7 @@ const AdminDashboard = () => {
         reason: "",
       });
     } catch (error) {
-      console.error("Error updating pitch status:", error);
+      
 
       setSnackbar({
         open: true,
@@ -676,7 +882,7 @@ const AdminDashboard = () => {
       });
       fetchPitches();
     } catch (error) {
-      console.error("Error deleting pitch:", error);
+      
 
       setSnackbar({
         open: true,
@@ -751,48 +957,49 @@ const AdminDashboard = () => {
           </p>
         </div>
         {/* Analytics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-blue-600">
-
               {userCount}
             </span>
             <span className="text-gray-700 mt-2">Users</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-green-600">
-
               {projectCount}
             </span>
             <span className="text-gray-700 mt-2">Projects</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-purple-600">
-
               {commentCount}
             </span>
             <span className="text-gray-700 mt-2">Comments</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-red-600">
-
               {reportCount}
             </span>
             <span className="text-gray-700 mt-2">Reports</span>
           </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-
             <span className="text-2xl font-bold text-orange-600">
-
               {pitches.length}
             </span>
             <span className="text-gray-700 mt-2">Pitches</span>
           </div>
+          {/* 🆕 NEW: Content Moderation Stats */}
+          {/* <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+            <span className="text-2xl font-bold text-yellow-600">
+              {moderationQueue.length}
+            </span>
+            <span className="text-gray-700 mt-2">Pending Review</span>
+            {unreadModerationNotifications > 0 && (
+              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 mt-1">
+                {unreadModerationNotifications} new
+              </span>
+            )}
+          </div> */}
         </div>
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b border-gray-200">
@@ -861,6 +1068,37 @@ const AdminDashboard = () => {
               <DollarSign className="w-4 h-4" /> Advertising ( {advertisingInterests.length})
             </div>
           </button>
+          <button
+            onClick={() => setActiveTab("notifications")}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
+                activeTab==='notifications'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }
+
+            `}
+          >
+
+            <div className="flex items-center gap-2">
+
+              <Bell className="w-4 h-4" /> Notifications ( {pitches.length})
+            </div>
+          </button>
+          {/* Moderation Tab - REMOVED FOR MERGE */}
+          {/* <button
+            onClick={() => setActiveTab("moderation")}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
+                activeTab==='moderation'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }
+
+            `}
+          >
+            <div className="flex items-center gap-2">
+              <HelpCircle className="w-4 h-4" /> Moderation ( {moderationQueue.length})
+            </div>
+          </button> */}
         </div>
         {/* Projects Tab */}
         {activeTab === "projects" && (
@@ -1436,10 +1674,10 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${interest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                interest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
-                                  interest.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                    interest.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                              interest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
+                                interest.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  interest.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
                               }`}
                           >
                             {interest.status}
@@ -1484,6 +1722,195 @@ const AdminDashboard = () => {
                                   <X className="w-4 h-4" />
                                 </button>
                               </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+        {/* Notifications Tab */}
+        {activeTab === "notifications" && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Send Notifications
+              </h2>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setNotificationModal(prev => ({ ...prev, open: true }))}
+                startIcon={<Bell className="w-4 h-4" />}
+              >
+                Send New Notification
+              </Button>
+            </div>
+            <div className="p-6">
+              <div className="text-center py-8">
+                <Bell className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Admin Notification System
+                </h3>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                  Send notifications to specific users or broadcast messages to all users on the platform.
+                </p>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => setNotificationModal(prev => ({ ...prev, open: true }))}
+                  startIcon={<Send className="w-4 h-4" />}
+                >
+                  Send Notification
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Moderation Tab */}
+        {activeTab === "moderation" && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Content Moderation Queue
+              </h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="outlined"
+                  onClick={() => setModerationTab('pending_review')}
+                  className={`${moderationTab === 'pending_review' ? 'bg-blue-600 text-white' : ''}`}
+                >
+                  Pending Review ({moderationQueue.filter(item => item.status === 'pending_review').length})
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setModerationTab('approved')}
+                  className={`${moderationTab === 'approved' ? 'bg-green-600 text-white' : ''}`}
+                >
+                  Approved ({moderationQueue.filter(item => item.status === 'approved').length})
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setModerationTab('rejected')}
+                  className={`${moderationTab === 'rejected' ? 'bg-red-600 text-white' : ''}`}
+                >
+                  Rejected ({moderationQueue.filter(item => item.status === 'rejected').length})
+                </Button>
+              </div>
+            </div>
+            {loadingModeration ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading moderation queue...</p>
+              </div>
+            ) : moderationQueue.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <HelpCircle className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No items in the moderation queue.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Content
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {moderationQueue.map((item) => (
+                      <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {item.id}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {item.content_type}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          <div className="max-w-xs truncate">
+                            {item.content && item.content.length > 100
+                              ? item.content.substring(0, 100) + '...'
+                              : item.content}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'pending_review' ? 'bg-yellow-100 text-yellow-800' :
+                              item.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                item.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                              }`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {item.profiles ? (
+                            <div>
+                              <div className="font-medium">{item.profiles.full_name || 'Unknown User'}</div>
+                              <div className="text-xs text-gray-400">{item.profiles.email}</div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">User not found</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            {item.status === 'pending_review' && (
+                              <>
+                                <button
+                                  onClick={() => updateModerationStatus(item.id, 'approved')}
+                                  className="text-green-600 hover:text-green-800"
+                                  title="Approve"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => updateModerationStatus(item.id, 'rejected')}
+                                  className="text-red-600 hover:text-red-800"
+                                  title="Reject"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                            {item.status === 'approved' && (
+                              <button
+                                onClick={() => updateModerationStatus(item.id, 'rejected')}
+                                className="text-red-600 hover:text-red-800"
+                                title="Reject"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                            {item.status === 'rejected' && (
+                              <button
+                                onClick={() => updateModerationStatus(item.id, 'approved')}
+                                className="text-green-600 hover:text-green-800"
+                                title="Approve"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
                             )}
                           </div>
                         </td>
@@ -1600,10 +2027,10 @@ const AdminDashboard = () => {
                     <p className="text-sm text-gray-600">Status:</p>
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedInterest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          selectedInterest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
-                            selectedInterest.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              selectedInterest.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
+                        selectedInterest.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
+                          selectedInterest.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            selectedInterest.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
                         }`}
                     >
                       {selectedInterest.status}
@@ -1878,7 +2305,155 @@ const AdminDashboard = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* MUI Snackbar */}
+      {/* Notification Modal */}
+      <Dialog
+        open={notificationModal.open}
+        onClose={() => setNotificationModal(prev => ({ ...prev, open: false }))}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle className="flex items-center gap-2">
+          <Bell className="w-5 h-5 text-blue-600" />
+          Send Notification
+        </DialogTitle>
+        <DialogContent>
+          <div className="space-y-4 pt-2">
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="notification-type-label">Notification Type</InputLabel>
+              <Select
+                labelId="notification-type-label"
+                value={notificationModal.type}
+                onChange={(e) =>
+                  setNotificationModal((prev) => ({
+                    ...prev,
+                    type: e.target.value,
+                  }))
+                }
+                label="Notification Type"
+              >
+                <MenuItem value="single">Send to a Specific User</MenuItem>
+                <MenuItem value="all">Send to All Users</MenuItem>
+              </Select>
+            </FormControl>
+
+            {notificationModal.type === "single" && (
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="user-select-label">Select User</InputLabel>
+                <Select
+                  labelId="user-select-label"
+                  value={notificationModal.selectedUserId}
+                  onChange={(e) =>
+                    setNotificationModal((prev) => ({
+                      ...prev,
+                      selectedUserId: e.target.value,
+                    }))
+                  }
+                  label="Select User"
+                  disabled={loadingUsers}
+                >
+                  {loadingUsers ? (
+                    <MenuItem value="">
+                      <Chip label="Loading Users..." />
+                    </MenuItem>
+                  ) : (
+                    <>
+                      <MenuItem value="">
+                        <Chip label="Select a user" />
+                      </MenuItem>
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          <Chip label={user.full_name || user.username || user.email} />
+                        </MenuItem>
+                      ))}
+                    </>
+                  )}
+                </Select>
+              </FormControl>
+            )}
+
+            <TextField
+              fullWidth
+              label="Notification Title"
+              value={notificationModal.title}
+              onChange={(e) =>
+                setNotificationModal((prev) => ({
+                  ...prev,
+                  title: e.target.value,
+                }))
+              }
+              variant="outlined"
+              placeholder="Enter notification title..."
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Notification Message"
+              value={notificationModal.message}
+              onChange={(e) =>
+                setNotificationModal((prev) => ({
+                  ...prev,
+                  message: e.target.value,
+                }))
+              }
+              variant="outlined"
+              placeholder="Enter notification message..."
+            />
+
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="notification-category-label">Category</InputLabel>
+              <Select
+                labelId="notification-category-label"
+                value={notificationModal.notificationType}
+                onChange={(e) =>
+                  setNotificationModal((prev) => ({
+                    ...prev,
+                    notificationType: e.target.value,
+                  }))
+                }
+                label="Category"
+              >
+                <MenuItem value="admin_notification">Admin Notification</MenuItem>
+                <MenuItem value="pitch_approved">Pitch Approved</MenuItem>
+                <MenuItem value="pitch_rejected">Pitch Rejected</MenuItem>
+                <MenuItem value="project_approved">Project Approved</MenuItem>
+                <MenuItem value="project_rejected">Project Rejected</MenuItem>
+                <MenuItem value="announcement">Announcement</MenuItem>
+                <MenuItem value="maintenance">Maintenance Notice</MenuItem>
+                <MenuItem value="update">Platform Update</MenuItem>
+              </Select>
+            </FormControl>
+
+            {notificationModal.type === "all" && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-yellow-800">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="font-medium">Broadcast Notice</span>
+                </div>
+                <p className="text-yellow-700 text-sm mt-1">
+                  This notification will be sent to all users on the platform. Use this feature carefully.
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNotificationModal(prev => ({ ...prev, open: false }))}>
+            Cancel
+          </Button>
+          <Button
+            onClick={sendNotification}
+            variant="contained"
+            color="primary"
+            disabled={loadingUsers || !notificationModal.message || !notificationModal.title || (notificationModal.type === "single" && !notificationModal.selectedUserId)}
+            startIcon={<Send className="w-4 h-4" />}
+          >
+            Send Notification
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -1934,22 +2509,22 @@ function PitchVideoPlayer({ filePath }) {
           path = filePath.split('/storage/v1/object/public/pitch-videos/')[1];
         }
 
-        console.log("Creating signed URL for path:", path);
+
 
         const { data, error } = await supabase.storage
           .from("pitch-videos")
           .createSignedUrl(path, 60 * 60);
 
         if (error) {
-          console.error("Error creating signed URL:", error);
+          
           // Fallback to public URL
           setSignedUrl(filePath);
         } else {
-          console.log("Signed URL created:", data?.signedUrl);
+
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {
-        console.error("Error creating signed URL:", error);
+        
         // Fallback to public URL
         setSignedUrl(filePath);
       }
@@ -1982,7 +2557,7 @@ function PitchVideoPlayer({ filePath }) {
       height={150}
       className="rounded border"
       onError={(e) => {
-        console.error("Video error:", e);
+        
         setError("Failed to load video");
       }}
     />

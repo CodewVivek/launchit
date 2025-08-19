@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import Share from "../Components/Share";
 import {
   ExternalLink,
   Calendar,
@@ -64,7 +65,7 @@ function PitchVideoPlayer({ filePath }) {
           .createSignedUrl(filePath, 60 * 60); // URL valid for 1 hour
 
         if (error) {
-          console.error("Error creating signed URL:", error);
+          
           // Fallback to public URL if signed URL creation fails
           const { data: publicUrlData } = supabase.storage
             .from("pitch-videos")
@@ -74,7 +75,7 @@ function PitchVideoPlayer({ filePath }) {
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {
-        console.error("Error creating signed URL:", error);
+        
         const { data: publicUrlData } = supabase.storage
           .from("pitch-videos")
           .getPublicUrl(filePath);
@@ -127,13 +128,13 @@ const UserProfile = () => {
         .select("*")
         .eq("user_id", profileId);
       if (error) {
-        console.error("Error fetching user projects:", error);
+        
         setProjects([]);
       } else {
         setProjects(userProjects || []);
       }
     } catch (err) {
-      console.error("Exception in fetchUserProjects:", err);
+      
       setProjects([]);
     }
   };
@@ -154,11 +155,11 @@ const UserProfile = () => {
       if (!error) {
         setUserPitches(data || []);
       } else {
-        console.error("Error fetching user pitches:", error);
+        
         setUserPitches([]);
       }
     } catch (err) {
-      console.error("Exception in fetchUserPitches:", err);
+      
       setUserPitches([]);
     }
     setLoadingPitches(false);
@@ -175,16 +176,16 @@ const UserProfile = () => {
 
       try {
         const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", decodedUsername)
-        .single();
+          .from("profiles")
+          .select("*")
+          .eq("username", decodedUsername)
+          .single();
 
         if (profileError) {
-          console.error("Error fetching profile:", profileError.message);
-        setProfile(null);
-        setLoading(false);
-        return;
+          
+          setProfile(null);
+          setLoading(false);
+          return;
         }
 
         setProfile(profileData);
@@ -194,6 +195,11 @@ const UserProfile = () => {
 
         const isProfileOwner = loggedInUser && loggedInUser.id === profileData.id;
         setIsOwner(isProfileOwner);
+
+        // If user is viewing comments tab but they're not the owner, reset to projects
+        if (!isProfileOwner && activeTab === "comments") {
+          setActiveTab("projects");
+        }
 
         let userProjects = [];
         if (isProfileOwner) {
@@ -223,7 +229,7 @@ const UserProfile = () => {
           setIsFollowing(!!followData);
         }
       } catch (err) {
-        console.error("Exception fetching profile data:", err);
+        
         setProfile(null);
       } finally {
         setLoading(false);
@@ -244,7 +250,7 @@ const UserProfile = () => {
         description: editForm.description,
         website_url: editForm.website_url,
         category_type: editForm.category_type,
-          updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }).eq("id", editProject.id);
       if (error) throw error;
       setEditProject(null);
@@ -268,7 +274,7 @@ const UserProfile = () => {
       setSnackbar({ open: true, message: "Project deleted successfully!", severity: "success" });
       setTimeout(() => fetchUserProjects(profile.id), 500);
     } catch (err) {
-      console.error("Error in handleDeleteConfirm:", err);
+      
       setEditError(err.message || "Failed to delete project.");
     }
   };
@@ -292,7 +298,7 @@ const UserProfile = () => {
       setSnackbar({ open: true, message: "Pitch deleted successfully", severity: "success" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     } catch (error) {
-      console.error("Error deleting pitch:", error);
+      
       setSnackbar({ open: true, message: "Failed to delete pitch: " + error.message, severity: "error" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     }
@@ -313,7 +319,7 @@ const UserProfile = () => {
       setComments(prev => prev.filter(comment => comment.id !== commentId));
       toast.success("Comment deleted successfully!");
     } catch (err) {
-      console.error("Error deleting comment:", err);
+      
       toast.error("Failed to delete comment. Please try again.");
     }
   };
@@ -365,7 +371,7 @@ const UserProfile = () => {
         toast.success(`Following ${profile.full_name || profile.username}`);
       }
     } catch (error) {
-      console.error('Error:', error);
+      
       toast.error(isFollowing ? 'Failed to unfollow' : 'Failed to follow');
     } finally {
       setFollowLoading(false);
@@ -392,7 +398,7 @@ const UserProfile = () => {
     );
   }
   if (!profile) {
-  return (
+    return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-500 text-lg">User profile not found.</p>
       </div>
@@ -400,18 +406,21 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="flex bg-gray-50 min-h-screen font-sans transition-colors duration-300 pt-16">
+    <div className="flex bg-white min-h-screen font-sans transition-colors duration-300 pt-4">
       {/* Main Content */}
       <main className="w-full flex-1 p-4 sm:p-6 md:p-8">
         {/* Profile Info */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8 transition-colors duration-300">
           <div className="flex flex-col md:flex-row items-center gap-6">
+            {/* Profile Image */}
             <img
               src={profile.avatar_url || "https://api.dicebear.com/6.x/initials/svg?seed=" + profile.username}
               alt="Profile"
               className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white object-cover shadow-md"
               loading="lazy"
             />
+
+            {/* Profile Info */}
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 {profile.full_name || profile.username || "Unnamed User"}
@@ -422,62 +431,105 @@ const UserProfile = () => {
               <p className="text-gray-700 mb-4 max-w-xl mx-auto md:mx-0">
                 {profile.bio || "This user has not written a bio yet"}
               </p>
+
+              {/* Social Links */}
               <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-500">
-                {profile.twitter && (<a href={profile.twitter} target="_blank" rel="noreferrer" className="hover:text-blue-500 flex items-center gap-1.5 transition-colors"> <Twitter className="w-4 h-4" /><span>Twitter</span></a>)}
-                {profile.linkedin && (<a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-blue-700 flex items-center gap-1.5 transition-colors"> <Linkedin className="w-4 h-4" /><span>LinkedIn</span></a>)}
-                {profile.youtube && (<a href={profile.youtube} target="_blank" rel="noreferrer" className="hover:text-red-600 flex items-center gap-1.5 transition-colors"> <Youtube className="w-4 h-4" /><span>YouTube</span></a>)}
-                {profile.portfolio && (<a href={profile.portfolio} target="_blank" rel="noreferrer" className="hover:text-gray-800 flex items-center gap-1.5 transition-colors"> <Briefcase className="w-4 h-4" /><span>Portfolio</span></a>)}
+                {profile.twitter && (
+                  <a href={profile.twitter} target="_blank" rel="noreferrer" className="hover:text-blue-500 flex items-center gap-1.5 transition-colors">
+                    <Twitter className="w-4 h-4" /><span>Twitter</span>
+                  </a>
+                )}
+                {profile.linkedin && (
+                  <a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-blue-700 flex items-center gap-1.5 transition-colors">
+                    <Linkedin className="w-4 h-4" /><span>LinkedIn</span>
+                  </a>
+                )}
+                {profile.youtube && (
+                  <a href={profile.youtube} target="_blank" rel="noreferrer" className="hover:text-red-600 flex items-center gap-1.5 transition-colors">
+                    <Youtube className="w-4 h-4" /><span>YouTube</span>
+                  </a>
+                )}
+                {profile.portfolio && (
+                  <a href={profile.portfolio} target="_blank" rel="noreferrer" className="hover:text-gray-800 flex items-center gap-1.5 transition-colors">
+                    <Briefcase className="w-4 h-4" /><span>Portfolio</span>
+                  </a>
+                )}
               </div>
             </div>
-            {currentUser && currentUser.id !== profile.id && (
-              <button
-                onClick={handleFollow}
-                disabled={followLoading}
-                className={`mt-4 md:mt-0 md:ml-auto px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md self-center md:self-start ${isFollowing ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {followLoading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto" />
-                ) : isFollowing ? (
-                  <div className="flex items-center gap-2"> <UserCheck className="w-4 h-4" />Following </div>
-                ) : (
-                  <div className="flex items-center gap-2"> <UserPlus className="w-4 h-4" />Follow </div>
-                )}
-              </button>
-            )}
-            {isOwner && (
-              <button
-                onClick={() => navigate("/settings")}
-                className="mt-4 md:mt-0 md:ml-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md self-center md:self-start"
-              >
-                Edit Profile
-              </button>
-            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col md:flex-row items-center gap-3 md:ml-auto">
+              {/* Follow Button */}
+              {currentUser && currentUser.id !== profile.id && (
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md ${isFollowing
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {followLoading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto" />
+                  ) : isFollowing ? (
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="w-4 h-4" /> Following
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="w-4 h-4" /> Follow
+                    </div>
+                  )}
+                </button>
+              )}
+
+              {/* Edit Profile (if owner) */}
+              {isOwner && (
+                <button
+                  onClick={() => navigate("/settings")}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md"
+                >
+                  Edit Profile
+                </button>
+              )}
+
+              {/* Share Button */}
+              <Share
+                projectSlug={profile.username}
+                projectName={`${profile.full_name || profile.username}'s Profile`}
+                isProfile={true}
+              />
+            </div>
           </div>
         </div>
+
         {/* Tab Navigation */}
-        <div className="flex space-x-8 border-b border-gray-200 mb-6">
+        <div className="flex space-x-8 border-b border-gray-200">
           <button
             onClick={() => setActiveTab("projects")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "projects" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            Projects
+            Projects ({projects.length})
           </button>
           <button
             onClick={() => setActiveTab("pitches")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            Pitches
+            Pitches ({userPitches.length})
           </button>
-          <button
-            onClick={() => setActiveTab("comments")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "comments" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
-          >
-            Comments
-          </button>
+          {/* Only show comments tab to profile owner */}
+          {isOwner && (
+            <button
+              onClick={() => setActiveTab("comments")}
+              className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "comments" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Comments ({comments.length})
+            </button>
+          )}
         </div>
         {activeTab === "projects" && (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 mt-4">
               <div className="flex flex-wrap gap-2 text-sm font-medium">
                 <button
                   onClick={() => setProjectFilter("all")}
@@ -486,98 +538,117 @@ const UserProfile = () => {
                   All ({projects.length})
                 </button>
                 {isOwner && (
-                            <button
+                  <button
                     onClick={() => setProjectFilter("draft")}
                     className={`px-4 py-2 rounded-full transition-colors ${projectFilter === "draft" ? "bg-yellow-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                   >
                     Drafts ({projects.filter((p) => p.status === "draft").length})
-                            </button>
+                  </button>
                 )}
-                            <button
+                <button
                   onClick={() => setProjectFilter("launched")}
                   className={`px-4 py-2 rounded-full transition-colors ${projectFilter === "launched" ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                            >
+                >
                   Launched ({projects.filter((p) => p.status !== "draft").length})
-                            </button>
-                          </div>
+                </button>
+              </div>
               <SortByDateFilter value={sortOrder} onChange={setSortOrder} />
-                        </div>
+            </div>
 
             {sortedProjects.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sortedProjects.map((project) => (
-                        <div
-                          key={project.id}
-                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
-                          onClick={() => navigate(`/launches/${project.slug}`)}
-                        >
-                          <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
-                            {project.thumbnail_url ? (
-                              <img
-                                src={project.thumbnail_url}
-                                alt={`${project.name} thumbnail`}
-                                className="absolute top-0 left-0 w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
+                  <div
+                    key={project.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+                    onClick={() => navigate(`/launches/${project.slug}`)}
+                  >
+                    <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
+                      {project.thumbnail_url ? (
+                        <img
+                          src={project.thumbnail_url}
+                          alt={`${project.name} thumbnail`}
+                          className="absolute top-0 left-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
                         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">Nt</div>
-                            )}
-                          </div>
-                          <div className="p-5 flex-grow flex flex-col">
-                            <div className="flex items-start gap-4 mb-3">
-                              {project.logo_url ? (
-                                <img
-                                  src={project.logo_url}
-                                  alt="Logo"
-                                  className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border flex-shrink-0 mt-1">
+                      )}
+                    </div>
+                    <div className="p-5 flex-grow flex flex-col">
+                      <div className="flex items-start gap-4 mb-3">
+                        {project.logo_url ? (
+                          <img
+                            src={project.logo_url}
+                            alt="Logo"
+                            className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border flex-shrink-0 mt-1">
                             <span>{project.name.charAt(0).toUpperCase()}</span>
-                                </div>
-                              )}
-                              <div>
+                          </div>
+                        )}
+                        <div>
                           <h2 className="text-lg font-bold text-gray-800 hover:text-blue-600 transition-colors">{project.name}</h2>
                           <p className="text-sm text-gray-600 line-clamp-2">{project.tagline}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-2 text-sm text-gray-500 mt-auto mb-4">
-                              <div className="flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-500 mt-auto mb-4">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-gray-400" />
                           <span className="capitalize font-medium text-gray-700">{project.category_type}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-400" />
-                                <span>
-                                  Launched on{" "}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span>
+                            Launched on{" "}
                             {new Date(project.created_at).toLocaleDateString("en-GB", {
                               day: "2-digit", month: "short", year: "numeric",
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                              <Like projectId={project.id} />
-                              {isOwner && (
-                                <div className="flex gap-2">
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/submit?edit=${project.id}`); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-                                    <Edit3 className="w-4 h-4" />
-                                  </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(project); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            })}
+                          </span>
                         </div>
-                      ))}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <Like projectId={project.id} />
+                        {isOwner && (
+                          <div className="flex gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/submit?edit=${project.id}`); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(project); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                ))}
+              </div>
             ) : (
-              <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
-                <h4 className="text-lg font-semibold text-gray-800">No Projects Found</h4>
-                <p className="text-gray-500 mt-1">There are no projects matching the selected filter.</p>
+              <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Rocket className="w-8 h-8 text-gray-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-gray-800 mb-2">
+                  {isOwner ? "No Launches Yet" : "No Launches Found"}
+                </h4>
+                <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                  {isOwner
+                    ? "You haven't launched any projects yet. Start building and share your ideas with the world!"
+                    : "This user hasn't launched any projects yet."
+                  }
+                </p>
+                {isOwner && (
+                  <button
+                    onClick={() => navigate('/submit')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <Rocket className="w-4 h-4" />
+                    Launch Your First Project
+                  </button>
+                )}
               </div>
             )}
           </>
@@ -593,8 +664,21 @@ const UserProfile = () => {
                 <p className="mt-2 text-gray-600">Loading pitches...</p>
               </div>
             ) : userPitches.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>No pitches submitted yet.</p>
+              <div className="p-12 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-8 h-8 text-gray-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-gray-800 mb-2">No Pitches Submitted Yet</h4>
+                <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                  You haven't submitted any pitch videos yet. Share your startup story and get feedback from the community!
+                </p>
+                <button
+                  onClick={() => navigate('/pitch-upload')}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Submit Your First Pitch
+                </button>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -667,26 +751,38 @@ const UserProfile = () => {
                               <span>{getTimeAgo(comment.created_at)}</span>
                             </div>
                             {isOwner && (
-                        <button
+                              <button
                                 onClick={() => handleDeleteComment(comment.id)}
                                 className="text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-50"
                                 title="Delete comment"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
                     </li>
-                ))}
+                  ))}
                 </ul>
               ) : (
-                <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
-                  <h4 className="text-lg font-semibold text-gray-800">No Comments Yet</h4>
-                  <p className="text-gray-500 mt-1">You haven't made any comments yet.</p>
-              </div>
-            )}
+                <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageCircle className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-gray-800 mb-2">No Comments Yet</h4>
+                  <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                    You haven't made any comments yet. Start engaging with the community by commenting on projects you find interesting!
+                  </p>
+                  <button
+                    onClick={() => navigate('/projects')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Explore Projects
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

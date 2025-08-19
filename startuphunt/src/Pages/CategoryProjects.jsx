@@ -37,14 +37,14 @@ const CategoryProjects = () => {
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Error fetching projects:', error);
+                
                 setError('Failed to load projects');
                 toast.error('Failed to load projects');
             } else {
                 setProjects(data || []);
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             setError('An error occurred while loading projects');
             toast.error('An error occurred while loading projects');
         } finally {

@@ -47,14 +47,14 @@ const MyLaunches = () => {
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Error fetching launches:', error);
+                
                 setError('Failed to load your launches');
                 toast.error('Failed to load your launches');
             } else {
                 setLaunches(data || []);
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             setError('An error occurred while loading your launches');
             toast.error('An error occurred while loading your launches');
         } finally {

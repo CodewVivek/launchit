@@ -13,13 +13,28 @@ import {
 } from "react-share";
 import { Copy, Check, Share2, X, ExternalLink } from "lucide-react";
 
-const Share = ({ projectSlug, projectName = "this project" }) => {
+const Share = ({ projectSlug, projectName = "this project", isProfile = false }) => {
   const [copied, setCopied] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const baseUrl = "https://launchit.site"; 
-  const shareUrl = `${baseUrl}/launches/${projectSlug}`;
-  const title = `Check out ${projectName} on LaunchIt!`;
+  // Auto-detect the current environment and use appropriate base URL
+  const getBaseUrl = () => {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+
+    if (hostname.includes('netlify.app')) {
+      return `${protocol}//${hostname}`; // Netlify dev/preview
+    } else {
+      return 'https://launchit.site'; // Production
+    }
+  };
+
+  const baseUrl = getBaseUrl();
+  // Use profile URL if it's a profile, otherwise use project URL
+  const shareUrl = isProfile ? `${baseUrl}/profile/${projectSlug}` : `${baseUrl}/launches/${projectSlug}`;
+  const title = isProfile ? `Check out ${projectName} on launchit!` : `Check out ${projectName} on launchit!`;
+
+
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -43,7 +58,7 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy link:", err);
+      
     }
   };
 
@@ -89,18 +104,23 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
 
             {/* Copy Link */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Project Link</label>
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Project Link
+              </label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-gray-50 rounded-lg border">
+                {/* Input */}
                 <input
                   type="text"
                   value={shareUrl}
                   readOnly
-                  className="flex-1 text-sm bg-transparent border-none outline-none text-gray-700"
+                  className="w-full text-sm bg-transparent border-none outline-none text-gray-700"
                 />
-                <div className="flex gap-1">
+
+                {/* Actions */}
+                <div className="flex flex-wrap sm:flex-nowrap gap-2">
                   <button
                     onClick={handleCopyLink}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${copied
+                    className={`flex items-center justify-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 flex-shrink-0 ${copied
                         ? "bg-green-100 text-green-700 border border-green-200"
                         : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border border-indigo-200"
                       }`}
@@ -118,11 +138,12 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
                       </>
                     )}
                   </button>
+
                   <a
                     href={shareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 transition-all duration-200"
+                    className="flex items-center justify-center gap-1 px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 transition-all duration-200 flex-shrink-0"
                     title="Open project link"
                   >
                     <ExternalLink className="w-4 h-4" />
@@ -131,6 +152,7 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
                 </div>
               </div>
             </div>
+
 
             {/* Social Media Buttons */}
             <div className="mb-6">

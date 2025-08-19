@@ -28,7 +28,7 @@ const SearchBar = () => {
       setSearchSuggestions(suggestions);
       setShowSuggestions(true);
     } catch (error) {
-      console.log('AI suggestions not available, using basic search');
+      
     }
   }, []);
 
@@ -55,11 +55,10 @@ const SearchBar = () => {
       // Try AI search first
       const aiResults = await semanticSearch(search, 20, {});
       if (aiResults.success && aiResults.results.length > 0) {
-        console.log('AI search found:', aiResults.results.length, 'results');
-        // You can handle AI results here without changing existing logic
+
       }
     } catch (error) {
-      console.log('AI search not available, using existing search');
+      
     } finally {
       setIsSearching(false);
     }

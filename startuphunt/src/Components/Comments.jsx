@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import ReportModal from "./ReportModal";
+import { toast } from "react-hot-toast";
+// Content moderation removed for merge
+
+// Content moderation will be checked on post/reply
 
 // Helper to show relative time (e.g., '1h ago', '2d ago', 'just now')
 function getRelativeTime(dateString) {
@@ -28,6 +32,10 @@ const Comments = ({ projectId }) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportCommentId, setReportCommentId] = useState(null);
+
+  // Content moderation will be checked on post/reply
+  const [isPostingComment, setIsPostingComment] = useState(false);
+  const [isPostingReply, setIsPostingReply] = useState(false);
 
   useEffect(() => {
     fetchComments();
@@ -65,15 +73,26 @@ const Comments = ({ projectId }) => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
-    await supabase.from("comments").insert({
-      project_id: projectId,
-      user_id: user.id,
-      content: newComment,
-      parent_id: null,
-      deleted: false,
-    });
-    setNewComment("");
-    fetchComments();
+
+    setIsPostingComment(true);
+
+    try {
+      // Content moderation removed for merge - direct posting enabled
+      await supabase.from("comments").insert({
+        project_id: projectId,
+        user_id: user.id,
+        content: newComment,
+        parent_id: null,
+        deleted: false,
+      });
+      setNewComment("");
+      fetchComments();
+
+    } catch (error) {
+      toast.error('Failed to post comment. Please try again.');
+    } finally {
+      setIsPostingComment(false);
+    }
   };
 
   // Soft delete: if has replies, mark as deleted; else, delete
@@ -106,16 +125,27 @@ const Comments = ({ projectId }) => {
 
   const handleReply = async (parentId) => {
     if (!user || !replyContent.trim()) return;
-    await supabase.from("comments").insert({
-      project_id: projectId,
-      user_id: user.id,
-      content: replyContent,
-      parent_id: parentId,
-      deleted: false,
-    });
-    setReplyTo(null);
-    setReplyContent("");
-    fetchComments();
+
+    setIsPostingReply(true);
+
+    try {
+      // Content moderation removed for merge - direct posting enabled
+      await supabase.from("comments").insert({
+        project_id: projectId,
+        user_id: user.id,
+        content: replyContent,
+        parent_id: parentId,
+        deleted: false,
+      });
+      setReplyTo(null);
+      setReplyContent("");
+      fetchComments();
+
+    } catch (error) {
+      toast.error('Failed to post reply. Please try again.');
+    } finally {
+      setIsPostingReply(false);
+    }
   };
 
   // Helper to nest replies
@@ -241,9 +271,20 @@ const Comments = ({ projectId }) => {
                   />
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg transition"
+                    disabled={isPostingReply}
+                    className={`text-xs px-4 py-2 rounded-lg transition ${isPostingReply
+                        ? 'bg-gray-400 cursor-not-allowed opacity-50 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
                   >
-                    Reply
+                    {isPostingReply ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1 inline"></div>
+                        Checking...
+                      </>
+                    ) : (
+                      'Reply'
+                    )}
                   </button>
                   <button
                     type="button"
@@ -254,6 +295,8 @@ const Comments = ({ projectId }) => {
                   </button>
                 </form>
               )}
+
+              {/* Content Moderation will be checked on reply */}
 
               {hasReplies && repliesOpen && (
                 <div className="mt-3">
@@ -286,11 +329,24 @@ const Comments = ({ projectId }) => {
             />
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl transition-all text-sm"
+              disabled={isPostingComment}
+              className={`font-semibold px-4 py-2 rounded-xl transition-all text-sm ${isPostingComment
+                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
             >
-              Post
+              {isPostingComment ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline"></div>
+                  Checking...
+                </>
+              ) : (
+                'Post'
+              )}
             </button>
           </div>
+
+          {/* Content Moderation will be checked on post */}
         </form>
       ) : (
         <p className="text-sm text-gray-500 mb-6">

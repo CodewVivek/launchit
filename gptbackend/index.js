@@ -2,27 +2,29 @@ import express from "express";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
-import fetch from "node-fetch";
+// fetch is built-in to Node.js 18+
 import cors from "cors";
-import { moderateContent, semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
+import { semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
 
 dotenv.config();
 
-// Validate required environment variables
-const requiredEnvVars = ['OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+// Check for required environment variables
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'OPENAI_API_KEY'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingEnvVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingEnvVars);
   process.exit(1);
 }
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://launchit.site', 'https://launchitsite.netlify.app']
-    : true,
+  origin: [
+    'https://launchit.site',
+    'https://launchitsite.netlify.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
   credentials: true
 }));
 
@@ -38,7 +40,7 @@ app.use((req, res, next) => {
 // Simple in-memory rate limiting
 const requestCounts = new Map();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per 15 minutes
+const MAX_REQUESTS_PER_WINDOW = 50; // 50 requests per 15 minutes
 
 const rateLimitMiddleware = (req, res, next) => {
   const clientId = req.ip || req.connection.remoteAddress;
@@ -104,7 +106,7 @@ async function generateMicrolinkAssets(url) {
       logo_url: logoUrl
     };
   } catch (error) {
-    console.error("❌ Microlink.io error:", error.message);
+    // Microlink.io error occurred
     return {
       thumbnail_url: "",
       logo_url: ""
@@ -157,7 +159,7 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
         temperature: 0
       });
     } catch (openaiError) {
-      console.error("❌ OpenAI API error:", openaiError.message);
+      // OpenAI API error occurred
       return res.status(500).json({
         err: true,
         message: "OpenAI API failed: " + openaiError.message
@@ -171,8 +173,7 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
       const jsonContent = rawContent.replace(/```json\s*|\s*```/g, '').trim();
       result = JSON.parse(jsonContent);
     } catch (e) {
-      console.error("❌ GPT JSON parse error:", gptresponse.choices[0].message.content);
-      console.error("❌ Parse error details:", e.message);
+      // GPT JSON parse error occurred
 
       // Fallback: create basic data from URL
       const fallbackResult = {
@@ -207,79 +208,12 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
     res.json(responseData);
 
   } catch (err) {
-    console.error("❌ Server error:", err);
+    // Server error occurred
     res.status(500).json({ error: true, message: err.message });
   }
 });
 
 // ==================== AI FEATURES ENDPOINTS ====================
-
-// 1. CONTENT MODERATION ENDPOINT
-app.post('/api/moderate', rateLimitMiddleware, async (req, res) => {
-  try {
-    const { content, contentType, userId } = req.body;
-
-    if (!content || !contentType) {
-      return res.status(400).json({
-        error: true,
-        message: 'Content and contentType are required'
-      });
-    }
-
-    // Moderate the content
-    const moderationResult = await moderateContent(content);
-
-    // Determine action based on moderation level
-    let action = 'approve';
-    let message = 'Content approved';
-
-    if (moderationResult.moderationLevel === 'flagged') {
-      if (moderationResult.issues.some(issue =>
-        issue.includes('Hate speech') ||
-        issue.includes('Self-harm') ||
-        issue.includes('Violent content')
-      )) {
-        action = 'reject';
-        message = 'Content rejected - violates community guidelines';
-      } else {
-        action = 'review';
-        message = 'Content flagged for admin review';
-      }
-    }
-
-    // Store moderation record in database
-    const { error: dbError } = await supabase
-      .from('content_moderation')
-      .insert({
-        user_id: userId,
-        content: content,
-        content_type: contentType,
-        moderation_result: moderationResult,
-        action: action,
-        status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'pending_review',
-        created_at: new Date().toISOString()
-      });
-
-    if (dbError) {
-      console.error('Database error:', dbError);
-    }
-
-    res.json({
-      success: true,
-      action: action,
-      message: message,
-      moderationResult: moderationResult,
-      requiresReview: action === 'review'
-    });
-
-  } catch (error) {
-    console.error('❌ Content moderation error:', error);
-    res.status(500).json({
-      error: true,
-      message: 'Content moderation failed: ' + error.message
-    });
-  }
-});
 
 // 2. SEMANTIC SEARCH ENDPOINT
 app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
@@ -336,7 +270,7 @@ app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
               return { ...project, embedding };
             }
           } catch (error) {
-            console.error(`Failed to generate embedding for project ${project.id}:`, error);
+            // Silently continue if embedding generation fails
           }
         }
         return project;
@@ -370,7 +304,7 @@ app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Semantic search error:', error);
+    // Semantic search error occurred
     res.status(500).json({
       error: true,
       message: 'Semantic search failed: ' + error.message
@@ -381,7 +315,7 @@ app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
 // 3. GENERATE EMBEDDINGS FOR EXISTING PROJECTS
 app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
   try {
-    const { projectId } = req.body;
+    const { projectId, projectText } = req.body;
 
     if (!projectId) {
       return res.status(400).json({
@@ -404,22 +338,26 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
       });
     }
 
-    // Generate embedding
-    const projectText = [
-      project.title || '',
-      project.description || '',
-      project.category || '',
-      project.tags ? project.tags.join(' ') : ''
-    ].join(' ').trim();
+    // Use provided projectText or generate from project data
+    let textForEmbedding = projectText;
+    if (!textForEmbedding) {
+      textForEmbedding = [
+        project.name || '',
+        project.description || '',
+        project.tagline || '',
+        project.category_type || '',
+        project.tags ? project.tags.join(' ') : ''
+      ].filter(text => text.trim()).join(' ').trim();
+    }
 
-    if (!projectText) {
+    if (!textForEmbedding) {
       return res.status(400).json({
         error: true,
         message: 'Project has no text content for embedding'
       });
     }
 
-    const embedding = await generateEmbedding(projectText);
+    const embedding = await generateEmbedding(textForEmbedding);
 
     // Update project with embedding
     const { error: updateError } = await supabase
@@ -434,11 +372,12 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
     res.json({
       success: true,
       message: 'Embedding generated successfully',
-      projectId: projectId
+      projectId: projectId,
+      projectName: project.name
     });
 
   } catch (error) {
-    console.error('❌ Embedding generation error:', error);
+    // Embedding generation error occurred
     res.status(500).json({
       error: true,
       message: 'Embedding generation failed: ' + error.message
@@ -446,86 +385,50 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
   }
 });
 
-// 4. GET MODERATION QUEUE (Admin only)
-app.get('/api/moderation/queue', rateLimitMiddleware, async (req, res) => {
-  try {
-    const { status = 'pending_review', limit = 50 } = req.query;
+// 4. GET MODERATION QUEUE (Admin only) - REMOVED FOR MERGE
+// app.get('/api/moderation/queue', rateLimitMiddleware, async (req, res) => { ... });
 
-    // TODO: Add admin authentication check
-    // For now, allow access to moderation queue
+// 5. UPDATE MODERATION STATUS (Admin only) - REMOVED FOR MERGE  
+// app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => { ... });
 
-    const { data: moderationRecords, error } = await supabase
-      .from('content_moderation')
-      .select('*')
-      .eq('status', status)
-      .order('created_at', { ascending: false })
-      .limit(parseInt(limit));
+// 6. GET USER NOTIFICATIONS (User only) - REMOVED FOR MERGE
+// app.get('/api/notifications/:userId', rateLimitMiddleware, async (req, res) => { ... });
 
-    if (error) {
-      throw new Error('Failed to fetch moderation queue: ' + error.message);
-    }
+// 7. MARK NOTIFICATION AS READ (User only) - REMOVED FOR MERGE
+// app.put('/api/notifications/:notificationId/read', rateLimitMiddleware, async (req, res) => { ... });
 
-    res.json({
-      success: true,
-      records: moderationRecords || [],
-      total: moderationRecords ? moderationRecords.length : 0,
-      status: status
-    });
+// 8. GET ADMIN NOTIFICATIONS (Admin only) - REMOVED FOR MERGE
+// app.get('/api/admin/notifications', rateLimitMiddleware, async (req, res) => { ... });
 
-  } catch (error) {
-    console.error('❌ Moderation queue error:', error);
-    res.status(500).json({
-      error: true,
-      message: 'Failed to fetch moderation queue: ' + error.message
-    });
-  }
+// 9. GET MODERATION QUEUE WITH NOTIFICATIONS (Admin only) - REMOVED FOR MERGE
+// app.get('/api/admin/moderation/queue', rateLimitMiddleware, async (req, res) => { ... });
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'launchit-ai-backend'
+  });
 });
 
-// 5. UPDATE MODERATION STATUS (Admin only)
-app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => {
-  try {
-    const { recordId, action, adminNotes } = req.body;
+// Error handling middleware
+app.use((err, req, res, next) => {
+  res.status(500).json({
+    error: true,
+    message: 'Internal server error'
+  });
+});
 
-    if (!recordId || !action) {
-      return res.status(400).json({
-        error: true,
-        message: 'Record ID and action are required'
-      });
-    }
-
-    // TODO: Add admin authentication check
-
-    const { error } = await supabase
-      .from('content_moderation')
-      .update({
-        status: action,
-        admin_notes: adminNotes,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: 'admin' // TODO: Replace with actual admin user ID
-      })
-      .eq('id', recordId);
-
-    if (error) {
-      throw new Error('Failed to update moderation status: ' + error.message);
-    }
-
-    res.json({
-      success: true,
-      message: 'Moderation status updated successfully',
-      recordId: recordId,
-      action: action
-    });
-
-  } catch (error) {
-    console.error('❌ Moderation status update error:', error);
-    res.status(500).json({
-      error: true,
-      message: 'Failed to update moderation status: ' + error.message
-    });
-  }
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: true,
+    message: 'Endpoint not found'
+  });
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () =>
-  console.log(`�� AI backend running on port ${PORT}`)
-);
+app.listen(PORT, () => {
+  // Server started successfully
+});

@@ -1,4 +1,12 @@
 {
+  "name": "launchit",
+  "version": "1.0.0",
+  "description": "LaunchIT - Startup Discovery Platform",
+  "scripts": {
+    "build": "cd startuphunt && npm install && npm run build",
+    "dev": "cd startuphunt && npm run dev",
+    "preview": "cd startuphunt && npm run preview"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",
     "dotenv": "^17.2.0",

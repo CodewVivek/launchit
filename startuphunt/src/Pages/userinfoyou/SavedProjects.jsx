@@ -51,7 +51,7 @@ const SavedProjects = () => {
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Error fetching saved projects:', error);
+                
                 setError('Failed to load your saved projects');
                 toast.error('Failed to load your saved projects');
             } else {
@@ -67,7 +67,7 @@ const SavedProjects = () => {
                 setSavedProjects(validProjects);
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             setError('An error occurred while loading your saved projects');
             toast.error('An error occurred while loading your saved projects');
         } finally {
@@ -83,14 +83,14 @@ const SavedProjects = () => {
                 .eq('id', savedId);
 
             if (error) {
-                console.error('Error removing from saved:', error);
+                
                 toast.error('Failed to remove from saved');
             } else {
                 setSavedProjects(prev => prev.filter(project => project.saved_id !== savedId));
                 toast.success(`Removed "${projectName}" from saved projects`);
             }
         } catch (error) {
-            console.error('Error:', error);
+            
             toast.error('An error occurred while removing from saved');
         }
     };
