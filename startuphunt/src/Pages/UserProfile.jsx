@@ -412,12 +412,15 @@ const UserProfile = () => {
         {/* Profile Info */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8 transition-colors duration-300">
           <div className="flex flex-col md:flex-row items-center gap-6">
+            {/* Profile Image */}
             <img
               src={profile.avatar_url || "https://api.dicebear.com/6.x/initials/svg?seed=" + profile.username}
               alt="Profile"
               className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white object-cover shadow-md"
               loading="lazy"
             />
+
+            {/* Profile Info */}
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 {profile.full_name || profile.username || "Unnamed User"}
@@ -428,42 +431,78 @@ const UserProfile = () => {
               <p className="text-gray-700 mb-4 max-w-xl mx-auto md:mx-0">
                 {profile.bio || "This user has not written a bio yet"}
               </p>
+
+              {/* Social Links */}
               <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-500">
-                {profile.twitter && (<a href={profile.twitter} target="_blank" rel="noreferrer" className="hover:text-blue-500 flex items-center gap-1.5 transition-colors"> <Twitter className="w-4 h-4" /><span>Twitter</span></a>)}
-                {profile.linkedin && (<a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-blue-700 flex items-center gap-1.5 transition-colors"> <Linkedin className="w-4 h-4" /><span>LinkedIn</span></a>)}
-                {profile.youtube && (<a href={profile.youtube} target="_blank" rel="noreferrer" className="hover:text-red-600 flex items-center gap-1.5 transition-colors"> <Youtube className="w-4 h-4" /><span>YouTube</span></a>)}
-                {profile.portfolio && (<a href={profile.portfolio} target="_blank" rel="noreferrer" className="hover:text-gray-800 flex items-center gap-1.5 transition-colors"> <Briefcase className="w-4 h-4" /><span>Portfolio</span></a>)}
+                {profile.twitter && (
+                  <a href={profile.twitter} target="_blank" rel="noreferrer" className="hover:text-blue-500 flex items-center gap-1.5 transition-colors">
+                    <Twitter className="w-4 h-4" /><span>Twitter</span>
+                  </a>
+                )}
+                {profile.linkedin && (
+                  <a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-blue-700 flex items-center gap-1.5 transition-colors">
+                    <Linkedin className="w-4 h-4" /><span>LinkedIn</span>
+                  </a>
+                )}
+                {profile.youtube && (
+                  <a href={profile.youtube} target="_blank" rel="noreferrer" className="hover:text-red-600 flex items-center gap-1.5 transition-colors">
+                    <Youtube className="w-4 h-4" /><span>YouTube</span>
+                  </a>
+                )}
+                {profile.portfolio && (
+                  <a href={profile.portfolio} target="_blank" rel="noreferrer" className="hover:text-gray-800 flex items-center gap-1.5 transition-colors">
+                    <Briefcase className="w-4 h-4" /><span>Portfolio</span>
+                  </a>
+                )}
               </div>
             </div>
-            {currentUser && currentUser.id !== profile.id && (
-              <button
-                onClick={handleFollow}
-                disabled={followLoading}
-                className={`mt-4 md:mt-0 md:ml-auto px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md self-center md:self-start ${isFollowing ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {followLoading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto" />
-                ) : isFollowing ? (
-                  <div className="flex items-center gap-2"> <UserCheck className="w-4 h-4" />Following </div>
-                ) : (
-                  <div className="flex items-center gap-2"> <UserPlus className="w-4 h-4" />Follow </div>
-                )}
-              </button>
-            )}
-            {isOwner && (
-              <button
-                onClick={() => navigate("/settings")}
-                className="mt-4 md:mt-0 md:ml-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md self-center md:self-start"
-              >
-                Edit Profile
-              </button>
-            )}
-            {/* Share Profile Button */}
-            <div className="mt-4 md:mt-0 md:ml-2">
-              <Share projectSlug={profile.username} projectName={`${profile.full_name || profile.username}'s Profile`} isProfile={true} />
+
+            {/* Action Buttons */}
+            <div className="flex flex-col md:flex-row items-center gap-3 md:ml-auto">
+              {/* Follow Button */}
+              {currentUser && currentUser.id !== profile.id && (
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md ${isFollowing
+                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {followLoading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto" />
+                  ) : isFollowing ? (
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="w-4 h-4" /> Following
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="w-4 h-4" /> Follow
+                    </div>
+                  )}
+                </button>
+              )}
+
+              {/* Edit Profile (if owner) */}
+              {isOwner && (
+                <button
+                  onClick={() => navigate("/settings")}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md"
+                >
+                  Edit Profile
+                </button>
+              )}
+
+              {/* Share Button */}
+              <Share
+                projectSlug={profile.username}
+                projectName={`${profile.full_name || profile.username}'s Profile`}
+                isProfile={true}
+              />
             </div>
           </div>
         </div>
+
         {/* Tab Navigation */}
         <div className="flex space-x-8 border-b border-gray-200">
           <button
@@ -596,7 +635,7 @@ const UserProfile = () => {
                   {isOwner ? "No Launches Yet" : "No Launches Found"}
                 </h4>
                 <p className="text-gray-600 mb-4 max-w-md mx-auto">
-                  {isOwner 
+                  {isOwner
                     ? "You haven't launched any projects yet. Start building and share your ideas with the world!"
                     : "This user hasn't launched any projects yet."
                   }
