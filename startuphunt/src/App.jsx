@@ -72,7 +72,7 @@ function AppRoutes() {
       )}
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-hidden ${mainContentMargin}`}>
         {!hideHeaderFooter && <Header onMenuClick={handleSidebarToggle} />}
-        <main className="flex-grow pt-24 sm:pt-16 w-full max-w-full overflow-x-hidden" style={{ minHeight: "100%" }}>
+        <main className="flex-grow pt-20 sm:pt-16 w-full max-w-full overflow-x-hidden" style={{ minHeight: "100%" }}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route path="/admin" element={
