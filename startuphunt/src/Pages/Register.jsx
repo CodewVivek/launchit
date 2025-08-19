@@ -1315,7 +1315,8 @@ const Register = () => {
                                 lastModified: Date.now()
                             });
 
-                            'Original size:', file.size, 'bytes',
+                            console.log(
+                                'Original size:', file.size, 'bytes',
                                 'New size:', qualityFile.size, 'bytes',
                                 'Quality maintained:', qualityFile.size >= file.size * 0.9 ? 'Yes' : 'Warning'
                             );
