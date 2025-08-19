@@ -464,7 +464,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[70] shadow-xl">
                             <button
                                 onClick={() => handleLaunchItemClick('submit')}
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -511,7 +511,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {open && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[70] shadow-xl">
                             {user ? (
                                 <>
                                     <div className="px-4 py-2 border-b border-gray-200">
@@ -573,7 +573,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[70] shadow-xl">
                             <button
                                 onClick={() => handleLaunchItemClick('submit')}
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -617,7 +617,7 @@ const Header = ({ onMenuClick }) => {
                         )}
                     </button>
                     {open && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[70] shadow-xl">
                             {user ? (
                                 <>
                                     <div className="px-4 py-2 border-b border-gray-200">
@@ -665,7 +665,7 @@ const Header = ({ onMenuClick }) => {
                 </div>
             </div>
             {/* Mobile Search Bar */}
-            <div className="block md:hidden absolute top-full left-0 right-0 px-3 sm:px-4 py-2 bg-white border-t border-gray-200 z-30">
+            <div className="block md:hidden absolute top-full left-0 right-0 px-3 sm:px-4 py-2 bg-blue-500 border-t border-blue-400 z-30">
                 <div className="relative w-full max-w-full mx-auto">
                     <input
                         type="text"
