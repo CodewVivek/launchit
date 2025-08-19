@@ -36,18 +36,7 @@ const Share = ({ projectSlug, projectName = "this project", isProfile = false })
   const shareUrl = isProfile ? `${baseUrl}/profile/${projectSlug}` : `${baseUrl}/launches/${projectSlug}`;
   const title = isProfile ? `Check out ${projectName} on launchit!` : `Check out ${projectName} on launchit!`;
 
-  // Debug logging for development
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.log('Share component debug:', {
-        hostname: window.location.hostname,
-        protocol: window.location.protocol,
-        baseUrl,
-        shareUrl,
-        projectSlug
-      });
-    }
-  }, [baseUrl, shareUrl, projectSlug]);
+
 
   useEffect(() => {
     const handleEscape = (e) => {

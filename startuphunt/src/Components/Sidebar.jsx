@@ -89,7 +89,7 @@ const Sidebar = ({ isOpen }) => {
 
     if (!isOpen) {
         return (
-            <aside className={`fixed left-0 top-14 w-16 h-[calc(100vh-64px)] bg-white overflow-y-auto shadow-lg ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
+            <aside className={`fixed left-0 top-[75px] w-16 h-[calc(100vh-75px)] bg-white overflow-y-auto shadow-lg ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
                 {/* Main Navigation */}
                 <div className="p-2">
                     <div className="space-y-2">
@@ -140,17 +140,14 @@ const Sidebar = ({ isOpen }) => {
                         ))}
                     </div>
                 </div>
-
             </aside>
         );
     }
 
     return (
-        <aside className={`fixed left-0 top-[72px] w-60 h-[calc(100vh-72px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'}`}>
+        <aside className={`fixed left-0 top-[82px] w-60 h-[calc(100vh-82px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'}`}>
             {/* Main sidebar content */}
             <div className="py-4 px-2">
-
-
                 {/* Main Navigation */}
                 <div className="space-y-1">
                     {mainItems.map((item) => (

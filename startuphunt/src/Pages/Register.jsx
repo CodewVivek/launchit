@@ -566,7 +566,7 @@ const Register = () => {
             if (logoFile && typeof logoFile !== 'string') {
                 // User uploaded file - preserve quality and upload
                 try {
-                    console.log('🔄 Processing user uploaded logo for quality preservation...');
+
                     const qualityFile = await preserveImageQuality(logoFile);
 
                     // Verify quality was maintained
@@ -583,7 +583,7 @@ const Register = () => {
                     }
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                     logoUrl = logoUrlData.publicUrl;
-                    console.log('✅ Logo uploaded with quality preservation');
+
                 } catch (error) {
                     console.error('Logo quality preservation failed, uploading original:', error);
                     // Fallback to original file if quality preservation fails
@@ -595,30 +595,25 @@ const Register = () => {
                     }
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                     logoUrl = logoUrlData.publicUrl;
-                    console.log('✅ Logo uploaded with original file (fallback)');
+
                 }
             } else if (logoFile && typeof logoFile === 'string') {
                 // AI-generated logo URL - download and upload to our storage
                 try {
-                    console.log('🔄 Processing AI-generated logo:', logoFile);
-                    console.log('📥 Fetching logo from URL...');
+
 
                     const response = await fetch(logoFile);
                     if (!response.ok) {
                         throw new Error(`Failed to fetch AI logo: ${response.status}`);
                     }
 
-                    console.log('✅ Logo fetched successfully, converting to blob...');
                     const blob = await response.blob();
-                    console.log('📦 Blob created:', blob.size, 'bytes, type:', blob.type);
 
                     const aiLogoFile = new File([blob], 'ai-generated-logo.png', { type: blob.type || 'image/png' });
-                    console.log('📁 File created:', aiLogoFile.name, 'size:', aiLogoFile.size);
+
 
                     // Preserve quality and upload
-                    console.log('🎨 Preserving image quality...');
                     const qualityFile = await preserveImageQuality(aiLogoFile);
-                    console.log('✨ Quality preserved, uploading to Supabase...');
 
                     const logoPath = `${Date.now()}-ai-logo-${nanoid(6)}.png`;
                     const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, qualityFile);
@@ -628,13 +623,13 @@ const Register = () => {
                         throw new Error(`AI logo upload failed: ${logoErrorUpload.message}`);
                     }
 
-                    console.log('✅ Logo uploaded to Supabase, getting public URL...');
+
                     const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                     logoUrl = logoUrlData.publicUrl;
-                    console.log('🎉 AI logo successfully uploaded to:', logoUrl);
+
                 } catch (error) {
                     console.error('❌ AI logo processing failed:', error);
-                    console.log('🔄 Falling back to original AI logo URL:', logoFile);
+
                     // Keep the original AI logo URL as fallback
                     logoUrl = logoFile;
                 }
