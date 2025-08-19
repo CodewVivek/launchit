@@ -405,8 +405,8 @@ app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     service: 'launchit-ai-backend'
   });
