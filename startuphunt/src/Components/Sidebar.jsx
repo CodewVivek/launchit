@@ -205,7 +205,7 @@ const Sidebar = ({ isOpen }) => {
                                 }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-black hover:bg-gray-100"
                             >
-                                <item.icon className="w-6 h-6" />
+                                <item.icon className="w-6 h-6 flex-shrink-0" style={{ transform: 'translateY(1px)' }} />
                                 <span>{item.title}</span>
                             </button>
                         ) : (
@@ -217,7 +217,7 @@ const Sidebar = ({ isOpen }) => {
                                     : "text-black hover:bg-gray-100"
                                     }`}
                             >
-                                <item.icon className="w-6 h-6" />
+                                <item.icon className="w-6 h-6 flex-shrink-0" />
                                 <span>{item.title}</span>
                             </Link>
                         )
