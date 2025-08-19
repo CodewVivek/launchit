@@ -738,7 +738,7 @@ const Register = () => {
             }
             submissionData.cover_urls = coverUrls;
 
-            
+
 
 
 
@@ -1315,86 +1315,86 @@ const Register = () => {
                                 lastModified: Date.now()
                             });
 
-                                'Original size:', file.size, 'bytes',
+                            'Original size:', file.size, 'bytes',
                                 'New size:', qualityFile.size, 'bytes',
                                 'Quality maintained:', qualityFile.size >= file.size * 0.9 ? 'Yes' : 'Warning'
                             );
 
-                            resolve(qualityFile);
-                        } else {
-                            console.warn('⚠️ Blob creation failed, using original file');
-                            resolve(file);
-                        }
-                    }, outputType, quality);
-                } catch (error) {
-                    console.error('❌ Image processing error:', error);
-                    console.warn('⚠️ Using original file due to processing error');
+                    resolve(qualityFile);
+                } else {
+                    console.warn('⚠️ Blob creation failed, using original file');
                     resolve(file);
                 }
-            };
+            }, outputType, quality);
+    } catch (error) {
+        console.error('❌ Image processing error:', error);
+        console.warn('⚠️ Using original file due to processing error');
+        resolve(file);
+    }
+};
 
-            img.onerror = () => {
-                console.error('❌ Image loading failed, using original file');
-                resolve(file);
-            };
+img.onerror = () => {
+    console.error('❌ Image loading failed, using original file');
+    resolve(file);
+};
 
-            // Create object URL for image loading
-            const objectUrl = URL.createObjectURL(file);
-            img.src = objectUrl;
+// Create object URL for image loading
+const objectUrl = URL.createObjectURL(file);
+img.src = objectUrl;
 
-            // Clean up object URL after loading
-            img.onload = () => {
-                URL.revokeObjectURL(objectUrl);
-                img.onload(); // Call the original onload
-            };
+// Clean up object URL after loading
+img.onload = () => {
+    URL.revokeObjectURL(objectUrl);
+    img.onload(); // Call the original onload
+};
         });
     };
 
-    const handleImageUpload = async (file, type) => {
-        try {
-            // Validate image quality first
-            await validateImageQuality(file);
+const handleImageUpload = async (file, type) => {
+    try {
+        // Validate image quality first
+        await validateImageQuality(file);
 
-            // Preserve image quality
-            const qualityFile = await preserveImageQuality(file);
+        // Preserve image quality
+        const qualityFile = await preserveImageQuality(file);
 
-            // Upload the quality-preserved file
-            const timestamp = Date.now();
-            const fileName = `${timestamp}-${type}-${sanitizeFileName(file.name)}`;
+        // Upload the quality-preserved file
+        const timestamp = Date.now();
+        const fileName = `${timestamp}-${type}-${sanitizeFileName(file.name)}`;
 
-            const { data, error } = await supabase.storage
-                .from('startup-media')
-                .upload(fileName, qualityFile, {
-                    cacheControl: '3600',
-                    upsert: false
-                });
+        const { data, error } = await supabase.storage
+            .from('startup-media')
+            .upload(fileName, qualityFile, {
+                cacheControl: '3600',
+                upsert: false
+            });
 
-            if (error) {
-                throw new Error(`Upload failed: ${error.message}`);
-            }
-
-            const { data: urlData } = supabase.storage
-                .from('startup-media')
-                .getPublicUrl(fileName);
-
-            return urlData.publicUrl;
-        } catch (error) {
-            console.error(`${type} upload error:`, error);
-            throw error;
+        if (error) {
+            throw new Error(`Upload failed: ${error.message}`);
         }
-    };
 
-    if (loadingProject) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-        );
+        const { data: urlData } = supabase.storage
+            .from('startup-media')
+            .getPublicUrl(fileName);
+
+        return urlData.publicUrl;
+    } catch (error) {
+        console.error(`${type} upload error:`, error);
+        throw error;
     }
+};
 
+if (loadingProject) {
     return (
-        <div className="min-h-screen font-sans antialiased text-gray-800 pb-20">
-            <style>{`
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+    );
+}
+
+return (
+    <div className="min-h-screen font-sans antialiased text-gray-800 pb-20">
+        <style>{`
                 .form-tab-panel {
                     padding: 2rem;
                     display: none;
@@ -1529,554 +1529,554 @@ const Register = () => {
                     }
                 }
             `}</style>
-            <div className="max-w-4xl mx-auto px-4 lg:px-0">
-                <header className="text-center py-8">
-                    <h1 className="text-3xl font-bold mb-2">Submit Your Launch</h1>
-                    <p className="text-gray-500 mt-2">
-                        Get your product in front of the right audience. Be seen, gain traction, and grow with confidence!
-                    </p>
-                </header>
-                <div className="form-container">
-                    {/* Tabs for Navigation */}
-                    <nav className="flex justify-center border-b border-gray-200 px-2 pt-1">
-                        <button
-                            type="button"
-                            onClick={() => setStep(1)}
-                            className={`tab-button ${step === 1 ? 'active' : ''}`}
-                        >
-                            Basic Info
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setStep(2)}
-                            className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
+        <div className="max-w-4xl mx-auto px-4 lg:px-0">
+            <header className="text-center py-8">
+                <h1 className="text-3xl font-bold mb-2">Submit Your Launch</h1>
+                <p className="text-gray-500 mt-2">
+                    Get your product in front of the right audience. Be seen, gain traction, and grow with confidence!
+                </p>
+            </header>
+            <div className="form-container">
+                {/* Tabs for Navigation */}
+                <nav className="flex justify-center border-b border-gray-200 px-2 pt-1">
+                    <button
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className={`tab-button ${step === 1 ? 'active' : ''}`}
+                    >
+                        Basic Info
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setStep(2)}
+                        className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 2 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                        >
-                            Media & Images
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setStep(3)}
-                            className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
+                    >
+                        Media & Images
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setStep(3)}
+                        className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
                                 ${step === 3 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                        >
-                            Additional Details
-                        </button>
-                    </nav>
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Step-specific content */}
-                        {step === 1 && (
-                            <div className="form-tab-panel active">
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="form-field-group">
-                                            <label className="form-label" htmlFor="name">
-                                                Name of the launch <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                id="name"
-                                                name="name"
-                                                value={formData.name}
-                                                onChange={handleInputChange}
-                                                className="form-input"
-                                                maxLength={30}
-                                                disabled={editingLaunched}
-                                                placeholder='e.g launchit'
-                                            />
-                                            <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
+                    >
+                        Additional Details
+                    </button>
+                </nav>
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Step-specific content */}
+                    {step === 1 && (
+                        <div className="form-tab-panel active">
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="form-field-group">
+                                        <label className="form-label" htmlFor="name">
+                                            Name of the launch <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="name"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            className="form-input"
+                                            maxLength={30}
+                                            disabled={editingLaunched}
+                                            placeholder='e.g launchit'
+                                        />
+                                        <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
 
-                                            {/* Content Moderation will be checked on submit */}
-                                        </div>
-                                        <div className="form-field-group">
-                                            <label className="form-label" htmlFor="websiteUrl">
-                                                Website URL <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                id="websiteUrl"
-                                                name="websiteUrl"
-                                                value={formData.websiteUrl}
-                                                onChange={handleInputChange}
-                                                onBlur={handleUrlBlur}
-                                                className={`form-input ${urlError ? 'border-red-500' : ''}`}
-                                                placeholder="https://yourproject.com"
-                                                disabled={editingLaunched}
-                                            />
-                                            {urlError && <p className="text-red-500 text-sm mt-1">{urlError}</p>}
-                                            <div className="flex gap-2">
+                                        {/* Content Moderation will be checked on submit */}
+                                    </div>
+                                    <div className="form-field-group">
+                                        <label className="form-label" htmlFor="websiteUrl">
+                                            Website URL <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="websiteUrl"
+                                            name="websiteUrl"
+                                            value={formData.websiteUrl}
+                                            onChange={handleInputChange}
+                                            onBlur={handleUrlBlur}
+                                            className={`form-input ${urlError ? 'border-red-500' : ''}`}
+                                            placeholder="https://yourproject.com"
+                                            disabled={editingLaunched}
+                                        />
+                                        {urlError && <p className="text-red-500 text-sm mt-1">{urlError}</p>}
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={handleGenerateLaunchData}
+                                                disabled={isAILoading || isRetrying}
+                                                className={`btn-text-icon ${isAILoading || isRetrying ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                {isAILoading || isRetrying ? (
+                                                    <>
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                                        {isRetrying ? 'Generating...' : 'Generating...'}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Wand2 className="w-4 h-4" />
+                                                        Auto-generate from URL
+                                                    </>
+                                                )}
+                                            </button>
+
+                                            {/* Fallback basic preview button */}
+                                            {!urlPreview && !isGeneratingPreview && (
                                                 <button
                                                     type="button"
-                                                    onClick={handleGenerateLaunchData}
-                                                    disabled={isAILoading || isRetrying}
-                                                    className={`btn-text-icon ${isAILoading || isRetrying ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    onClick={() => generateBasicPreview(formData.websiteUrl)}
+                                                    disabled={isGeneratingPreview || !formData.websiteUrl}
+                                                    className="btn-text-icon-secondary"
+                                                    title="Generate basic preview if AI fails"
                                                 >
-                                                    {isAILoading || isRetrying ? (
+                                                    {isGeneratingPreview ? (
                                                         <>
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                                                            {isRetrying ? 'Generating...' : 'Generating...'}
+                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                                                            Preview...
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <Wand2 className="w-4 h-4" />
-                                                            Auto-generate from URL
+                                                            <Eye className="w-4 h-4" />
+                                                            Basic Preview
                                                         </>
                                                     )}
                                                 </button>
+                                            )}
+                                        </div>
 
-                                                {/* Fallback basic preview button */}
-                                                {!urlPreview && !isGeneratingPreview && (
+                                        {/* Show preview data if available */}
+                                        {urlPreview && (
+                                            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                                    <span className="text-sm font-medium text-green-800">
+                                                        Basic preview available from {urlPreview.domain}
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs text-green-700">
+                                                    <p><strong>Title:</strong> {urlPreview.title}</p>
+                                                    <p><strong>Description:</strong> {urlPreview.description}</p>
+                                                    {urlPreview.logo && <p><strong>Logo:</strong> ✓ Found</p>}
+                                                    {urlPreview.screenshot && <p><strong>Screenshot:</strong> ✓ Found</p>}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="form-field-group">
+                                        <label className="form-label" htmlFor="tagline">
+                                            Tagline <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="tagline"
+                                            name="tagline"
+                                            value={formData.tagline}
+                                            onChange={handleTaglineChange}
+                                            className="form-input"
+                                            maxLength={60}
+                                            placeholder="catchy tagline of what the launch does."
+                                        />
+                                        <div className="text-xs text-gray-400 text-right mt-1">{taglineCharCount} / 60</div>
+
+                                        {/* Content Moderation will be checked on submit */}
+                                    </div>
+                                    <div className="form-field-group">
+                                        <label className="form-label" htmlFor="category">
+                                            Category(ies) <span className="text-red-500">*</span>
+                                        </label>
+                                        <Select
+                                            options={dynamicCategoryOptions}
+                                            isClearable={true}
+                                            isSearchable={true}
+                                            value={selectedCategory}
+                                            onChange={setSelectedCategory}
+                                            styles={customSelectStyles}
+                                            placeholder="Select a category"
+                                        />
+                                    </div>
+                                    <div className="form-field-group md:col-span-2">
+                                        <label className="form-label" htmlFor="description">
+                                            Description <span className="text-red-500">*</span>
+                                        </label>
+                                        <textarea
+                                            id="description"
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleDescriptionChange}
+                                            rows={4}
+                                            className="form-input"
+                                            placeholder="Describe your launch in detail. What problem does it solve? What makes it unique?"
+                                        />
+                                        <div className="text-xs text-gray-400 text-right mt-1">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
+
+                                        {/* Content Moderation will be checked on submit */}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {step === 2 && (
+                        <div className="form-tab-panel active">
+                            <div className="space-y-8">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-2xl font-bold">Media</h3>
+                                    <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+                                        💡 <strong>AI Tip:</strong> Use the "Auto-generate from URL" button in Step 1 to automatically generate logo and thumbnail!
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="form-label">
+                                            Logo
+                                            {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                <span className="text-red-500">*</span>
+                                            )}
+                                            {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
+                                                <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center gap-6 mt-2">
+                                            <div className="relative">
+                                                <label className="w-24 h-24 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
+                                                    <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+                                                    {logoFile ? (
+                                                        <img
+                                                            src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)}
+                                                            alt="Logo Preview"
+                                                            className="w-full h-full object-cover rounded-2xl"
+                                                            onError={(e) => typeof logoFile === 'string' ? handleImageError(e, 'logo') : null}
+                                                        />
+                                                    ) : isAILoading ? (
+                                                        <div className="flex flex-col items-center justify-center text-blue-600">
+                                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+                                                            <span className="text-xs">AI generating...</span>
+                                                        </div>
+                                                    ) : (
+                                                        <Plus className="w-6 h-6 text-gray-400" />
+                                                    )}
+                                                </label>
+                                                {logoFile && typeof logoFile === 'string' && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => generateBasicPreview(formData.websiteUrl)}
-                                                        disabled={isGeneratingPreview || !formData.websiteUrl}
-                                                        className="btn-text-icon-secondary"
-                                                        title="Generate basic preview if AI fails"
+                                                        onClick={() => viewAIImage(logoFile, 'logo')}
+                                                        className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 shadow hover:bg-blue-600 transition-colors"
+                                                        title="View AI-generated logo"
                                                     >
-                                                        {isGeneratingPreview ? (
-                                                            <>
-                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                                                                Preview...
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Eye className="w-4 h-4" />
-                                                                Basic Preview
-                                                            </>
-                                                        )}
+                                                        <Eye className="w-3 h-3" />
                                                     </button>
                                                 )}
                                             </div>
-
-                                            {/* Show preview data if available */}
-                                            {urlPreview && (
-                                                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                                        <span className="text-sm font-medium text-green-800">
-                                                            Basic preview available from {urlPreview.domain}
-                                                        </span>
+                                            <div className="text-sm text-gray-500">
+                                                Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
+                                                {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                    <div className="text-red-600 font-medium">Required if AI generation fails</div>
+                                                )}
+                                                {logoFile && (
+                                                    <div className="mt-2 space-y-1">
+                                                        <button type="button" onClick={removeLogo} className="block text-red-600 hover:text-red-800">Remove</button>
+                                                        {typeof logoFile === 'string' && (
+                                                            <div className="text-xs text-blue-600">🤖 AI-generated logo</div>
+                                                        )}
                                                     </div>
-                                                    <div className="text-xs text-green-700">
-                                                        <p><strong>Title:</strong> {urlPreview.title}</p>
-                                                        <p><strong>Description:</strong> {urlPreview.description}</p>
-                                                        {urlPreview.logo && <p><strong>Logo:</strong> ✓ Found</p>}
-                                                        {urlPreview.screenshot && <p><strong>Screenshot:</strong> ✓ Found</p>}
-                                                    </div>
-                                                </div>
+                                                )}
+                                                {isAILoading && !logoFile && (
+                                                    <div className="mt-2 text-xs text-blue-600">🔄 AI is generating logo...</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">
+                                            Thumbnail (Dashboard)
+                                            {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
+                                                <span className="text-red-500">*</span>
                                             )}
+                                            {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
+                                                <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center gap-6 mt-2">
+                                            <div className="relative">
+                                                <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
+                                                    <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
+                                                    {thumbnailFile ? (
+                                                        <img
+                                                            src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)}
+                                                            alt="Thumbnail Preview"
+                                                            className="w-full h-full object-cover rounded-lg"
+                                                            onError={(e) => typeof thumbnailFile === 'string' ? handleImageError(e, 'thumbnail') : null}
+                                                        />
+                                                    ) : isAILoading ? (
+                                                        <div className="flex flex-col items-center justify-center text-blue-600">
+                                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+                                                            <span className="text-xs">AI generating...</span>
+                                                        </div>
+                                                    ) : (
+                                                        <Plus className="w-6 h-6 text-gray-400" />
+                                                    )}
+                                                </label>
+                                                {thumbnailFile && typeof thumbnailFile === 'string' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => viewAIImage(thumbnailFile, 'thumbnail')}
+                                                        className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 shadow hover:bg-blue-600 transition-colors"
+                                                        title="View AI-generated thumbnail"
+                                                    >
+                                                        <Eye className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                                Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
+                                                {thumbnailFile && (
+                                                    <div className="mt-2 space-y-1">
+                                                        <button type="button" onClick={removeThumbnail} className="block text-red-600 hover:text-red-800">Remove</button>
+                                                        {typeof thumbnailFile === 'string' && (
+                                                            <div className="text-xs text-blue-600">🤖 AI-generated screenshot</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {isAILoading && !thumbnailFile && (
+                                                    <div className="mt-2 text-xs text-blue-600">🔄 AI is generating thumbnail...</div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="form-field-group">
-                                            <label className="form-label" htmlFor="tagline">
-                                                Tagline <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                id="tagline"
-                                                name="tagline"
-                                                value={formData.tagline}
-                                                onChange={handleTaglineChange}
-                                                className="form-input"
-                                                maxLength={60}
-                                                placeholder="catchy tagline of what the launch does."
-                                            />
-                                            <div className="text-xs text-gray-400 text-right mt-1">{taglineCharCount} / 60</div>
-
-                                            {/* Content Moderation will be checked on submit */}
+                                    </div>
+                                    <div>
+                                        <label className="form-label">
+                                            Cover image(s) <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="flex flex-wrap gap-4 mt-2">
+                                            {coverFiles.map((file, idx) => (
+                                                <div key={idx} className="relative">
+                                                    <label className="w-32 h-20 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
+                                                        <input type="file" accept="image/*" onChange={e => handleCoverChange(e, idx)} className="hidden" />
+                                                        {file ? (
+                                                            <img src={typeof file === 'string' ? file : URL.createObjectURL(file)} alt={`Cover ${idx + 1}`} className="w-full h-full object-cover rounded-lg" />
+                                                        ) : (
+                                                            <Plus className="w-6 h-6 text-gray-400" />
+                                                        )}
+                                                    </label>
+                                                    {file && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => { e.preventDefault(); removeCover(idx); }}
+                                                            className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
+                                                        >
+                                                            <X className="w-3 h-3 text-red-600" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="form-field-group">
-                                            <label className="form-label" htmlFor="category">
-                                                Category(ies) <span className="text-red-500">*</span>
-                                            </label>
-                                            <Select
-                                                options={dynamicCategoryOptions}
-                                                isClearable={true}
-                                                isSearchable={true}
-                                                value={selectedCategory}
-                                                onChange={setSelectedCategory}
-                                                styles={customSelectStyles}
-                                                placeholder="Select a category"
-                                            />
-                                        </div>
-                                        <div className="form-field-group md:col-span-2">
-                                            <label className="form-label" htmlFor="description">
-                                                Description <span className="text-red-500">*</span>
-                                            </label>
-                                            <textarea
-                                                id="description"
-                                                name="description"
-                                                value={formData.description}
-                                                onChange={handleDescriptionChange}
-                                                rows={4}
-                                                className="form-input"
-                                                placeholder="Describe your launch in detail. What problem does it solve? What makes it unique?"
-                                            />
-                                            <div className="text-xs text-gray-400 text-right mt-1">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
-
-                                            {/* Content Moderation will be checked on submit */}
+                                        <div className="text-sm text-gray-500 mt-2">
+                                            <span className="text-red-600 font-medium">Required: At least 2 cover images</span><br />
+                                            Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                        {step === 2 && (
-                            <div className="form-tab-panel active">
-                                <div className="space-y-8">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-2xl font-bold">Media</h3>
-                                        <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
-                                            💡 <strong>AI Tip:</strong> Use the "Auto-generate from URL" button in Step 1 to automatically generate logo and thumbnail!
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="form-label">
-                                                Logo
-                                                {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
-                                                    <span className="text-red-500">*</span>
-                                                )}
-                                                {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
-                                                    <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
-                                                )}
-                                            </label>
-                                            <div className="flex items-center gap-6 mt-2">
-                                                <div className="relative">
-                                                    <label className="w-24 h-24 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
-                                                        <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
-                                                        {logoFile ? (
-                                                            <img
-                                                                src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)}
-                                                                alt="Logo Preview"
-                                                                className="w-full h-full object-cover rounded-2xl"
-                                                                onError={(e) => typeof logoFile === 'string' ? handleImageError(e, 'logo') : null}
-                                                            />
-                                                        ) : isAILoading ? (
-                                                            <div className="flex flex-col items-center justify-center text-blue-600">
-                                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-                                                                <span className="text-xs">AI generating...</span>
-                                                            </div>
-                                                        ) : (
-                                                            <Plus className="w-6 h-6 text-gray-400" />
-                                                        )}
-                                                    </label>
-                                                    {logoFile && typeof logoFile === 'string' && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => viewAIImage(logoFile, 'logo')}
-                                                            className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 shadow hover:bg-blue-600 transition-colors"
-                                                            title="View AI-generated logo"
-                                                        >
-                                                            <Eye className="w-3 h-3" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
-                                                    {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
-                                                        <div className="text-red-600 font-medium">Required if AI generation fails</div>
-                                                    )}
-                                                    {logoFile && (
-                                                        <div className="mt-2 space-y-1">
-                                                            <button type="button" onClick={removeLogo} className="block text-red-600 hover:text-red-800">Remove</button>
-                                                            {typeof logoFile === 'string' && (
-                                                                <div className="text-xs text-blue-600">🤖 AI-generated logo</div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                    {isAILoading && !logoFile && (
-                                                        <div className="mt-2 text-xs text-blue-600">🔄 AI is generating logo...</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="form-label">
-                                                Thumbnail (Dashboard)
-                                                {(!urlPreview || (!urlPreview.logo && !urlPreview.screenshot)) && (
-                                                    <span className="text-red-500">*</span>
-                                                )}
-                                                {urlPreview && (urlPreview.logo || urlPreview.screenshot) && (
-                                                    <span className="text-green-500 text-xs ml-2">✓ AI Generated</span>
-                                                )}
-                                            </label>
-                                            <div className="flex items-center gap-6 mt-2">
-                                                <div className="relative">
-                                                    <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
-                                                        <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
-                                                        {thumbnailFile ? (
-                                                            <img
-                                                                src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)}
-                                                                alt="Thumbnail Preview"
-                                                                className="w-full h-full object-cover rounded-lg"
-                                                                onError={(e) => typeof thumbnailFile === 'string' ? handleImageError(e, 'thumbnail') : null}
-                                                            />
-                                                        ) : isAILoading ? (
-                                                            <div className="flex flex-col items-center justify-center text-blue-600">
-                                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-                                                                <span className="text-xs">AI generating...</span>
-                                                            </div>
-                                                        ) : (
-                                                            <Plus className="w-6 h-6 text-gray-400" />
-                                                        )}
-                                                    </label>
-                                                    {thumbnailFile && typeof thumbnailFile === 'string' && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => viewAIImage(thumbnailFile, 'thumbnail')}
-                                                            className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 shadow hover:bg-blue-600 transition-colors"
-                                                            title="View AI-generated thumbnail"
-                                                        >
-                                                            <Eye className="w-3 h-3" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
-                                                    {thumbnailFile && (
-                                                        <div className="mt-2 space-y-1">
-                                                            <button type="button" onClick={removeThumbnail} className="block text-red-600 hover:text-red-800">Remove</button>
-                                                            {typeof thumbnailFile === 'string' && (
-                                                                <div className="text-xs text-blue-600">🤖 AI-generated screenshot</div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                    {isAILoading && !thumbnailFile && (
-                                                        <div className="mt-2 text-xs text-blue-600">🔄 AI is generating thumbnail...</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="form-label">
-                                                Cover image(s) <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="flex flex-wrap gap-4 mt-2">
-                                                {coverFiles.map((file, idx) => (
-                                                    <div key={idx} className="relative">
-                                                        <label className="w-32 h-20 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
-                                                            <input type="file" accept="image/*" onChange={e => handleCoverChange(e, idx)} className="hidden" />
-                                                            {file ? (
-                                                                <img src={typeof file === 'string' ? file : URL.createObjectURL(file)} alt={`Cover ${idx + 1}`} className="w-full h-full object-cover rounded-lg" />
-                                                            ) : (
-                                                                <Plus className="w-6 h-6 text-gray-400" />
-                                                            )}
-                                                        </label>
-                                                        {file && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => { e.preventDefault(); removeCover(idx); }}
-                                                                className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
-                                                            >
-                                                                <X className="w-3 h-3 text-red-600" />
+                        </div>
+                    )}
+                    {step === 3 && (
+                        <div className="form-tab-panel active">
+                            <div className="space-y-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="form-label">Links</label>
+                                        <div className="space-y-4 mt-2">
+                                            {links.map((link, index) => {
+                                                const { label, icon } = getLinkType(link);
+                                                return (
+                                                    <div key={index} className="flex items-center gap-4">
+                                                        <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-xl">
+                                                            {icon}
+                                                        </span>
+                                                        <input
+                                                            type="url"
+                                                            value={link}
+                                                            onChange={e => updateLink(index, e.target.value)}
+                                                            placeholder={`Enter ${label} URL`}
+                                                            className="form-input flex-1"
+                                                        />
+                                                        {links.length > 1 && (
+                                                            <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600 hover:bg-gray-100 rounded-full">
+                                                                <X className="w-5 h-5" />
                                                             </button>
                                                         )}
                                                     </div>
+                                                );
+                                            })}
+                                            <button
+                                                type="button"
+                                                onClick={addLink}
+                                                className="btn-text-icon"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                                <span>Add another link</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <BuiltWithSelect value={builtWith} onChange={setBuiltWith} styles={customSelectStyles} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Tags</label>
+                                        <div className="space-y-2 mt-2">
+                                            <div className="flex flex-wrap gap-2">
+                                                {tags.map((tag, index) => (
+                                                    <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                                        {tag}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setTags(tags.filter((_, i) => i !== index))}
+                                                            className="text-blue-600 hover:text-blue-800"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </span>
                                                 ))}
                                             </div>
-                                            <div className="text-sm text-gray-500 mt-2">
-                                                <span className="text-red-600 font-medium">Required: At least 2 cover images</span><br />
-                                                Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        {step === 3 && (
-                            <div className="form-tab-panel active">
-                                <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="form-label">Links</label>
-                                            <div className="space-y-4 mt-2">
-                                                {links.map((link, index) => {
-                                                    const { label, icon } = getLinkType(link);
-                                                    return (
-                                                        <div key={index} className="flex items-center gap-4">
-                                                            <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-xl">
-                                                                {icon}
-                                                            </span>
-                                                            <input
-                                                                type="url"
-                                                                value={link}
-                                                                onChange={e => updateLink(index, e.target.value)}
-                                                                placeholder={`Enter ${label} URL`}
-                                                                className="form-input flex-1"
-                                                            />
-                                                            {links.length > 1 && (
-                                                                <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600 hover:bg-gray-100 rounded-full">
-                                                                    <X className="w-5 h-5" />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                                <button
-                                                    type="button"
-                                                    onClick={addLink}
-                                                    className="btn-text-icon"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                    <span>Add another link</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <BuiltWithSelect value={builtWith} onChange={setBuiltWith} styles={customSelectStyles} className="mt-2" />
-                                        </div>
-                                        <div>
-                                            <label className="form-label">Tags</label>
-                                            <div className="space-y-2 mt-2">
-                                                <div className="flex flex-wrap gap-2">
-                                                    {tags.map((tag, index) => (
-                                                        <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                                            {tag}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setTags(tags.filter((_, i) => i !== index))}
-                                                                className="text-blue-600 hover:text-blue-800"
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </button>
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Add tags (press Enter to add)"
-                                                    className="form-input"
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' && e.target.value.trim()) {
-                                                            e.preventDefault();
-                                                            const newTag = e.target.value.trim();
-                                                            if (!tags.includes(newTag)) {
-                                                                setTags([...tags, newTag]);
-                                                            }
-                                                            e.target.value = '';
+                                            <input
+                                                type="text"
+                                                placeholder="Add tags (press Enter to add)"
+                                                className="form-input"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && e.target.value.trim()) {
+                                                        e.preventDefault();
+                                                        const newTag = e.target.value.trim();
+                                                        if (!tags.includes(newTag)) {
+                                                            setTags([...tags, newTag]);
                                                         }
-                                                    }}
-                                                />
-                                                <div className="text-sm text-gray-500">
-                                                    AI-generated tags appear here. You can remove them or add your own.
-                                                </div>
+                                                        e.target.value = '';
+                                                    }
+                                                }}
+                                            />
+                                            <div className="text-sm text-gray-500">
+                                                AI-generated tags appear here. You can remove them or add your own.
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </form>
-                    <div className="form-actions-bar">
-                        {step > 1 && (
-                            <button
-                                type="button"
-                                onClick={() => setStep(step - 1)}
-                                className="btn-secondary"
-                            >
-                                Previous
-                            </button>
-                        )}
-                        <div className="ml-auto flex gap-4">
-                            <button
-                                type="button"
-                                onClick={handleSaveDraft}
-                                className="btn-tertiary"
-                            >
-                                Save as Draft
-                            </button>
-                            {step < 3 ? (
-                                <button
-                                    type="button"
-                                    onClick={() => setStep(step + 1)}
-                                    className="btn-primary"
-                                >
-                                    Next
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={handleSubmit}
-                                    disabled={isModerating}
-                                    className={`btn-primary ${isModerating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    {isModerating ? (
-                                        <>
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                            Checking Content...
-                                        </>
-                                    ) : (
-                                        'Submit Launch'
-                                    )}
-                                </button>
-                            )}
                         </div>
+                    )}
+                </form>
+                <div className="form-actions-bar">
+                    {step > 1 && (
+                        <button
+                            type="button"
+                            onClick={() => setStep(step - 1)}
+                            className="btn-secondary"
+                        >
+                            Previous
+                        </button>
+                    )}
+                    <div className="ml-auto flex gap-4">
+                        <button
+                            type="button"
+                            onClick={handleSaveDraft}
+                            className="btn-tertiary"
+                        >
+                            Save as Draft
+                        </button>
+                        {step < 3 ? (
+                            <button
+                                type="button"
+                                onClick={() => setStep(step + 1)}
+                                className="btn-primary"
+                            >
+                                Next
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={isModerating}
+                                className={`btn-primary ${isModerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {isModerating ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Checking Content...
+                                    </>
+                                ) : (
+                                    'Submit Launch'
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+        </div>
 
-            {/* Smart Fill Dialog */}
-            <Dialog open={showSmartFillDialog} onClose={handleSmartFillCancel} maxWidth="sm" fullWidth>
-                <DialogTitle>🤖 AI Data Generated</DialogTitle>
-                <DialogContent>
-                    <div className="space-y-4">
-                        <p className="text-gray-600">
-                            AI has successfully extracted data from your website! How would you like to proceed?
-                        </p>
+        {/* Smart Fill Dialog */}
+        <Dialog open={showSmartFillDialog} onClose={handleSmartFillCancel} maxWidth="sm" fullWidth>
+            <DialogTitle>🤖 AI Data Generated</DialogTitle>
+            <DialogContent>
+                <div className="space-y-4">
+                    <p className="text-gray-600">
+                        AI has successfully extracted data from your website! How would you like to proceed?
+                    </p>
 
-                        {pendingAIData && (
-                            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                                <h4 className="font-medium text-gray-800">Preview of AI-generated data:</h4>
-                                {pendingAIData.name && <p><strong>Name:</strong> {pendingAIData.name}</p>}
-                                {pendingAIData.tagline && <p><strong>Tagline:</strong> {pendingAIData.tagline}</p>}
-                                {pendingAIData.category && <p><strong>Category:</strong> {pendingAIData.category}</p>}
-                                {pendingAIData.features?.length > 0 && (
-                                    <p><strong>Tags:</strong> {pendingAIData.features.join(', ')}</p>
-                                )}
-                                {pendingAIData.logo_url && <p><strong>Logo:</strong> Found ✅</p>}
-                                {pendingAIData.thumbnail_url && <p><strong>Screenshot:</strong> Generated ✅</p>}
-                            </div>
-                        )}
+                    {pendingAIData && (
+                        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                            <h4 className="font-medium text-gray-800">Preview of AI-generated data:</h4>
+                            {pendingAIData.name && <p><strong>Name:</strong> {pendingAIData.name}</p>}
+                            {pendingAIData.tagline && <p><strong>Tagline:</strong> {pendingAIData.tagline}</p>}
+                            {pendingAIData.category && <p><strong>Category:</strong> {pendingAIData.category}</p>}
+                            {pendingAIData.features?.length > 0 && (
+                                <p><strong>Tags:</strong> {pendingAIData.features.join(', ')}</p>
+                            )}
+                            {pendingAIData.logo_url && <p><strong>Logo:</strong> Found ✅</p>}
+                            {pendingAIData.thumbnail_url && <p><strong>Screenshot:</strong> Generated ✅</p>}
+                        </div>
+                    )}
 
-                        <div className="space-y-3">
-                            <div className="p-3 border border-blue-200 rounded-lg bg-blue-50">
-                                <h5 className="font-medium text-blue-800">Fill All Fields</h5>
-                                <p className="text-sm text-blue-600">Replace existing data with AI-generated content</p>
-                            </div>
-                            <div className="p-3 border border-green-200 rounded-lg bg-green-50">
-                                <h5 className="font-medium text-green-800">Fill Empty Fields Only</h5>
-                                <p className="text-sm text-green-600">Keep your existing data, only fill empty fields</p>
-                            </div>
+                    <div className="space-y-3">
+                        <div className="p-3 border border-blue-200 rounded-lg bg-blue-50">
+                            <h5 className="font-medium text-blue-800">Fill All Fields</h5>
+                            <p className="text-sm text-blue-600">Replace existing data with AI-generated content</p>
+                        </div>
+                        <div className="p-3 border border-green-200 rounded-lg bg-green-50">
+                            <h5 className="font-medium text-green-800">Fill Empty Fields Only</h5>
+                            <p className="text-sm text-green-600">Keep your existing data, only fill empty fields</p>
                         </div>
                     </div>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleSmartFillCancel} color="inherit">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleSmartFillEmpty} color="success" variant="contained">
-                        Fill Empty Only
-                    </Button>
-                    <Button onClick={handleSmartFillAll} color="primary" variant="contained">
-                        Fill All Fields
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                </div>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleSmartFillCancel} color="inherit">
+                    Cancel
+                </Button>
+                <Button onClick={handleSmartFillEmpty} color="success" variant="contained">
+                    Fill Empty Only
+                </Button>
+                <Button onClick={handleSmartFillAll} color="primary" variant="contained">
+                    Fill All Fields
+                </Button>
+            </DialogActions>
+        </Dialog>
 
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={4000}
+        <Snackbar
+            open={snackbar.open}
+            autoHideDuration={4000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            sx={{ mt: '70px' }}
+        >
+            <Alert
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                sx={{ mt: '70px' }}
+                severity={snackbar.severity}
+                sx={{ width: '100%' }}
             >
-                <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: '100%' }}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </div>
-    );
+                {snackbar.message}
+            </Alert>
+        </Snackbar>
+    </div>
+);
 };
 
 export default Register;
