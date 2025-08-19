@@ -9,11 +9,10 @@ import { semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
 dotenv.config();
 
 // Check for required environment variables
-const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'OPENAI_API_KEY'];
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'OPENAI_API_KEY'];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingEnvVars.length > 0) {
-  // Missing required environment variables
   process.exit(1);
 }
 
@@ -415,7 +414,6 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
   res.status(500).json({
     error: true,
     message: 'Internal server error'
