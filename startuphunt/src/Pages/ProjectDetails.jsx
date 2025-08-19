@@ -304,49 +304,49 @@ const ProjectDetails = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 lg:gap-8 py-6 lg:py-10 px-4 lg:px-6">
+    <div className="min-h-screen overflow-x-hidden">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 py-4 sm:py-6 lg:py-10 px-3 sm:px-4 lg:px-6">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-4 justify-center">
-            <div className="flex flex-col items-center justify-center w-full max-w-2xl p-6 text-center ">
+            <div className="flex flex-col items-center justify-center w-full max-w-2xl p-3 sm:p-4 lg:p-6 text-center">
               {project.logo_url && (
                 <img
                   src={project.logo_url}
                   alt={`${project.name} logo`}
-                  className="w-16 h-16 rounded-2xl border-4 border-gray-300  shadow-lg object-contain  mx-auto mb-2 "
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl border-2 sm:border-4 border-gray-300 shadow-lg object-contain mx-auto mb-2"
                   width={64}
                   height={64}
                   loading="eager"
                 />
               )}
-              <h1 className="text-3xl lg:text-4xl font-semibold text-gray-800 mb-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-800 mb-2 px-2">
                 {project.name}
               </h1>
-              <p className="text-lg lg:text-xl text-gray-600  font-medium ">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 font-medium px-2">
                 {project.tagline}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center mt-4">
                 <a
                   href={`${project.website_url}${project.website_url.includes('?') ? '&' : '?'
                     }ref=launchit`}
                   target="_blank"
                   rel="noopener"
-                  className="px-6 lg:px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow transition text-base lg:text-lg flex items-center gap-2"
+                  className="px-4 sm:px-6 lg:px-8 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow transition text-sm sm:text-base lg:text-lg flex items-center gap-2"
                 >
                   <ExternalLink className="w-4 h-4 lg:w-5 lg:h-5" />
                   Launch {project.name}
                 </a>
 
-                <div className=" rounded-full  shadow-sm hover:shadow-md border border-gray-200  transition-all duration-300 inline-flex items-center justify-center">
+                <div className="rounded-full shadow-sm hover:shadow-md border border-gray-200 transition-all duration-300 inline-flex items-center justify-center">
                   <Like projectId={project.id} />
                 </div>
               </div>
             </div>
           </div>
-          <p className="text-base lg:text-lg text-gray-700 mb-6 whitespace-pre-line">{project.description}</p>
+          <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-6 whitespace-pre-line px-2">{project.description}</p>
           {/* Images */}
           {project.cover_urls && project.cover_urls.length > 0 && (
-            <div className="mb-10 relative">
+            <div className="mb-6 sm:mb-10 relative px-2">
               <Slider
                 dots={true}
                 infinite={project.cover_urls.length > 1}
@@ -358,6 +358,15 @@ const ProjectDetails = () => {
                 swipeToSlide={true}
                 adaptiveHeight={false}
                 className="rounded-xl overflow-hidden"
+                responsive={[
+                  {
+                    breakpoint: 768,
+                    settings: {
+                      arrows: false,
+                      dots: true
+                    }
+                  }
+                ]}
               >
                 {project.cover_urls.map((url, idx) => (
                   <div
@@ -426,7 +435,7 @@ const ProjectDetails = () => {
 
           )}
           {/* Comments */}
-          <div className=" rounded-xl shadow p-4 lg:p-6 mb-10">
+          <div className="rounded-xl shadow p-3 sm:p-4 lg:p-6 mb-6 sm:mb-10">
             <h2 className="text-lg font-bold mb-4">Comments</h2>
             <Comments projectId={project.id} className="mt-10" />
           </div>
@@ -435,8 +444,8 @@ const ProjectDetails = () => {
         </div>
         {/* Right/Sidebar Section */}
         <aside className="w-full lg:w-80 flex-shrink-0">
-          <div className="p-[2px] rounded-xl bg-gradient-to-r from-blue-400 to-sky-300 mb-6 shadow">
-            <div className="bg-white rounded-xl shadow p-4 lg:p-6 border border-gray-100">
+          <div className="p-[2px] rounded-xl bg-gradient-to-r from-blue-400 to-sky-300 mb-4 sm:mb-6 shadow">
+            <div className="bg-white rounded-xl shadow p-3 sm:p-4 lg:p-6 border border-gray-100">
               {/* launch Info */}
               <h2 className="text-lg font-bold mb-4">Launch Info</h2>
               <div className="flex items-center gap-2 mb-2">
@@ -445,7 +454,7 @@ const ProjectDetails = () => {
                   }ref=launchit`}
                   target="_blank"
                   rel="noopener"
-                  className="text-blue-700 hover:underline truncate text-sm">
+                  className="text-blue-700 hover:underline truncate text-sm break-all">
                   {project.website_url}
                 </a>
               </div>
@@ -465,12 +474,12 @@ const ProjectDetails = () => {
                       <img
                         src={creator.avatar_url || '/default-avatar.png'}
                         alt="creator avatar"
-                        className="w-10 h-10 rounded-full border object-cover"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border object-cover"
                         loading="eager"
                         decoding="async"
                       />
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-800 truncate">
                           {creator.full_name || 'Anonymous'}
                         </p>
                         <p className="text-xs text-gray-500">View profile</p>
