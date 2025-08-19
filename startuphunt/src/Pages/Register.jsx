@@ -707,7 +707,7 @@ const Register = () => {
                     if (file && typeof file !== 'string') {
                         // User uploaded file - preserve quality and upload
                         try {
-        
+
                             const qualityFile = await preserveImageQuality(file);
 
                             // Verify quality was maintained
@@ -724,7 +724,7 @@ const Register = () => {
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                             coverUrls.push(coverUrlData.publicUrl);
-        
+
                         } catch (error) {
                             console.error(`Cover image ${i + 1} quality preservation failed, uploading original:`, error);
                             // Fallback to original file if quality preservation fails
@@ -736,7 +736,7 @@ const Register = () => {
                             }
                             const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                             coverUrls.push(coverUrlData.publicUrl);
-        
+
                         }
                     } else if (typeof file === 'string') {
                         coverUrls.push(file);
@@ -749,15 +749,13 @@ const Register = () => {
 
 
 
-            console.log('��️ Logo File Type:', typeof logoFile);
 
 
 
-            console.log('📁 Final Cover URLs:', coverUrls);
-            console.log('📊 Complete Submission Data:', submissionData);
-            console.log('🎯 Logo URL in submissionData:', submissionData.logo_url);
-            console.log('🎯 Thumbnail URL in submissionData:', submissionData.thumbnail_url);
-            console.log('🎯 Cover URLs in submissionData:', submissionData.cover_urls);
+
+
+
+
 
             let finalSubmissionData;
             if (isEditing && editingProjectId) {
@@ -876,7 +874,6 @@ const Register = () => {
                 });
             }
         } catch (error) {
-            console.log('Basic preview failed, continuing with manual input');
         } finally {
             setIsGeneratingPreview(false);
         }
@@ -1276,7 +1273,6 @@ const Register = () => {
 
             // If it's already a high-quality format and small enough, don't process
             if (file.size < 5 * 1024 * 1024 && (fileType.includes('png') || fileType.includes('webp'))) {
-                console.log('🔄 Image already high quality, skipping processing:', file.name, file.size);
                 resolve(file);
                 return;
             }
@@ -1287,7 +1283,6 @@ const Register = () => {
 
             img.onload = () => {
                 try {
-                    console.log('🖼️ Processing image:', file.name, 'Original size:', img.width, 'x', img.height);
 
                     // Set canvas size to match image dimensions (no resizing)
                     canvas.width = img.width;
@@ -1322,7 +1317,6 @@ const Register = () => {
                         }
                     }
 
-                    console.log('🎨 Output format:', outputType, 'Quality:', quality);
 
                     // Convert to blob with maximum quality
                     canvas.toBlob((blob) => {
@@ -1333,7 +1327,6 @@ const Register = () => {
                                 lastModified: Date.now()
                             });
 
-                            console.log('✅ Quality preserved:',
                                 'Original size:', file.size, 'bytes',
                                 'New size:', qualityFile.size, 'bytes',
                                 'Quality maintained:', qualityFile.size >= file.size * 0.9 ? 'Yes' : 'Warning'

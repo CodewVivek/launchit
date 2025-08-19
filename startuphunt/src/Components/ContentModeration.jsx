@@ -70,7 +70,6 @@ const ContentModeration = ({
         // This automatically happens in the backend when content is rejected
         // The backend stores the rejection in the content_moderation table
         // Admins can see this in their moderation dashboard
-        console.log('Content automatically reported to admin:', {
             content: content.substring(0, 100) + '...',
             contentType,
             userId,
