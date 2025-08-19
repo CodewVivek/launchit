@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Rocket } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
@@ -120,11 +120,10 @@ const Like = ({ projectId }) => {
     <>
       <button
         onClick={handleLike}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${
-          liked
+        className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${liked
             ? "bg-green-100 text-green-700 hover:bg-green-200"
             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-        }`}
+          }`}
       >
         <Rocket
           className={`w-4 h-4 ${animateRocket ? "animate-bounce" : ""}`}
