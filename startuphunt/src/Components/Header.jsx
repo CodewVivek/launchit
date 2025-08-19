@@ -274,7 +274,7 @@ const Header = ({ onMenuClick }) => {
         (searchSuggestions?.tags?.length || 0);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-[50] flex items-center justify-between px-2 sm:px-4 py-3 sm:py-4 bg-gray-800  min-h-[64px] sm:min-h-[72px]">
+        <header className="fixed top-0 left-0 right-0 z-[50] flex items-center justify-between px-3 sm:px-4 py-3 sm:py-4 bg-white  min-h-[64px] sm:min-h-[72px]">
 
             {/* Left side with menu button and logo */}
             <div className="flex items-center space-x-3 sm:space-x-4">

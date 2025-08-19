@@ -146,10 +146,9 @@ const Sidebar = ({ isOpen }) => {
     }
 
     return (
-        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white overflow-y-auto shadow-xl ${isProjectDetails ? 'z-50' : 'z-40'}`}>
+        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-82px)] bg-white overflow-y-auto shadow-xl ${isProjectDetails ? 'z-50' : 'z-40'}`}>
             {/* Main sidebar content */}
-            <div className="py-4 px-2"> {/* Corrected: Use py-4 and px-2 for consistent spacing */}
-                {/* Mobile Search Bar - Only visible when sidebar is open */}
+            <div className="py-4 px-2">
                 <div className="block lg:hidden px-2 mb-4">
                     <div className="relative">
                         <input
