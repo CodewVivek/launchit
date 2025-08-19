@@ -692,7 +692,7 @@ const Register = () => {
                     }
                     const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                     thumbnailUrl = thumbUrlData.publicUrl;
-                    console.log('AI thumbnail successfully uploaded to:', thumbnailUrl);
+
                 } catch (error) {
                     console.error('AI thumbnail processing failed:', error);
                     // Keep the original AI thumbnail URL as fallback
@@ -707,7 +707,7 @@ const Register = () => {
                     if (file && typeof file !== 'string') {
                         // User uploaded file - preserve quality and upload
                         try {
-                            console.log(`🔄 Processing cover image ${i + 1} for quality preservation...`);
+        
                             const qualityFile = await preserveImageQuality(file);
 
                             // Verify quality was maintained
