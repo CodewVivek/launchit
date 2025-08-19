@@ -204,7 +204,6 @@ const Header = ({ onMenuClick }) => {
             }
         } catch (error) {
             console.error('Search input error:', error);
-            // Don't show error toast for input errors, just log them
         }
     }, [performSearch]);
 

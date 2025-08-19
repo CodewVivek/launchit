@@ -92,7 +92,6 @@ const Register = () => {
     const [tags, setTags] = useState([]);
     const [dynamicCategoryOptions, setDynamicCategoryOptions] = useState(categoryOptions);
 
-    // Smart Fill Dialog States
     const [showSmartFillDialog, setShowSmartFillDialog] = useState(false);
     const [pendingAIData, setPendingAIData] = useState(null);
     const [isAILoading, setIsAILoading] = useState(false);
@@ -151,7 +150,6 @@ const Register = () => {
         const file = e.target.files[0];
         if (file) {
             try {
-                // Optimize logo image before setting
                 const optimizedFile = await optimizeImage(file, 'logo');
                 setLogoFile(optimizedFile);
             } catch (error) {
@@ -377,7 +375,6 @@ const Register = () => {
             errors.push('Please select a category for your startup');
         }
 
-        // STEP 2: Cover Images (2 required) + Logo/Thumbnail (if AI generation failed)
 
         // Check cover images - require at least 2
         const validCoverFiles = coverFiles.filter(file => file !== null);
@@ -385,7 +382,6 @@ const Register = () => {
             errors.push('Please upload at least 2 cover images for your startup');
         }
 
-        // Check logo/thumbnail - required if AI generation failed or no preview available
         const hasAIGeneratedImages = urlPreview && (urlPreview.logo || urlPreview.screenshot);
         const hasUserUploadedImages = logoFile || thumbnailFile;
 
@@ -395,7 +391,6 @@ const Register = () => {
 
         // STEP 3: Optional Fields (no validation required)
         // - tags
-        // - built-with technologies  
         // - links
 
         if (errors.length > 0) {
@@ -598,7 +593,6 @@ const Register = () => {
 
                 }
             } else if (logoFile && typeof logoFile === 'string') {
-                // AI-generated logo URL - download and upload to our storage
                 try {
 
 
@@ -630,7 +624,6 @@ const Register = () => {
                 } catch (error) {
                     console.error('❌ AI logo processing failed:', error);
 
-                    // Keep the original AI logo URL as fallback
                     logoUrl = logoFile;
                 }
             }
@@ -745,7 +738,7 @@ const Register = () => {
             }
             submissionData.cover_urls = coverUrls;
 
-            // Log submission data for debugging
+            
 
 
 
@@ -982,7 +975,6 @@ const Register = () => {
                     severity: 'success'
                 });
             } else {
-                // If 4+ fields filled, show dialog for user choice
                 setPendingAIData(processedData);
                 setShowSmartFillDialog(true);
             }
@@ -1059,7 +1051,6 @@ const Register = () => {
             setLinks(gptData.links);
         }
 
-        // Set AI-extracted logo URL (only if user doesn't have logo or onlyEmptyFields is false)
         if (gptData.logo_url && (!onlyEmptyFields || !logoFile)) {
             setLogoFile(gptData.logo_url);
         }
@@ -1091,7 +1082,6 @@ const Register = () => {
                     isNew: true
                 };
 
-                // Add the new category to the "🧪 Emerging Technologies" group
                 const updatedCategoryOptions = [...dynamicCategoryOptions];
                 const emergingTechIndex = updatedCategoryOptions.findIndex(
                     group => group.label === "🧪 Emerging Technologies"
@@ -1100,7 +1090,6 @@ const Register = () => {
                 if (emergingTechIndex !== -1) {
                     updatedCategoryOptions[emergingTechIndex].options.push(categoryOption);
                 } else {
-                    // If no Emerging Technologies group, create a new group
                     updatedCategoryOptions.push({
                         label: "🤖 AI-Detected Categories",
                         options: [categoryOption]
@@ -1251,7 +1240,6 @@ const Register = () => {
                     return;
                 }
 
-                // Check aspect ratio for logo/thumbnail (should be roughly square)
                 const aspectRatio = img.width / img.height;
                 if (aspectRatio < 0.5 || aspectRatio > 2) {
                     reject(new Error('Logo/thumbnail should have a reasonable aspect ratio (not too wide or tall)'));

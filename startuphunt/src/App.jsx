@@ -152,7 +152,6 @@ function App() {
     // Mark subscription fixes as applied
     markSubscriptionFixesApplied();
 
-    // Log performance improvements
     logPageSpeedImprovements();
 
     return () => {

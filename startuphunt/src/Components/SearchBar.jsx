@@ -56,7 +56,6 @@ const SearchBar = () => {
       const aiResults = await semanticSearch(search, 20, {});
       if (aiResults.success && aiResults.results.length > 0) {
 
-        // You can handle AI results here without changing existing logic
       }
     } catch (error) {
       

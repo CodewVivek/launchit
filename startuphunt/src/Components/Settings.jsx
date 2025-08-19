@@ -39,7 +39,6 @@ const Settings = () => {
   const handleDeleteAccount = async () => {
     try {
       if (!profile) return;
-      // Simplified deletion logic
       await supabase.rpc("delete_user_account");
       await supabase.auth.signOut();
       setSnackbar({
