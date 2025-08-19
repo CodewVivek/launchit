@@ -4,7 +4,7 @@ import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
 import fetch from "node-fetch";
 import cors from "cors";
-import { moderateContent, semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
+import { semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
 
 dotenv.config();
 
