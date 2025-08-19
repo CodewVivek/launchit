@@ -68,7 +68,11 @@ function AppRoutes() {
   return (
     <div className="flex min-h-screen transition-colors duration-300">
       {!hideHeaderFooter && (
-        <Sidebar isOpen={sidebarOpen} isProjectDetails={isProjectDetailsPage} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          isProjectDetails={isProjectDetailsPage}
+          onClose={() => setSidebarOpen(false)}
+        />
       )}
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-hidden ${mainContentMargin}`}>
         {!hideHeaderFooter && <Header onMenuClick={handleSidebarToggle} />}

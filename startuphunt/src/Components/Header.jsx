@@ -464,7 +464,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[70] shadow-xl">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[100] ">
                             <button
                                 onClick={() => handleLaunchItemClick('submit')}
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -573,7 +573,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[70] shadow-xl">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[100] l">
                             <button
                                 onClick={() => handleLaunchItemClick('submit')}
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
