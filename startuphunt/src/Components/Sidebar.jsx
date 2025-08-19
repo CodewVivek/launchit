@@ -47,7 +47,7 @@ const Sidebar = ({ isOpen }) => {
             navigate("/UserRegister");
             return;
         }
-        
+
         if (route === "profile") {
             try {
                 const { data: profile } = await supabase
@@ -73,11 +73,10 @@ const Sidebar = ({ isOpen }) => {
         { title: "Home", icon: Home, active: true, to: "/" },
         { title: "pitch", icon: Scissors, to: "/approved-pitches" },
         { title: "Community", icon: Users, to: "/launchit-community" },
-        { title: "You", icon: User, to: "/explore" },
+        { title: "You", icon: User, isProfile: true },
     ];
 
     const youItems = [
-        { title: "Profile", icon: User, route: "profile" },
         { title: "Your Launches", icon: Rocket, route: "/my-launches" },
         { title: "Saved Launches", icon: Bookmark, route: "/saved-projects" },
         { title: "Upvoted Launches", icon: ThumbsUp, route: "/upvoted-projects" },
@@ -91,23 +90,57 @@ const Sidebar = ({ isOpen }) => {
     if (!isOpen) {
         return (
             <aside className={`fixed left-0 top-14 w-16 h-[calc(100vh-64px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
+                {/* Main Navigation */}
                 <div className="p-2">
                     <div className="space-y-2">
                         {mainItems.map((item) => (
-                            <Link
-                                key={item.title}
-                                to={item.to}
-                                className={`w-full flex items-center justify-center p-3 rounded-lg text-sm font-medium transition-colors ${item.active
-                                    ? "bg-gray-100 text-black"
-                                    : "text-black hover:bg-gray-100"
-                                    }`}
-                                title={item.title}
-                            >
-                                <item.icon className="w-5 h-5 mb-1" />
-                            </Link>
+                            item.isProfile ? (
+                                <button
+                                    key={item.title}
+                                    onClick={async () => {
+                                        if (!user) {
+                                            toast.error("Please login to access your profile");
+                                            navigate("/UserRegister");
+                                            return;
+                                        }
+                                        try {
+                                            const { data: profile } = await supabase
+                                                .from('profiles')
+                                                .select('username')
+                                                .eq('id', user.id)
+                                                .single();
+                                            if (profile?.username) {
+                                                navigate(`/profile/${profile.username}`);
+                                            } else {
+                                                toast.error("Profile not found");
+                                            }
+                                        } catch (error) {
+                                            console.error("Error fetching profile:", error);
+                                            toast.error("Error loading profile");
+                                        }
+                                    }}
+                                    className={`w-full flex items-center justify-center p-3 rounded-lg text-sm font-medium transition-colors text-black hover:bg-gray-100`}
+                                    title={item.title}
+                                >
+                                    <item.icon className="w-5 h-5 mb-1" />
+                                </button>
+                            ) : (
+                                <Link
+                                    key={item.title}
+                                    to={item.to}
+                                    className={`w-full flex items-center justify-center p-3 rounded-lg text-sm font-medium transition-colors ${item.active
+                                        ? "bg-gray-100 text-black"
+                                        : "text-black hover:bg-gray-100"
+                                        }`}
+                                    title={item.title}
+                                >
+                                    <item.icon className="w-5 h-5 mb-1" />
+                                </Link>
+                            )
                         ))}
                     </div>
                 </div>
+
             </aside>
         );
     }
@@ -145,17 +178,49 @@ const Sidebar = ({ isOpen }) => {
                 {/* Main Navigation */}
                 <div className="space-y-1 p-2">
                     {mainItems.map((item) => (
-                        <Link
-                            key={item.title}
-                            to={item.to}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${item.active
-                                ? "bg-gray-100 text-black"
-                                : "text-black hover:bg-gray-100"
-                                }`}
-                        >
-                            <item.icon className="w-6 h-6" />
-                            <span>{item.title}</span>
-                        </Link>
+                        item.isProfile ? (
+                            <button
+                                key={item.title}
+                                onClick={async () => {
+                                    if (!user) {
+                                        toast.error("Please login to access your profile");
+                                        navigate("/UserRegister");
+                                        return;
+                                    }
+                                    try {
+                                        const { data: profile } = await supabase
+                                            .from('profiles')
+                                            .select('username')
+                                            .eq('id', user.id)
+                                            .single();
+                                        if (profile?.username) {
+                                            navigate(`/profile/${profile.username}`);
+                                        } else {
+                                            toast.error("Profile not found");
+                                        }
+                                    } catch (error) {
+                                        console.error("Error fetching profile:", error);
+                                        toast.error("Error loading profile");
+                                    }
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-black hover:bg-gray-100"
+                            >
+                                <item.icon className="w-6 h-6" />
+                                <span>{item.title}</span>
+                            </button>
+                        ) : (
+                            <Link
+                                key={item.title}
+                                to={item.to}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${item.active
+                                    ? "bg-gray-100 text-black"
+                                    : "text-black hover:bg-gray-100"
+                                    }`}
+                            >
+                                <item.icon className="w-6 h-6" />
+                                <span>{item.title}</span>
+                            </Link>
+                        )
                     ))}
                 </div>
 
