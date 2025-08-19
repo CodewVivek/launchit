@@ -60,7 +60,7 @@ function AppRoutes() {
     if (window.innerWidth < 1024 && sidebarOpen) {
       setSidebarOpen(false);
     }
-  }, [location.pathname, sidebarOpen]);
+  }, [location.pathname]);
 
   // The main content container will have a left margin ONLY IF the sidebar is open AND it's NOT the ProjectDetails page
   const mainContentMargin = sidebarOpen && !isProjectDetailsPage ? 'lg:ml-60' : 'lg:ml-10';

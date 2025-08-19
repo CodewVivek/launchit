@@ -176,7 +176,7 @@ const Sidebar = ({ isOpen }) => {
                 </div>
 
                 {/* Main Navigation */}
-                <div className="space-y-1 p-2">
+                <div className="space-y-1 p-4">
                     {mainItems.map((item) => (
                         item.isProfile ? (
                             <button
