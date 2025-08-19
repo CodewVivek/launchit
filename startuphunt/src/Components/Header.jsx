@@ -274,20 +274,20 @@ const Header = ({ onMenuClick }) => {
         (searchSuggestions?.tags?.length || 0);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 py-2 bg-white overflow-x-hidden">
+        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 py-3 sm:py-4 bg-white overflow-x-hidden min-h-[64px] sm:min-h-[72px]">
 
             {/* Left side with menu button and logo */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
                 <button
-                    className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none"
+                    className="p-2 sm:p-2.5 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none"
                     onClick={onMenuClick}
                     aria-label="Toggle sidebar menu"
                 >
-                    <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
                 </button>
-                <Link to="/" className="flex items-center space-x-1 sm:space-x-2 group">
+                <Link to="/" className="flex items-center space-x-2 sm:space-x-2 group">
                     <div className="rounded flex items-center justify-center">
-                        <img className="w-6 h-6 sm:w-8 sm:h-8 text-white" src="/images/r6_circle_optimized.png" alt="L" />
+                        <img className="w-8 h-8 sm:w-9 sm:h-9 text-white" src="/images/r6_circle_optimized.png" alt="L" />
                     </div>
                     <span className="text-lg sm:text-xl font-bold tracking-wide hidden sm:block">
                         <span className="text-gray-800">launchit</span>
@@ -496,7 +496,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
                             <button
                                 onClick={() => handleLaunchItemClick('submit')}
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -543,7 +543,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
 
                     {open && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
                             {user ? (
                                 <>
                                     <div className="px-4 py-2 border-b border-gray-200">
@@ -593,15 +593,15 @@ const Header = ({ onMenuClick }) => {
             </nav>
 
             {/* Mobile Navigation - Right Side */}
-            <div className="md:hidden flex items-center space-x-1 sm:space-x-2">
+            <div className="md:hidden flex items-center space-x-2 sm:space-x-3">
                 {/* + Launch Dropdown Mobile */}
                 <div className="relative launch-dropdown">
                     <button
                         onClick={handleLaunchDropdownToggle}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 text-black rounded-full hover:bg-gray-100 transition-colors"
+                        className="flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 text-black rounded-full hover:bg-gray-100 transition-colors"
                     >
-                        <CirclePlus className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="text-xs sm:text-sm">Launch</span>
+                        <CirclePlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="text-sm sm:text-base">Launch</span>
                     </button>
 
                     {launchDropdownOpen && (
@@ -631,20 +631,20 @@ const Header = ({ onMenuClick }) => {
 
                 {/* User Dropdown Mobile */}
                 <div className="user-dropdown relative">
-                    <button className="p-1.5 sm:p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
+                    <button className="p-2 sm:p-2.5 rounded-full hover:bg-white/20" onClick={handlepopover}>
                         {user ? (
                             <img
                                 src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
                                 alt="profile"
-                                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full"
+                                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full"
                             />
                         ) : (
-                            <CircleUserRound className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                            <CircleUserRound className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                         )}
                     </button>
 
                     {open && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
                             {user ? (
                                 <>
                                     <div className="px-4 py-2 border-b border-gray-200">
@@ -694,13 +694,13 @@ const Header = ({ onMenuClick }) => {
 
                 <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="p-1.5 sm:p-2 rounded-lg hover:bg-white/20 text-white"
+                    className="p-2 sm:p-2.5 rounded-lg hover:bg-white/20 text-white"
                 >
-                    {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
+                    {mobileMenuOpen ? <X className="w-6 h-6 sm:w-7 sm:h-7" /> : <Menu className="w-6 h-6 sm:w-7 sm:h-7" />}
                 </button>
             </div>
             {/* Mobile Search Bar */}
-            <div className="block md:hidden absolute top-full left-0 right-0 px-3 sm:px-4 py-2 bg-blue-500 border-t border-blue-400">
+            <div className="block md:hidden absolute top-full left-0 right-0 px-3 sm:px-4 py-2 bg-blue-500 border-t border-blue-400 z-30">
                 <div className="relative w-full max-w-full mx-auto">
                     <input
                         type="text"
@@ -738,7 +738,7 @@ const Header = ({ onMenuClick }) => {
             {/* Mobile Menu */}
             {
                 mobileMenuOpen && (
-                    <div className="md:hidden absolute top-full left-0 right-0 bg-blue-500 border-t border-blue-400 z-40">
+                    <div className="md:hidden absolute top-full left-0 right-0 bg-blue-500 border-t border-blue-400 z-30">
                         <div className="px-3 sm:px-4 py-2 space-y-1">
                             <Link to="/submit" className="block text-gray-800 font-medium flex items-center gap-2 py-2 px-2 rounded hover:bg-blue-400 transition-colors">
                                 <CirclePlus className="w-4 h-4" />

@@ -54,6 +54,13 @@ function AppRoutes() {
 
   const isProjectDetailsPage = location.pathname.startsWith("/launches/");
 
+  // Auto-close sidebar when location changes (new page opened)
+  useEffect(() => {
+    if (sidebarOpen) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
   // The main content container will have a left margin ONLY IF the sidebar is open AND it's NOT the ProjectDetails page
   const mainContentMargin = sidebarOpen && !isProjectDetailsPage ? 'lg:ml-60' : 'lg:ml-10';
 
@@ -64,7 +71,7 @@ function AppRoutes() {
       )}
       <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-hidden ${mainContentMargin}`}>
         {!hideHeaderFooter && <Header onMenuClick={handleSidebarToggle} />}
-        <main className="flex-grow pt-16 w-full max-w-full overflow-x-hidden" style={{ minHeight: "100%" }}>
+        <main className="flex-grow pt-20 sm:pt-16 w-full max-w-full overflow-x-hidden" style={{ minHeight: "100%" }}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route path="/admin" element={
@@ -138,10 +145,10 @@ function App() {
   useEffect(() => {
     // Mark subscription fixes as applied
     markSubscriptionFixesApplied();
-    
+
     // Log performance improvements
     logPageSpeedImprovements();
-    
+
     return () => {
       // Clean up all channels when app unmounts
       supabase.removeAllChannels();
