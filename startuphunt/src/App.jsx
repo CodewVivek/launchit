@@ -157,11 +157,14 @@ function App() {
 
     logPageSpeedImprovements();
 
-    // Set up auth state listener for auto username generation
+    // Set up auth state listener for auto username generation and OAuth completion
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         // Call auto username generation when user signs in
         await ensureAutoUsername();
+        
+        // Redirect to dashboard after successful OAuth
+        window.location.href = '/';
       }
     });
 
