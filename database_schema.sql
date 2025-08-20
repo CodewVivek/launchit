@@ -124,3 +124,125 @@ CREATE POLICY "Users can remove their saved projects" ON public.saved_projects
 -- ============================================================================
 -- END OF CRITICAL FIX
 -- ============================================================================ 
+
+-- ============================================================================
+-- COMPLETE ACCOUNT DELETION FUNCTION - REMOVES ALL USER DATA
+-- ============================================================================
+
+-- Function to completely delete a user account and all related data
+CREATE OR REPLACE FUNCTION delete_user_account(user_uuid UUID)
+RETURNS VOID AS $$
+BEGIN
+  -- Delete all user's projects/launches
+  DELETE FROM public.projects WHERE user_id = user_uuid;
+  
+  -- Delete all user's comments
+  DELETE FROM public.comments WHERE user_id = user_uuid;
+  
+  -- Delete all user's pitch submissions
+  DELETE FROM public.pitch_submissions WHERE user_id = user_uuid;
+  
+  -- Delete all user's project likes
+  DELETE FROM public.project_likes WHERE user_id = user_uuid;
+  
+  -- Delete all user's follows (as follower)
+  DELETE FROM public.follows WHERE follower_id = user_uuid;
+  
+  -- Delete all user's follows (as following)
+  DELETE FROM public.follows WHERE following_id = user_uuid;
+  
+  -- Delete all user's saved projects
+  DELETE FROM public.saved_projects WHERE user_id = user_uuid;
+  
+  -- Delete all user's notifications
+  DELETE FROM public.notifications WHERE user_id = user_uuid;
+  
+  -- Delete all user's reports
+  DELETE FROM public.reports WHERE user_id = user_uuid;
+  
+  -- Delete all user's viewed history
+  DELETE FROM public.viewed_history WHERE user_id = user_uuid;
+  
+  -- Delete all user's community posts
+  DELETE FROM public.community_posts WHERE user_id = user_uuid;
+  
+  -- Delete all user's community likes
+  DELETE FROM public.community_likes WHERE user_id = user_uuid;
+  
+  -- Delete all user's community replies
+  DELETE FROM public.community_replies WHERE user_id = user_uuid;
+  
+  -- Delete all user's advertising interests
+  DELETE FROM public.advertising_interests WHERE user_id = user_uuid;
+  
+  -- Delete user's profile (this will be done by Supabase Auth cascade)
+  DELETE FROM public.profiles WHERE id = user_uuid;
+  
+  -- Note: Supabase Auth will automatically delete the auth.users record
+  -- which will cascade to remove the profile if RLS allows it
+  
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION delete_user_account(UUID) TO authenticated;
+
+-- ============================================================================
+-- RLS POLICY FOR ACCOUNT DELETION - USERS CAN ONLY DELETE THEIR OWN DATA
+-- ============================================================================
+
+-- Users can only delete their own account data
+CREATE POLICY "Users can delete their own account data" ON public.profiles
+    FOR DELETE USING (auth.uid() = id);
+
+-- Users can only delete their own projects
+CREATE POLICY "Users can delete their own projects" ON public.projects
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own comments
+CREATE POLICY "Users can delete their own comments" ON public.comments
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own pitch submissions
+CREATE POLICY "Users can delete their own pitch submissions" ON public.pitch_submissions
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own project likes
+CREATE POLICY "Users can delete their own project likes" ON public.project_likes
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own follows
+CREATE POLICY "Users can delete their own follows" ON public.follows
+    FOR DELETE USING (auth.uid() = follower_id OR auth.uid() = following_id);
+
+-- Users can only delete their own saved projects
+CREATE POLICY "Users can delete their own saved projects" ON public.saved_projects
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own notifications
+CREATE POLICY "Users can delete their own notifications" ON public.notifications
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own reports
+CREATE POLICY "Users can delete their own reports" ON public.reports
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own viewed history
+CREATE POLICY "Users can delete their own viewed history" ON public.viewed_history
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own community posts
+CREATE POLICY "Users can delete their own community posts" ON public.community_posts
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own community likes
+CREATE POLICY "Users can delete their own community likes" ON public.community_likes
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own community replies
+CREATE POLICY "Users can delete their own community replies" ON public.community_replies
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Users can only delete their own advertising interests
+CREATE POLICY "Users can delete their own advertising interests" ON public.advertising_interests
+    FOR DELETE USING (auth.uid() = user_id); 

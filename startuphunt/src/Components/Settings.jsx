@@ -39,19 +39,32 @@ const Settings = () => {
   const handleDeleteAccount = async () => {
     try {
       if (!profile) return;
-      await supabase.rpc("delete_user_account");
+
+      // Call the database function to delete all user data
+      const { error: deleteError } = await supabase.rpc("delete_user_account", {
+        user_uuid: profile.id
+      });
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      // Sign out the user
       await supabase.auth.signOut();
+
       setSnackbar({
         open: true,
         message: "Account and all data deleted successfully",
         severity: "success",
       });
+
+      // Navigate to home page
       navigate("/");
     } catch (error) {
-      
+      console.error("Account deletion error:", error);
       setSnackbar({
         open: true,
-        message: "Failed to delete account",
+        message: "Failed to delete account: " + (error.message || "Unknown error"),
         severity: "error",
       });
     }
@@ -85,7 +98,7 @@ const Settings = () => {
         });
         setAvatarUrl(profileData.avatar_url || "");
       } else {
-        
+
       }
       setLoading(false);
     };
@@ -446,8 +459,18 @@ const Settings = () => {
               </button>
             </div>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete your account? All of your data
-              will be permanently removed. This action cannot be undone.
+              Are you sure you want to delete your account? This will permanently remove:
+            </p>
+            <ul className="text-gray-600 mb-6 text-sm space-y-1">
+              <li>• All your launches/projects</li>
+              <li>• All your comments and replies</li>
+              <li>• All your pitch submissions</li>
+              <li>• All your likes, follows, and saved projects</li>
+              <li>• All your notifications and activity history</li>
+              <li>• Your profile and all personal data</li>
+            </ul>
+            <p className="text-red-600 mb-6 font-semibold">
+              ⚠️ This action cannot be undone. Please be certain.
             </p>
             <div className="flex justify-end space-x-3">
               <button
