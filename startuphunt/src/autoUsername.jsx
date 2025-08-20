@@ -11,7 +11,7 @@ export async function ensureAutoUsername() {
     .from("profiles")
     .select("username, full_name")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!profile) return;
 
@@ -26,7 +26,7 @@ export async function ensureAutoUsername() {
       .from("profiles")
       .select("id")
       .eq("username", username)
-      .single();
+      .maybeSingle();
 
     while (exists) {
       username = base + suffix;
@@ -35,7 +35,7 @@ export async function ensureAutoUsername() {
         .from("profiles")
         .select("id")
         .eq("username", username)
-        .single());
+        .maybeSingle());
     }
 
     // Save the username
