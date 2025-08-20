@@ -10,6 +10,7 @@ const UserRegister = () => {
     setLoading(true);
     setError("");
     try {
+      //google sign in with redirect to home page
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -19,12 +20,12 @@ const UserRegister = () => {
       });
 
       if (error) {
-        
+
         setError("Failed to sign in. Please try again.");
         setLoading(false);
       }
     } catch (err) {
-      
+
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
