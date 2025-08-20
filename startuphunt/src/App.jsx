@@ -58,16 +58,20 @@ function AppRoutes() {
 
   // Google Analytics Page Tracking
   useEffect(() => {
-    if (window.gtag) {
-      // Track page view
-      window.gtag('config', import.meta.env.VITE_GA_MEASUREMENT_ID, {
-        page_path: location.pathname,
-        page_title: document.title
-      });
+    if (window.gtag && import.meta.env.VITE_GA_MEASUREMENT_ID) {
+      try {
+        // Track page view
+        window.gtag('config', import.meta.env.VITE_GA_MEASUREMENT_ID, {
+          page_path: location.pathname,
+          page_title: document.title
+        });
 
-      // Track custom page view event
-      if (window.trackPageView) {
-        window.trackPageView(document.title, location.pathname);
+        // Track custom page view event
+        if (window.trackPageView) {
+          window.trackPageView(document.title, location.pathname);
+        }
+      } catch (error) {
+        // Silently handle analytics errors in production
       }
     }
   }, [location.pathname]);

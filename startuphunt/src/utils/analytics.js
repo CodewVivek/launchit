@@ -3,7 +3,7 @@
 
 // Initialize Google Analytics
 export const initGA = () => {
-    if (typeof window !== 'undefined' && window.gtag) {
+    if (typeof window !== 'undefined' && window.gtag && import.meta.env.VITE_GA_MEASUREMENT_ID) {
         window.gtag('config', import.meta.env.VITE_GA_MEASUREMENT_ID, {
             page_title: 'LaunchIT',
             custom_map: {
@@ -23,7 +23,7 @@ export const initGA = () => {
 
 // Track page views
 export const trackPageView = (pageTitle, pagePath) => {
-    if (typeof window !== 'undefined' && window.gtag) {
+    if (typeof window !== 'undefined' && window.gtag && import.meta.env.VITE_GA_MEASUREMENT_ID) {
         window.gtag('event', 'page_view', {
             page_title: pageTitle,
             page_location: window.location.href,
@@ -34,7 +34,7 @@ export const trackPageView = (pageTitle, pagePath) => {
 
 // Track custom events
 export const trackEvent = (eventName, parameters = {}) => {
-    if (typeof window !== 'undefined' && window.gtag) {
+    if (typeof window !== 'undefined' && window.gtag && import.meta.env.VITE_GA_MEASUREMENT_ID) {
         window.gtag('event', eventName, {
             event_category: 'LaunchIT',
             event_label: window.location.pathname,

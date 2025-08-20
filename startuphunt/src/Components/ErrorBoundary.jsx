@@ -16,8 +16,9 @@ class ErrorBoundary extends React.Component {
             errorInfo: errorInfo
         });
 
+        // Log error in development mode
         if (import.meta.env.DEV) {
-            
+            console.error('Error caught by boundary:', error, errorInfo);
         }
     }
 
