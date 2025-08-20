@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
-import { Rocket, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const UserRegister = () => {
   const [loading, setLoading] = useState(false);
@@ -9,24 +9,41 @@ const UserRegister = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError("");
+
+    // Add timeout to prevent stuck loading state
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      setError("Sign-in is taking longer than expected. Please try again.");
+    }, 30000); // 30 second timeout
+
     try {
-      //google sign in with redirect to home page
+      // Check if Supabase auth is available
+      if (!supabase.auth) {
+        clearTimeout(timeoutId);
+        setError("Authentication service unavailable. Please refresh the page.");
+        setLoading(false);
+        return;
+      }
+
+      //google sign in - let Supabase handle the callback automatically
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
           queryParams: { access_type: "offline" },
         },
       });
 
-      if (error) {
+      clearTimeout(timeoutId);
 
+      if (error) {
+        console.error('OAuth Error:', error);
         setError("Failed to sign in. Please try again.");
         setLoading(false);
       }
     } catch (err) {
-
-      setError("An unexpected error occurred. Please try again.");
+      clearTimeout(timeoutId);
+      console.error('Network/General Error:', err);
+      setError("Network error. Please check your connection and try again.");
       setLoading(false);
     }
   };

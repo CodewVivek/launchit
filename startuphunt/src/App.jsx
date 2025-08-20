@@ -124,7 +124,7 @@ function AppRoutes() {
                 <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
                 <Route path="/launchit-community" element={<PageFade><Community /></PageFade>} />
                 <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />
-                <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />
+
               </Routes>
             </AnimatePresence>
           </main>
