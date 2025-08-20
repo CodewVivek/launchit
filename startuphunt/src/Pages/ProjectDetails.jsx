@@ -151,7 +151,7 @@ const ProjectDetails = () => {
             .select('id')
             .eq('follower_id', user.id)
             .eq('following_id', creator.id)
-            .single();
+            .maybeSingle();
 
           setIsFollowing(!!followData);
         }
