@@ -53,21 +53,49 @@
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#3B82F6" />
 
-  <!-- Google Analytics (uncomment and add your tracking ID) -->
-  <!--
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+  <!-- Google Analytics 4 (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXXX', {
-      page_title: 'LaunchIT - Home',
+
+    // Configure GA4
+    gtag('config', '%VITE_GA_MEASUREMENT_ID%', {
+      page_title: 'LaunchIT',
       custom_map: {
-        dimension1: 'user_type'
+        dimension1: 'user_type',
+        dimension2: 'user_role',
+        dimension3: 'project_category'
+      },
+      // Enhanced ecommerce tracking
+      send_page_view: true,
+      anonymize_ip: true,
+      // Custom parameters
+      custom_parameters: {
+        platform: 'LaunchIT',
+        version: '1.0.0'
       }
     });
+
+    // Track custom events
+    window.trackEvent = function (eventName, parameters = {}) {
+      gtag('event', eventName, {
+        event_category: 'LaunchIT',
+        event_label: window.location.pathname,
+        ...parameters
+      });
+    };
+
+    // Track page views
+    window.trackPageView = function (pageTitle, pagePath) {
+      gtag('event', 'page_view', {
+        page_title: pageTitle,
+        page_location: window.location.href,
+        page_path: pagePath
+      });
+    };
   </script>
-  -->
 </head>
 
 <body>
@@ -81,7 +109,7 @@
       if ('performance' in window) {
         const perfData = performance.getEntriesByType('navigation')[0];
         if (perfData) {
-  
+
         }
       }
     });

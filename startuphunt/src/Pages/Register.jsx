@@ -244,7 +244,7 @@ const Register = () => {
                         .select('*')
                         .eq('id', projectId)
                         .eq('user_id', user.id)
-                        .single();
+                        .maybeSingle();
 
                     if (error) {
 
@@ -659,14 +659,14 @@ const Register = () => {
             let finalSubmissionData;
             if (isEditing && editingProjectId) {
                 submissionData.status = 'launched';
-                const { data, error } = await supabase.from('projects').update(submissionData).eq('id', editingProjectId).select().single();
+                const { data, error } = await supabase.from('projects').update(submissionData).eq('id', editingProjectId).select().maybeSingle();
                 if (error) {
 
                     throw new Error(`Update failed: ${error.message}`);
                 }
                 finalSubmissionData = data;
             } else {
-                const { data, error } = await supabase.from('projects').insert([submissionData]).select().single();
+                const { data, error } = await supabase.from('projects').insert([submissionData]).select().maybeSingle();
                 if (error) {
 
                     throw new Error(`Insert failed: ${error.message}`);

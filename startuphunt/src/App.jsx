@@ -56,6 +56,22 @@ function AppRoutes() {
 
   const isProjectDetailsPage = location.pathname.startsWith("/launches/");
 
+  // Google Analytics Page Tracking
+  useEffect(() => {
+    if (window.gtag) {
+      // Track page view
+      window.gtag('config', import.meta.env.VITE_GA_MEASUREMENT_ID, {
+        page_path: location.pathname,
+        page_title: document.title
+      });
+
+      // Track custom page view event
+      if (window.trackPageView) {
+        window.trackPageView(document.title, location.pathname);
+      }
+    }
+  }, [location.pathname]);
+
   // Auto-close sidebar on mobile when navigating to a new page
   useEffect(() => {
     // Only auto-close on mobile devices (screen width < 1024px)

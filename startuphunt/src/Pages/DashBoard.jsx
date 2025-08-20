@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { ExternalLink, Tag, Search, Rocket } from "lucide-react";
+import { ExternalLink, Tag, Search } from "lucide-react";
 import Like from "../Components/Like";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isYesterday } from "date-fns";
+import { trackEvent, trackProjectInteraction } from "../utils/analytics";
 import "../index.css";
 
 const Dashboard = () => {
@@ -18,36 +19,32 @@ const Dashboard = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Add timeout to prevent infinite loading
         const timeoutId = setTimeout(() => {
           setLoading(false);
           setError("Request timeout. Please refresh the page.");
         }, 10000); // 10 seconds timeout
-        
+
         const { data, error } = await supabase
           .from("projects")
           .select("*")
           .neq("status", "draft");
-        
+
         clearTimeout(timeoutId); // Clear timeout if successful
-        
-        console.log("Supabase response:", { data, error, dataLength: data?.length });
-        
+
         if (error) {
-          console.error("Supabase error:", error);
           setError("Failed to load projects. Please try again.");
         } else {
           setProjects(data || []);
         }
       } catch (err) {
-        console.error("Fetch error:", err);
         setError("Failed to load projects. Please try again.");
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchProjectsData();
   }, []);
 
@@ -149,35 +146,59 @@ const Dashboard = () => {
 
   // Check if there are no projects
   if (projects.length === 0) {
+    // Track empty state view
+    useEffect(() => {
+      trackEvent('empty_dashboard_view', {
+        event_category: 'Dashboard',
+        event_label: 'No projects available'
+      });
+    }, []);
+
     return (
-      <div className="min-h-screen pt-4 overflow-x-hidden">
+      <div className="min-h-screen pt-4 overflow-x-hidden bg-white">
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-          {/* Empty State Icon */}
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-            <Rocket className="w-12 h-12 text-gray-400" />
+          {/* Logo with gentle bounce animation */}
+          <div className="w-24 h-24 mb-8 animate-bounce">
+            <img
+              src="/images/r6_circle_optimized.png"
+              alt="LaunchIT Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
-          
-          {/* Empty State Message */}
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-4">
+
+          {/* Main Heading with fade-in animation */}
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 text-center mb-4 animate-fade-in">
             No Launches Yet
           </h2>
-          
-          <p className="text-gray-600 text-center text-lg mb-8 max-w-md">
+
+          {/* Description with slide-up animation */}
+          <p className="text-gray-600 text-center text-lg mb-8 max-w-md animate-slide-up">
             Be the first one to launch your startup on LaunchIT!
-            Share your innovative ideas with the world.
           </p>
-          
-          {/* Launch Button */}
+
+          {/* Launch Button with pulse animation */}
           <button
-            onClick={() => navigate("/submit")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
+            onClick={() => {
+              // Track launch button click
+              trackEvent('launch_button_click', {
+                event_category: 'Dashboard',
+                event_label: 'Empty state launch button',
+                value: 1
+              });
+              navigate("/submit");
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-3 animate-pulse hover:animate-none"
           >
-            <Rocket className="w-6 h-6" />
+            <img
+              src="/images/r6_circle_optimized.png"
+              alt="LaunchIT"
+              className="w-5 h-5 object-contain"
+            />
             Launch Your Startup
           </button>
-          
-          {/* Additional Info */}
-          <p className="text-gray-500 text-center text-sm mt-6 max-w-sm">
+
+          {/* Additional Info with fade-in delay */}
+          <p className="text-gray-500 text-center text-sm mt-6 max-w-sm animate-fade-in-delay">
             Join the community of innovators and get feedback on your next big idea
           </p>
         </div>
@@ -214,7 +235,11 @@ const ProjectCard = ({ project, onProjectClick }) => {
   return (
     <div className="
     group cursor-pointer w-full overflow-hidden mb-2 sm:mb-1  border border-gray-200 rounded-lg bg-white  sm:border-0 sm:bg-transparent  "
-      onClick={() => onProjectClick(project)}>
+      onClick={() => {
+        // Track project card click
+        trackProjectInteraction('project_card_click', project.name, project.category_type);
+        onProjectClick(project);
+      }}>
       {/* Thumbnail */}
       <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden mb-3">
         {project.thumbnail_url ? (
@@ -228,7 +253,7 @@ const ProjectCard = ({ project, onProjectClick }) => {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <Rocket className="w-12 h-12" />
+            <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
           </div>
         )}
         <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1 py-0.5 rounded">
@@ -250,7 +275,7 @@ const ProjectCard = ({ project, onProjectClick }) => {
             />
           ) : (
             <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
-              <Rocket className="w-5 h-5 text-gray-500" />
+              <div className="w-5 h-5 bg-gray-400 rounded-full"></div>
             </div>
           )}
         </div>

@@ -87,14 +87,14 @@ const Like = ({ projectId }) => {
           .from("projects")
           .select("user_id, name")
           .eq("id", projectId)
-          .single();
+          .maybeSingle();
 
         if (projectData && projectData.user_id !== user.id) {
           const { data: userProfile } = await supabase
             .from("profiles")
             .select("full_name")
             .eq("id", user.id)
-            .single();
+            .maybeSingle();
 
           await supabase.from("notifications").insert([
             {
@@ -107,7 +107,7 @@ const Like = ({ projectId }) => {
         }
       }
     } catch (error) {
-      
+
       setSnackbar({
         open: true,
         message: "Failed to update like",
@@ -121,8 +121,8 @@ const Like = ({ projectId }) => {
       <button
         onClick={handleLike}
         className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 ${liked
-            ? "bg-green-100 text-green-700 hover:bg-green-200"
-            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          ? "bg-green-100 text-green-700 hover:bg-green-200"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
       >
         <Rocket

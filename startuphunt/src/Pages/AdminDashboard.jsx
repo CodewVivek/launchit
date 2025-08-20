@@ -138,7 +138,7 @@ const AdminDashboard = () => {
           .from("profiles")
           .select("role")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError || profile?.role !== "admin") {
           setSnackbar({
@@ -155,7 +155,7 @@ const AdminDashboard = () => {
           fetchAdvertisingInterests();
         }
       } catch (error) {
-        
+
 
         setSnackbar({
           open: true,
@@ -241,7 +241,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       setAdvertisingInterests(data || []);
     } catch (error) {
-      
+
     } finally {
       setLoadingAdvertisingInterests(false);
     }
@@ -259,7 +259,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       setUsers(data || []);
     } catch (error) {
-      
+
       setSnackbar({
         open: true,
         message: "Failed to fetch users",
@@ -409,7 +409,7 @@ const AdminDashboard = () => {
       });
 
     } catch (error) {
-      
+
       setSnackbar({
         open: true,
         message: "Failed to send notification",
@@ -442,7 +442,7 @@ const AdminDashboard = () => {
 
       fetchAdvertisingInterests();
     } catch (error) {
-      
+
       setSnackbar({
         open: true,
         message: "Failed to update interest status",
@@ -469,14 +469,14 @@ const AdminDashboard = () => {
         });
 
       if (error) {
-        
+
         setProjects([]);
       } else {
         // Projects data loaded
         setProjects(data || []);
       }
     } catch (error) {
-      
+
       setProjects([]);
     } finally {
       setLoadingProjects(false);
@@ -510,7 +510,7 @@ const AdminDashboard = () => {
         });
 
       if (reportsError) {
-        
+
         setReports([]);
         return;
       }
@@ -525,7 +525,7 @@ const AdminDashboard = () => {
           .in("id", userIds);
 
         if (profilesError) {
-          
+
         } else {
           // Combine the data
           const profilesMap = {};
@@ -545,7 +545,7 @@ const AdminDashboard = () => {
         setReports([]);
       }
     } catch (error) {
-      
+
       setReports([]);
     } finally {
       setLoadingReports(false);
@@ -570,7 +570,7 @@ const AdminDashboard = () => {
         .eq("project_id", projectId);
 
       if (likesError) {
-        
+
       }
 
       // 2. Delete media files from storage
@@ -588,7 +588,7 @@ const AdminDashboard = () => {
             .remove(filePaths);
 
           if (storageError) {
-            
+
           }
         }
       }
@@ -610,7 +610,7 @@ const AdminDashboard = () => {
       });
       fetchProjects();
     } catch (error) {
-      
+
 
       setSnackbar({
         open: true,
@@ -633,7 +633,7 @@ const AdminDashboard = () => {
         .eq("id", reportId);
 
       if (error) {
-        
+
 
         setSnackbar({
           open: true,
@@ -649,7 +649,7 @@ const AdminDashboard = () => {
         fetchReports();
       }
     } catch (error) {
-      
+
     }
   };
 
@@ -688,7 +688,7 @@ const AdminDashboard = () => {
         });
 
       if (pitchesError) {
-        
+
         setPitches([]);
         return;
       }
@@ -705,7 +705,7 @@ const AdminDashboard = () => {
           .in("id", userIds);
 
         if (profilesError) {
-          
+
         } else {
           // Combine the data
           const profilesMap = {};
@@ -726,7 +726,7 @@ const AdminDashboard = () => {
         setPitches([]);
       }
     } catch (err) {
-      
+
       setPitches([]);
     } finally {
       setLoadingPitches(false);
@@ -757,7 +757,7 @@ const AdminDashboard = () => {
         .from("pitch_submissions")
         .select("user_id, title, projects(name)")
         .eq("id", pitchId)
-        .single();
+        .maybeSingle();
 
       if (pitchData) {
         // Create notification
@@ -784,7 +784,7 @@ const AdminDashboard = () => {
           .insert([notificationData]);
 
         if (notifError) {
-          
+
         }
       }
 
@@ -807,7 +807,7 @@ const AdminDashboard = () => {
         reason: "",
       });
     } catch (error) {
-      
+
 
       setSnackbar({
         open: true,
@@ -882,7 +882,7 @@ const AdminDashboard = () => {
       });
       fetchPitches();
     } catch (error) {
-      
+
 
       setSnackbar({
         open: true,
@@ -2516,7 +2516,7 @@ function PitchVideoPlayer({ filePath }) {
           .createSignedUrl(path, 60 * 60);
 
         if (error) {
-          
+
           // Fallback to public URL
           setSignedUrl(filePath);
         } else {
@@ -2524,7 +2524,7 @@ function PitchVideoPlayer({ filePath }) {
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {
-        
+
         // Fallback to public URL
         setSignedUrl(filePath);
       }
@@ -2557,7 +2557,7 @@ function PitchVideoPlayer({ filePath }) {
       height={150}
       className="rounded border"
       onError={(e) => {
-        
+
         setError("Failed to load video");
       }}
     />

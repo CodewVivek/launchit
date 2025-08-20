@@ -26,7 +26,7 @@ export const semanticSearch = async (query, limit = 10, filters = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('Semantic search error:', error);
+    // Error handled silently for production
     throw error;
   }
 };
@@ -51,7 +51,7 @@ export const generateEmbedding = async (projectId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('Embedding generation error:', error);
+    // Error handled silently for production
     throw error;
   }
 };
