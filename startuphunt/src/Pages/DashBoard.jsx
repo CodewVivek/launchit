@@ -14,15 +14,50 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  // Check if user is authenticated
+  // Check if user is authenticated with proper session handling
   useEffect(() => {
+    let mounted = true;
+    
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/UserRegister");
+      try {
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          if (!session?.user) {
+            // Listen for auth changes
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+              if (mounted && event === 'SIGNED_IN' && session?.user) {
+                // User signed in, stay on dashboard
+                return;
+              } else if (mounted && event === 'SIGNED_OUT') {
+                navigate("/UserRegister");
+              }
+            });
+            
+            // If still no user after listening, redirect
+            setTimeout(async () => {
+              if (mounted) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                  navigate("/UserRegister");
+                }
+              }
+            }, 2000);
+            
+            return () => subscription.unsubscribe();
+          }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
       }
     };
+    
     checkUser();
+    
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
   useEffect(() => {
