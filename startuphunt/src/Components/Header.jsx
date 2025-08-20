@@ -30,7 +30,7 @@ const Header = ({ onMenuClick }) => {
                     .from('profiles')
                     .select('role')
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
                 setUserRole(profile?.role);
             }
         };
@@ -55,7 +55,7 @@ const Header = ({ onMenuClick }) => {
             toast.success("Signed out successfully");
             navigate("/");
         } catch (error) {
-            
+
             toast.error("Error signing out");
         }
     };
@@ -67,14 +67,14 @@ const Header = ({ onMenuClick }) => {
                 .from('profiles')
                 .select('username')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
             if (profile?.username) {
                 navigate(`/profile/${profile.username}`);
             } else {
                 toast.error("Profile not found");
             }
         } catch (error) {
-            
+
             toast.error("Error loading profile");
         }
         handleClose();
@@ -90,7 +90,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(5);
 
             if (error) {
-                
+
                 return;
             }
 
@@ -101,7 +101,7 @@ const Header = ({ onMenuClick }) => {
                 tags: []
             });
         } catch (error) {
-            
+
         }
     }, []);
 
@@ -122,7 +122,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (projectsError) {
-                
+
             }
 
             // Search users/profiles
@@ -133,7 +133,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (usersError) {
-                
+
             }
 
             // Search categories (from projects)
@@ -144,7 +144,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (categoriesError) {
-                
+
             }
 
             // Search tags (from projects) - tags is ARRAY type in database
@@ -156,7 +156,7 @@ const Header = ({ onMenuClick }) => {
                     .limit(10);
 
                 if (tagError) {
-                    
+
                 } else if (tagProjects) {
                     // Filter projects that contain the search query in their tags array
                     tagMatches = tagProjects.filter(project =>
@@ -169,7 +169,7 @@ const Header = ({ onMenuClick }) => {
                     ).slice(0, 3);
                 }
             } catch (tagFilterError) {
-                
+
             }
 
             setSearchSuggestions({
@@ -179,7 +179,7 @@ const Header = ({ onMenuClick }) => {
                 tags: tagMatches
             });
         } catch (error) {
-            
+
             // Try fallback search if main search fails
             await performFallbackSearch(query);
         } finally {
@@ -203,7 +203,7 @@ const Header = ({ onMenuClick }) => {
                 setSearchSuggestions({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
             }
         } catch (error) {
-            
+
         }
     }, [performSearch]);
 
@@ -213,7 +213,7 @@ const Header = ({ onMenuClick }) => {
                 setShowSearchSuggestions(true);
             }
         } catch (error) {
-            
+
         }
     };
 
@@ -224,7 +224,7 @@ const Header = ({ onMenuClick }) => {
                 setShowSearchSuggestions(false);
             }, 200);
         } catch (error) {
-            
+
         }
     };
 

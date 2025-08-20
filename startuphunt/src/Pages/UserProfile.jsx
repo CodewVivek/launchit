@@ -65,7 +65,7 @@ function PitchVideoPlayer({ filePath }) {
           .createSignedUrl(filePath, 60 * 60); // URL valid for 1 hour
 
         if (error) {
-          
+
           // Fallback to public URL if signed URL creation fails
           const { data: publicUrlData } = supabase.storage
             .from("pitch-videos")
@@ -75,7 +75,7 @@ function PitchVideoPlayer({ filePath }) {
           setSignedUrl(data?.signedUrl || "");
         }
       } catch (error) {
-        
+
         const { data: publicUrlData } = supabase.storage
           .from("pitch-videos")
           .getPublicUrl(filePath);
@@ -128,13 +128,13 @@ const UserProfile = () => {
         .select("*")
         .eq("user_id", profileId);
       if (error) {
-        
+
         setProjects([]);
       } else {
         setProjects(userProjects || []);
       }
     } catch (err) {
-      
+
       setProjects([]);
     }
   };
@@ -155,11 +155,11 @@ const UserProfile = () => {
       if (!error) {
         setUserPitches(data || []);
       } else {
-        
+
         setUserPitches([]);
       }
     } catch (err) {
-      
+
       setUserPitches([]);
     }
     setLoadingPitches(false);
@@ -179,10 +179,10 @@ const UserProfile = () => {
           .from("profiles")
           .select("*")
           .eq("username", decodedUsername)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
-          
+
           setProfile(null);
           setLoading(false);
           return;
@@ -225,11 +225,11 @@ const UserProfile = () => {
         }
 
         if (loggedInUser && !isProfileOwner) {
-          const { data: followData } = await supabase.from('follows').select('id').eq('follower_id', loggedInUser.id).eq('following_id', profileData.id).single();
+          const { data: followData } = await supabase.from('follows').select('id').eq('follower_id', loggedInUser.id).eq('following_id', profileData.id).maybeSingle();
           setIsFollowing(!!followData);
         }
       } catch (err) {
-        
+
         setProfile(null);
       } finally {
         setLoading(false);
@@ -274,7 +274,7 @@ const UserProfile = () => {
       setSnackbar({ open: true, message: "Project deleted successfully!", severity: "success" });
       setTimeout(() => fetchUserProjects(profile.id), 500);
     } catch (err) {
-      
+
       setEditError(err.message || "Failed to delete project.");
     }
   };
@@ -286,7 +286,7 @@ const UserProfile = () => {
   const handleDeletePitchConfirm = async () => {
     const { pitchId, status } = deletePitchModal;
     try {
-      const { data: pitchData, error: fetchError } = await supabase.from("pitch_submissions").select("video_url, video_type").eq("id", pitchId).single();
+      const { data: pitchData, error: fetchError } = await supabase.from("pitch_submissions").select("video_url, video_type").eq("id", pitchId).maybeSingle();
       if (fetchError) throw fetchError;
       if (pitchData?.video_type === "file" && pitchData?.video_url && pitchData.video_url.includes("pitch-videos")) {
         const filePath = pitchData.video_url.split("/pitch-videos/")[1];
@@ -298,7 +298,7 @@ const UserProfile = () => {
       setSnackbar({ open: true, message: "Pitch deleted successfully", severity: "success" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     } catch (error) {
-      
+
       setSnackbar({ open: true, message: "Failed to delete pitch: " + error.message, severity: "error" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     }
@@ -319,7 +319,7 @@ const UserProfile = () => {
       setComments(prev => prev.filter(comment => comment.id !== commentId));
       toast.success("Comment deleted successfully!");
     } catch (err) {
-      
+
       toast.error("Failed to delete comment. Please try again.");
     }
   };
@@ -371,7 +371,7 @@ const UserProfile = () => {
         toast.success(`Following ${profile.full_name || profile.username}`);
       }
     } catch (error) {
-      
+
       toast.error(isFollowing ? 'Failed to unfollow' : 'Failed to follow');
     } finally {
       setFollowLoading(false);
