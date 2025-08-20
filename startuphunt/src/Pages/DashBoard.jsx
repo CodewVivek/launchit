@@ -22,7 +22,7 @@ const Dashboard = () => {
         .select("*")
         .neq("status", "draft");
       if (error) {
-        
+
         setError("Failed to load projects. Please try again.");
       } else {
         setProjects(data);
@@ -124,6 +124,44 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-600 pt-16">
         Error: {error}
+      </div>
+    );
+  }
+
+  // Check if there are no projects
+  if (projects.length === 0) {
+    return (
+      <div className="min-h-screen pt-4 overflow-x-hidden">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+          {/* Empty State Icon */}
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <Rocket className="w-12 h-12 text-gray-400" />
+          </div>
+
+          {/* Empty State Message */}
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-4">
+            No Launches Yet
+          </h2>
+
+          <p className="text-gray-600 text-center text-lg mb-8 max-w-md">
+            Be the first one to launch your startup on LaunchIT!
+            Share your innovative ideas with the world.
+          </p>
+
+          {/* Launch Button */}
+          <button
+            onClick={() => navigate("/submit")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
+          >
+            <Rocket className="w-6 h-6" />
+            Launch Your Startup
+          </button>
+
+          {/* Additional Info */}
+          <p className="text-gray-500 text-center text-sm mt-6 max-w-sm">
+            Join the community of innovators and get feedback on your next big idea
+          </p>
+        </div>
       </div>
     );
   }
