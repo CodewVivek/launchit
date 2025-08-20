@@ -4,7 +4,7 @@ import { ExternalLink, Tag, Search } from "lucide-react";
 import Like from "../Components/Like";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isYesterday } from "date-fns";
-import { trackEvent, trackProjectInteraction } from "../utils/analytics";
+
 import "../index.css";
 
 const Dashboard = () => {
@@ -87,8 +87,6 @@ const Dashboard = () => {
       .replace(/[^\w-]+/g, "");
 
   const openProjectDetails = (project) => {
-    // Track project card click
-    trackProjectInteraction('project_card_click', project.name, project.category_type);
     navigate(`/launches/${project.slug}`);
   };
 
@@ -121,14 +119,6 @@ const Dashboard = () => {
 
   // Check if there are no projects
   if (projects.length === 0) {
-    // Track empty state view
-    useEffect(() => {
-      trackEvent('empty_dashboard_view', {
-        event_category: 'Dashboard',
-        event_label: 'No projects available'
-      });
-    }, []);
-
     return (
       <div className="min-h-screen pt-4 overflow-x-hidden bg-white">
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
@@ -153,15 +143,7 @@ const Dashboard = () => {
 
           {/* Launch Button with pulse animation */}
           <button
-            onClick={() => {
-              // Track launch button click
-              trackEvent('launch_button_click', {
-                event_category: 'Dashboard',
-                event_label: 'Empty state launch button',
-                value: 1
-              });
-              navigate("/submit");
-            }}
+            onClick={() => navigate("/submit")}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-3 animate-pulse hover:animate-none"
           >
             <img
@@ -210,11 +192,7 @@ const ProjectCard = ({ project, onProjectClick }) => {
   return (
     <div className="
     group cursor-pointer w-full overflow-hidden mb-2 sm:mb-1  border border-gray-200 rounded-lg bg-white  sm:border-0 sm:bg-transparent  "
-      onClick={() => {
-        // Track project card click
-        trackProjectInteraction('project_card_click', project.name, project.category_type);
-        onProjectClick(project);
-      }}>
+      onClick={() => onProjectClick(project)}>
       {/* Thumbnail */}
       <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden mb-3">
         {project.thumbnail_url ? (
