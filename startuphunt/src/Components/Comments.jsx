@@ -65,7 +65,7 @@ const Comments = ({ projectId }) => {
         .from("profiles")
         .select("role")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       setUserRole(profile?.role);
     }
   };
@@ -273,8 +273,8 @@ const Comments = ({ projectId }) => {
                     type="submit"
                     disabled={isPostingReply}
                     className={`text-xs px-4 py-2 rounded-lg transition ${isPostingReply
-                        ? 'bg-gray-400 cursor-not-allowed opacity-50 text-white'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      ? 'bg-gray-400 cursor-not-allowed opacity-50 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
                       }`}
                   >
                     {isPostingReply ? (
@@ -331,8 +331,8 @@ const Comments = ({ projectId }) => {
               type="submit"
               disabled={isPostingComment}
               className={`font-semibold px-4 py-2 rounded-xl transition-all text-sm ${isPostingComment
-                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}
             >
               {isPostingComment ? (

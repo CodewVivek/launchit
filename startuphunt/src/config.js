@@ -6,7 +6,6 @@ export const config = {
     // Environment detection
     isDevelopment: import.meta.env.DEV,
     isProduction: import.meta.env.PROD,
-    environment: import.meta.env.VITE_ENV || 'development',
 
     // Domain detection
     isCustomDomain: window.location.hostname === 'launchit.site',

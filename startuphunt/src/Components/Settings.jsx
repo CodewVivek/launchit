@@ -61,7 +61,7 @@ const Settings = () => {
       // Navigate to home page
       navigate("/");
     } catch (error) {
-      console.error("Account deletion error:", error);
+      // Error handled silently for production
       setSnackbar({
         open: true,
         message: "Failed to delete account: " + (error.message || "Unknown error"),
@@ -84,7 +84,7 @@ const Settings = () => {
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profileData) {
         setProfile(profileData);

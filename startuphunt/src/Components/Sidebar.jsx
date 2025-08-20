@@ -54,14 +54,14 @@ const Sidebar = ({ isOpen }) => {
                     .from('profiles')
                     .select('username')
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
                 if (profile?.username) {
                     navigate(`/profile/${profile.username}`);
                 } else {
                     toast.error("Profile not found");
                 }
             } catch (error) {
-                
+
                 toast.error("Error loading profile");
             }
         } else {
@@ -108,14 +108,14 @@ const Sidebar = ({ isOpen }) => {
                                                 .from('profiles')
                                                 .select('username')
                                                 .eq('id', user.id)
-                                                .single();
+                                                .maybeSingle();
                                             if (profile?.username) {
                                                 navigate(`/profile/${profile.username}`);
                                             } else {
                                                 toast.error("Profile not found");
                                             }
                                         } catch (error) {
-                                            
+
                                             toast.error("Error loading profile");
                                         }
                                     }}
@@ -165,14 +165,14 @@ const Sidebar = ({ isOpen }) => {
                                             .from('profiles')
                                             .select('username')
                                             .eq('id', user.id)
-                                            .single();
+                                            .maybeSingle();
                                         if (profile?.username) {
                                             navigate(`/profile/${profile.username}`);
                                         } else {
                                             toast.error("Profile not found");
                                         }
                                     } catch (error) {
-                                        
+
                                         toast.error("Error loading profile");
                                     }
                                 }}
@@ -214,14 +214,14 @@ const Sidebar = ({ isOpen }) => {
                                     .from('profiles')
                                     .select('username')
                                     .eq('id', user.id)
-                                    .single();
+                                    .maybeSingle();
                                 if (profile?.username) {
                                     navigate(`/profile/${profile.username}`);
                                 } else {
                                     toast.error("Profile not found");
                                 }
                             } catch (error) {
-                                
+
                                 toast.error("Error loading profile");
                             }
                         }}
