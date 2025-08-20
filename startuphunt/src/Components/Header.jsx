@@ -29,8 +29,7 @@ const Header = ({ onMenuClick }) => {
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role')
-                    .eq('id', user.id)
-                    .single();
+                    .eq('id', user.id);
                 setUserRole(profile?.role);
             }
         };
@@ -66,8 +65,7 @@ const Header = ({ onMenuClick }) => {
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('username')
-                .eq('id', user.id)
-                .single();
+                .eq('id', user.id);
             if (profile?.username) {
                 navigate(`/profile/${profile.username}`);
             } else {

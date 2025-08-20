@@ -86,15 +86,13 @@ const Like = ({ projectId }) => {
         const { data: projectData } = await supabase
           .from("projects")
           .select("user_id, name")
-          .eq("id", projectId)
-          .single();
+          .eq("id", projectId);
 
         if (projectData && projectData.user_id !== user.id) {
           const { data: userProfile } = await supabase
             .from("profiles")
             .select("full_name")
-            .eq("id", user.id)
-            .single();
+            .eq("id", user.id);
 
           await supabase.from("notifications").insert([
             {
