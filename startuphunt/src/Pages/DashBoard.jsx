@@ -14,6 +14,17 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/UserRegister");
+      }
+    };
+    checkUser();
+  }, [navigate]);
+
   useEffect(() => {
     const fetchProjectsData = async () => {
       try {

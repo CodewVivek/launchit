@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const UserRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -25,10 +27,11 @@ const UserRegister = () => {
         return;
       }
 
-      //google sign in - let Supabase handle the callback automatically
+      //google sign in with proper redirect
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
+          redirectTo: "https://launchit.site/",
           queryParams: { access_type: "offline" },
         },
       });
@@ -47,6 +50,21 @@ const UserRegister = () => {
       setLoading(false);
     }
   };
+
+  // Handle auth state changes
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          navigate("/");
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
