@@ -1,13 +1,12 @@
 import express from "express";
+import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
 // fetch is built-in to Node.js 18+
 import cors from "cors";
 import { semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
 
-// Load environment variables
-import { config } from 'dotenv';
-config();
+dotenv.config();
 
 // Check for required environment variables
 const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'OPENAI_API_KEY'];

@@ -83,7 +83,8 @@ const ProjectDetails = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('slug', slug);
+        .eq('slug', slug)
+        .single();
 
       if (error) {
         
@@ -96,7 +97,8 @@ const ProjectDetails = () => {
           const { data: userData, error: userError } = await supabase
             .from('profiles')
             .select('id, full_name, avatar_url, username')
-            .eq('id', data.user_id);
+            .eq('id', data.user_id)
+            .single();
 
           if (userError) {
             
@@ -123,7 +125,8 @@ const ProjectDetails = () => {
         const { data: profile } = await supabase
           .from('profiles')
           .select('full_name, avatar_url')
-          .eq('id', user.id);
+          .eq('id', user.id)
+          .single();
         if (!profile || !profile.full_name || !profile.avatar_url) {
           await supabase.from('profiles').update({
             full_name: user.user_metadata.full_name,
@@ -147,7 +150,8 @@ const ProjectDetails = () => {
             .from('follows')
             .select('id')
             .eq('follower_id', user.id)
-            .eq('following_id', creator.id);
+            .eq('following_id', creator.id)
+            .single();
 
           setIsFollowing(!!followData);
         }
@@ -157,7 +161,8 @@ const ProjectDetails = () => {
           .from('saved_projects')
           .select('id')
           .eq('user_id', user.id)
-          .eq('project_id', project.id);
+          .eq('project_id', project.id)
+          .single();
 
         setIsSaved(!!saveData);
       }
