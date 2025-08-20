@@ -86,4 +86,41 @@
 -- );
 
 -- NOTE: This system has been removed for merge. The platform now operates without content moderation.
--- Users can submit content directly without AI review or admin approval. 
+-- Users can submit content directly without AI review or admin approval.
+
+-- ============================================================================
+-- CRITICAL: FIX FOR 406 ERRORS - RLS POLICIES FOR FOLLOWS AND SAVED_PROJECTS
+-- ============================================================================
+
+-- Enable RLS on follows table (if not already enabled)
+ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
+
+-- Enable RLS on saved_projects table (if not already enabled)
+ALTER TABLE public.saved_projects ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for follows table
+CREATE POLICY "Users can view follows they're involved in" ON public.follows
+    FOR SELECT USING (
+        auth.uid() = follower_id OR 
+        auth.uid() = following_id
+    );
+
+CREATE POLICY "Users can create follows" ON public.follows
+    FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+CREATE POLICY "Users can delete their own follows" ON public.follows
+    FOR DELETE USING (auth.uid() = follower_id);
+
+-- RLS Policies for saved_projects table
+CREATE POLICY "Users can view their own saved projects" ON public.saved_projects
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can save projects" ON public.saved_projects
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can remove their saved projects" ON public.saved_projects
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- END OF CRITICAL FIX
+-- ============================================================================ 
