@@ -89,7 +89,7 @@ const Sidebar = ({ isOpen }) => {
 
     if (!isOpen) {
         return (
-            <aside className={`fixed left-0 top-[75px] w-16 h-[calc(100vh-75px)] bg-white overflow-y-auto shadow-lg ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
+            <aside className={`fixed left-0 top-[75px] w-16 h-[calc(100vh-75px)] bg-white overflow-y-auto  ${isProjectDetails ? 'z-50' : 'z-40'} hidden lg:block`}>
                 {/* Main Navigation */}
                 <div className="p-2">
                     <div className="space-y-2">

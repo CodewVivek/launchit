@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { toast } from "react-hot-toast";
+import { Alert, Snackbar } from "@mui/material";
 import NotificationBell from "./NotificationBell";
 
 
@@ -18,6 +18,7 @@ const Header = ({ onMenuClick }) => {
     const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
     const [searchSuggestions, setSearchSuggestions] = useState({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
     const [isSearching, setIsSearching] = useState(false);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -52,11 +53,10 @@ const Header = ({ onMenuClick }) => {
     const handleSignOut = async () => {
         try {
             await supabase.auth.signOut();
-            toast.success("Signed out successfully");
+            setSnackbar({ open: true, message: "Signed out successfully", severity: 'success' });
             navigate("/");
         } catch (error) {
-
-            toast.error("Error signing out");
+            setSnackbar({ open: true, message: "Error signing out", severity: 'error' });
         }
     };
 
@@ -71,11 +71,10 @@ const Header = ({ onMenuClick }) => {
             if (profile?.username) {
                 navigate(`/profile/${profile.username}`);
             } else {
-                toast.error("Profile not found");
+                setSnackbar({ open: true, message: "Profile not found", severity: 'error' });
             }
         } catch (error) {
-
-            toast.error("Error loading profile");
+            setSnackbar({ open: true, message: "Error loading profile", severity: 'error' });
         }
         handleClose();
     };
@@ -90,7 +89,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(5);
 
             if (error) {
-
+                setSnackbar({ open: true, message: "Error performing fallback search", severity: 'error' });
                 return;
             }
 
@@ -101,7 +100,7 @@ const Header = ({ onMenuClick }) => {
                 tags: []
             });
         } catch (error) {
-
+            setSnackbar({ open: true, message: "Error performing fallback search", severity: 'error' });
         }
     }, []);
 
@@ -122,7 +121,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (projectsError) {
-
+                setSnackbar({ open: true, message: "Error searching projects", severity: 'error' });
             }
 
             // Search users/profiles
@@ -133,7 +132,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (usersError) {
-
+                setSnackbar({ open: true, message: "Error searching users", severity: 'error' });
             }
 
             // Search categories (from projects)
@@ -144,7 +143,7 @@ const Header = ({ onMenuClick }) => {
                 .limit(3);
 
             if (categoriesError) {
-
+                setSnackbar({ open: true, message: "Error searching categories", severity: 'error' });
             }
 
             // Search tags (from projects) - tags is ARRAY type in database
@@ -156,7 +155,7 @@ const Header = ({ onMenuClick }) => {
                     .limit(10);
 
                 if (tagError) {
-
+                    setSnackbar({ open: true, message: "Error searching tags", severity: 'error' });
                 } else if (tagProjects) {
                     // Filter projects that contain the search query in their tags array
                     tagMatches = tagProjects.filter(project =>
@@ -169,7 +168,7 @@ const Header = ({ onMenuClick }) => {
                     ).slice(0, 3);
                 }
             } catch (tagFilterError) {
-
+                setSnackbar({ open: true, message: "Error filtering tags", severity: 'error' });
             }
 
             setSearchSuggestions({
@@ -179,7 +178,7 @@ const Header = ({ onMenuClick }) => {
                 tags: tagMatches
             });
         } catch (error) {
-
+            setSnackbar({ open: true, message: "Error performing main search", severity: 'error' });
             // Try fallback search if main search fails
             await performFallbackSearch(query);
         } finally {
@@ -203,7 +202,7 @@ const Header = ({ onMenuClick }) => {
                 setSearchSuggestions({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
             }
         } catch (error) {
-
+            setSnackbar({ open: true, message: "Error handling search input", severity: 'error' });
         }
     }, [performSearch]);
 
@@ -213,7 +212,7 @@ const Header = ({ onMenuClick }) => {
                 setShowSearchSuggestions(true);
             }
         } catch (error) {
-
+            setSnackbar({ open: true, message: "Error handling search focus", severity: 'error' });
         }
     };
 
@@ -224,7 +223,7 @@ const Header = ({ onMenuClick }) => {
                 setShowSearchSuggestions(false);
             }, 200);
         } catch (error) {
-
+            setSnackbar({ open: true, message: "Error handling search blur", severity: 'error' });
         }
     };
 
@@ -272,399 +271,419 @@ const Header = ({ onMenuClick }) => {
         (searchSuggestions?.categories?.length || 0) +
         (searchSuggestions?.tags?.length || 0);
 
+    const handleCloseSnackbar = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
+
     return (
-        <header className="fixed top-0 left-0 right-0 z-[50] flex items-center justify-between px-3 sm:px-4 py-3 sm:py-4 bg-white  min-h-[64px] sm:min-h-[72px]">
+        <>
+            <header className="fixed top-0 left-0 right-0 z-[50] flex items-center justify-between px-3 sm:px-4 py-3 sm:py-4 bg-white  min-h-[64px] sm:min-h-[72px]">
 
-            {/* Left side with menu button and logo */}
-            <div className="flex items-center space-x-3 sm:space-x-4">
-                <button
-                    className="p-2 sm:p-2.5 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none"
-                    onClick={onMenuClick}
-                    aria-label="Toggle sidebar menu"
-                >
-                    <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
-                </button>
-                <Link to="/" className="flex items-center space-x-2 sm:space-x-2 group">
-                    <div className="rounded flex items-center justify-center">
-                        <img className="w-8 h-8 sm:w-9 sm:h-9 text-white" src="/images/r6_circle_optimized.png" alt="L" />
-                    </div>
-                    <span className="text-lg sm:text-xl font-bold tracking-wide hidden sm:block">
-                        <span className="text-gray-800">launchit</span>
-                    </span>
-                </Link>
-            </div>
+                {/* Left side with menu button and logo */}
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                    <button
+                        className="p-2 sm:p-2.5 rounded-lg hover:bg-gray-100 text-gray-800 focus:outline-none"
+                        onClick={onMenuClick}
+                        aria-label="Toggle sidebar menu"
+                    >
+                        <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </button>
+                    <Link to="/" className="flex items-center space-x-2 sm:space-x-2 group">
+                        <div className="rounded flex items-center justify-center">
+                            <img className="w-8 h-8 sm:w-9 sm:h-9 text-white" src="/images/r6_circle_optimized.png" alt="L" />
+                        </div>
+                        <span className="text-lg sm:text-xl font-bold tracking-wide hidden sm:block">
+                            <span className="text-gray-800">launchit</span>
+                        </span>
+                    </Link>
+                </div>
 
-            {/* Universal Search Bar - Hidden on mobile */}
-            <div className="hidden md:block flex-1 mx-8">
-                <div className="relative w-full max-w-lg mx-auto">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                        <input
-                            type="text"
-                            value={search || ''}
-                            onChange={(e) => {
-                                const value = e.target.value || '';
-                                setSearch(value);
-                                if (value.trim()) {
-                                    setShowSearchSuggestions(true);
-                                    performSearch(value);
-                                } else {
+                {/* Universal Search Bar - Hidden on mobile */}
+                <div className="hidden md:block flex-1 mx-8">
+                    <div className="relative w-full max-w-lg mx-auto">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                            <input
+                                type="text"
+                                value={search || ''}
+                                onChange={(e) => {
+                                    const value = e.target.value || '';
+                                    setSearch(value);
+                                    if (value.trim()) {
+                                        setShowSearchSuggestions(true);
+                                        performSearch(value);
+                                    } else {
+                                        setShowSearchSuggestions(false);
+                                    }
+                                }}
+                                onFocus={handleSearchFocus}
+                                onBlur={handleSearchBlur}
+                                placeholder="Search projects, users, categories..."
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                disabled={isSearching}
+                            />
+                            {isSearching && (
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                </div>
+                            )}
+                        </div>
+                        {search && (
+                            <button
+                                type="button"
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg"
+                                onClick={() => {
+                                    setSearch("");
                                     setShowSearchSuggestions(false);
-                                }
-                            }}
-                            onFocus={handleSearchFocus}
-                            onBlur={handleSearchBlur}
-                            placeholder="Search projects, users, categories..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            disabled={isSearching}
-                        />
-                        {isSearching && (
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                }}
+                                aria-label="Clear search"
+                            >
+                                &times;
+                            </button>
+                        )}
+                        {showSearchSuggestions && totalSuggestions > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[130]">
+                                {isSearching ? (
+                                    <div className="p-4 text-center">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
+                                        <p className="text-sm text-gray-500 mt-2">Searching...</p>
+                                    </div>
+                                ) : (
+                                    <div className="py-2">
+                                        {searchSuggestions.projects?.length > 0 && (
+                                            <div className="mb-2">
+                                                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    Projects
+                                                </div>
+                                                {searchSuggestions.projects.map((project) => (
+                                                    <button
+                                                        key={project.id}
+                                                        onClick={() => handleSuggestionClick('project', project)}
+                                                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                    >
+                                                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            {project.logo_url ? (
+                                                                <img src={project.logo_url} alt={project.name} className="w-6 h-6 rounded object-cover" />
+                                                            ) : (
+                                                                <Rocket className="w-4 h-4 text-gray-500" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-medium text-gray-900 truncate">{project.name}</div>
+                                                            <div className="text-sm text-gray-500 truncate">{project.category_type}</div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchSuggestions.users?.length > 0 && (
+                                            <div className="mb-2">
+                                                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    Users
+                                                </div>
+                                                {searchSuggestions.users.map((user) => (
+                                                    <button
+                                                        key={user.id}
+                                                        onClick={() => handleSuggestionClick('user', user)}
+                                                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                    >
+                                                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            {user.avatar_url ? (
+                                                                <img src={user.avatar_url} alt={user.username} className="w-6 h-6 rounded object-cover" />
+                                                            ) : (
+                                                                <User className="w-4 h-4 text-gray-500" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-medium text-gray-900 truncate">{user.username}</div>
+                                                            <div className="text-sm text-gray-500 truncate">{user.full_name}</div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchSuggestions.categories?.length > 0 && (
+                                            <div className="mb-2">
+                                                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    Categories
+                                                </div>
+                                                {searchSuggestions.categories.map((category) => (
+                                                    <button
+                                                        key={category}
+                                                        onClick={() => handleSuggestionClick('category', { category_type: category })}
+                                                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                    >
+                                                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <Monitor className="w-4 h-4 text-blue-600" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-medium text-gray-900 truncate">{category}</div>
+                                                            <div className="text-sm text-gray-500">Category</div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchSuggestions.tags?.length > 0 && (
+                                            <div className="mb-2">
+                                                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    Tagged Projects
+                                                </div>
+                                                {searchSuggestions.tags.map((project) => (
+                                                    <button
+                                                        key={project.id}
+                                                        onClick={() => handleSuggestionClick('project', project)}
+                                                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
+                                                    >
+                                                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <Tag className="w-4 h-4 text-green-600" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-medium text-gray-900 truncate">{project.name}</div>
+                                                            <div className="text-sm text-gray-500">Tagged Project</div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
-                    {search && (
+                </div>
+
+                {/* Desktop Navigation */}
+                <nav className="hidden md:flex items-center space-x-6">
+                    {/* + Launch Dropdown */}
+                    <div className="relative launch-dropdown">
                         <button
-                            type="button"
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg"
-                            onClick={() => {
-                                setSearch("");
-                                setShowSearchSuggestions(false);
-                            }}
-                            aria-label="Clear search"
+                            onClick={handleLaunchDropdownToggle}
+                            className="flex items-center gap-2 px-4 py-2  text-black rounded-full hover:bg-gray-300 transition-colors"
                         >
-                            &times;
+                            <CirclePlus className="w-4 h-4" />
+                            Launch
+                            <ChevronDown className={`w-4 h-4 transition-transform ${launchDropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
-                    )}
-                    {showSearchSuggestions && totalSuggestions > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[130]">
-                            {isSearching ? (
-                                <div className="p-4 text-center">
-                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
-                                    <p className="text-sm text-gray-500 mt-2">Searching...</p>
-                                </div>
-                            ) : (
-                                <div className="py-2">
-                                    {searchSuggestions.projects?.length > 0 && (
-                                        <div className="mb-2">
-                                            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                                Projects
-                                            </div>
-                                            {searchSuggestions.projects.map((project) => (
-                                                <button
-                                                    key={project.id}
-                                                    onClick={() => handleSuggestionClick('project', project)}
-                                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
-                                                >
-                                                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        {project.logo_url ? (
-                                                            <img src={project.logo_url} alt={project.name} className="w-6 h-6 rounded object-cover" />
-                                                        ) : (
-                                                            <Rocket className="w-4 h-4 text-gray-500" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">{project.name}</div>
-                                                        <div className="text-sm text-gray-500 truncate">{project.category_type}</div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {searchSuggestions.users?.length > 0 && (
-                                        <div className="mb-2">
-                                            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                                Users
-                                            </div>
-                                            {searchSuggestions.users.map((user) => (
-                                                <button
-                                                    key={user.id}
-                                                    onClick={() => handleSuggestionClick('user', user)}
-                                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
-                                                >
-                                                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        {user.avatar_url ? (
-                                                            <img src={user.avatar_url} alt={user.username} className="w-6 h-6 rounded object-cover" />
-                                                        ) : (
-                                                            <User className="w-4 h-4 text-gray-500" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">{user.username}</div>
-                                                        <div className="text-sm text-gray-500 truncate">{user.full_name}</div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {searchSuggestions.categories?.length > 0 && (
-                                        <div className="mb-2">
-                                            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                                Categories
-                                            </div>
-                                            {searchSuggestions.categories.map((category) => (
-                                                <button
-                                                    key={category}
-                                                    onClick={() => handleSuggestionClick('category', { category_type: category })}
-                                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
-                                                >
-                                                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        <Monitor className="w-4 h-4 text-blue-600" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">{category}</div>
-                                                        <div className="text-sm text-gray-500">Category</div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {searchSuggestions.tags?.length > 0 && (
-                                        <div className="mb-2">
-                                            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                                Tagged Projects
-                                            </div>
-                                            {searchSuggestions.tags.map((project) => (
-                                                <button
-                                                    key={project.id}
-                                                    onClick={() => handleSuggestionClick('project', project)}
-                                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-left"
-                                                >
-                                                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        <Tag className="w-4 h-4 text-green-600" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 truncate">{project.name}</div>
-                                                        <div className="text-sm text-gray-500">Tagged Project</div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
-                {/* + Launch Dropdown */}
-                <div className="relative launch-dropdown">
-                    <button
-                        onClick={handleLaunchDropdownToggle}
-                        className="flex items-center gap-2 px-4 py-2  text-black rounded-full hover:bg-gray-300 transition-colors"
-                    >
-                        <CirclePlus className="w-4 h-4" />
-                        Launch
-                        <ChevronDown className={`w-4 h-4 transition-transform ${launchDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[130]">
-                            <button
-                                onClick={() => handleLaunchItemClick('submit')}
-                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                                <CirclePlus className="w-4 h-4 mr-2" />
-                                Submit
-                            </button>
-                            {user && (
+                        {launchDropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[130]">
                                 <button
-                                    onClick={() => handleLaunchItemClick('pitch')}
+                                    onClick={() => handleLaunchItemClick('submit')}
                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 >
-                                    <Video className="w-4 h-4 mr-2" />
-                                    Pitch
+                                    <CirclePlus className="w-4 h-4 mr-2" />
+                                    Submit
                                 </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <Link to="/coming-soon" className="text-gray-800  font-medium flex items-center gap-2   ">
-                    <Rocket className="w-4 h-4" />
-                    Coming Soon
-                </Link>
-
-                {userRole === "admin" && (
-                    <Link to="/admin" className="text-gray-800  font-medium rounded ">Admin</Link>
-                )}
-
-                {user && <NotificationBell />}
-
-                {/* User Dropdown */}
-                <div className="user-dropdown relative">
-                    <button className="p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
-                        {user ? (
-                            <img
-                                src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
-                                alt="profile"
-                                className="w-6 h-6 rounded-full"
-                            />
-                        ) : (
-                            <CircleUserRound className="w-6 h-6 text-white" />
-                        )}
-                    </button>
-
-                    {open && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[130]">
-                            {user ? (
-                                <>
-                                    <div className="px-4 py-2 border-b border-gray-200">
-                                        <div className="flex items-center gap-3">
-                                            <img
-                                                src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
-                                                alt="profile"
-                                                className="w-6 h-6 rounded-full"
-                                            />
-                                            <p className="text-sm font-semibold text-gray-700">
-                                                {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
-                                            </p>
-                                        </div>
-                                        <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
-                                    </div>
-
-                                    <div className="py-1">
-                                        <button onClick={handleProfileClick}
-                                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                            <User className="w-4 h-4 mr-2" />
-                                            Profile
-                                        </button>
-                                        <button onClick={() => { handleClose(); navigate("/settings"); }}
-                                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                            <Settings className="w-4 h-4 mr-2" />
-                                            Settings
-                                        </button>
-                                        <button onClick={() => { handleClose(); handleSignOut(); }}
-                                            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                            <LogOut className="w-4 h-4 mr-2" />
-                                            Sign Out
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="py-1">
-                                    <button onClick={() => { handleClose(); navigate("/UserRegister"); }}
-                                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-600">
-                                        <CircleUserRound className="w-4 h-4 mr-2" />
-                                        Sign In
+                                {user && (
+                                    <button
+                                        onClick={() => handleLaunchItemClick('pitch')}
+                                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                    >
+                                        <Video className="w-4 h-4 mr-2" />
+                                        Pitch
                                     </button>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <Link to="/coming-soon" className="text-gray-800  font-medium flex items-center gap-2   ">
+                        <Rocket className="w-4 h-4" />
+                        Coming Soon
+                    </Link>
+
+                    {userRole === "admin" && (
+                        <Link to="/admin" className="text-gray-800  font-medium rounded ">Admin</Link>
                     )}
-                </div>
-            </nav>
 
-            {/* Mobile Navigation - Right Side (Refactored) */}
-            <div className="md:hidden flex items-center space-x-2 sm:space-x-3">
-                {/* Launch Dropdown Mobile */}
-                <div className="relative launch-dropdown">
-                    <button
-                        onClick={handleLaunchDropdownToggle}
-                        className="flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 text-black rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                        <CirclePlus className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="text-sm sm:text-base">Launch</span>
-                    </button>
+                    {user && <NotificationBell />}
 
-                    {launchDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[130]">
-                            <button
-                                onClick={() => handleLaunchItemClick('submit')}
-                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                                <CirclePlus className="w-4 h-4 mr-2" />
-                                Submit
-                            </button>
-                            {user && (
+                    {/* User Dropdown */}
+                    <div className="user-dropdown relative">
+                        <button className="p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
+                            {user ? (
+                                <img
+                                    src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
+                                    alt="profile"
+                                    className="w-6 h-6 rounded-full"
+                                />
+                            ) : (
+                                <CircleUserRound className="w-6 h-6 text-black" />
+                            )}
+                        </button>
+
+                        {open && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[130]">
+                                {user ? (
+                                    <>
+                                        <div className="px-4 py-2 border-b border-gray-200">
+                                            <div className="flex items-center gap-3">
+                                                <img
+                                                    src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
+                                                    alt="profile"
+                                                    className="w-6 h-6 rounded-full"
+                                                />
+                                                <p className="text-sm font-semibold text-gray-700">
+                                                    {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
+                                                </p>
+                                            </div>
+                                            <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
+                                        </div>
+
+                                        <div className="py-1">
+                                            <button onClick={handleProfileClick}
+                                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <User className="w-4 h-4 mr-2" />
+                                                Profile
+                                            </button>
+                                            <button onClick={() => { handleClose(); navigate("/settings"); }}
+                                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <Settings className="w-4 h-4 mr-2" />
+                                                Settings
+                                            </button>
+                                            <button onClick={() => { handleClose(); handleSignOut(); }}
+                                                className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                                <LogOut className="w-4 h-4 mr-2" />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="py-1">
+                                        <button onClick={() => { handleClose(); navigate("/UserRegister"); }}
+                                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-600">
+                                            <CircleUserRound className="w-4 h-4 mr-2" />
+                                            Sign In
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </nav>
+
+                {/* Mobile Navigation - Right Side (Refactored) */}
+                <div className="md:hidden flex items-center space-x-2 sm:space-x-3">
+                    {/* Launch Dropdown Mobile */}
+                    <div className="relative launch-dropdown">
+                        <button
+                            onClick={handleLaunchDropdownToggle}
+                            className="flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 text-black rounded-full hover:bg-gray-100 transition-colors"
+                        >
+                            <CirclePlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="text-sm sm:text-base">Launch</span>
+                        </button>
+
+                        {launchDropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[130]">
                                 <button
-                                    onClick={() => handleLaunchItemClick('pitch')}
+                                    onClick={() => handleLaunchItemClick('submit')}
                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 >
-                                    <Video className="w-4 h-4 mr-2" />
-                                    Pitch
+                                    <CirclePlus className="w-4 h-4 mr-2" />
+                                    Submit
                                 </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Coming Soon Mobile (New) */}
-                <Link to="/coming-soon" className="text-gray-800 font-medium flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full hover:bg-gray-100 transition-colors">
-                    <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-sm sm:text-base">Soon</span>
-                </Link>
-
-                {/* Notifications Mobile */}
-                {user && <NotificationBell />}
-
-                {/* User Dropdown Mobile */}
-                <div className="user-dropdown relative">
-                    <button className="p-2 sm:p-2.5 rounded-full hover:bg-white/20" onClick={handlepopover}>
-                        {user ? (
-                            <img
-                                src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
-                                alt="profile"
-                                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full"
-                            />
-                        ) : (
-                            <CircleUserRound className="w-6 h-6 sm:w-7 sm:h-7 text-black" />
-                        )}
-                    </button>
-                    {open && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[130]">
-                            {user ? (
-                                <>
-                                    <div className="px-4 py-2 border-b border-gray-200">
-                                        <div className="flex items-center gap-3">
-                                            <img
-                                                src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
-                                                alt="profile"
-                                                className="w-6 h-6 rounded-full"
-                                            />
-                                            <p className="text-sm font-semibold text-gray-700">
-                                                {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
-                                            </p>
-                                        </div>
-                                        <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
-                                    </div>
-                                    <div className="py-1">
-                                        <button onClick={handleProfileClick}
-                                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                            <User className="w-4 h-4 mr-2" />
-                                            Profile
-                                        </button>
-                                        <button onClick={() => { handleClose(); navigate("/settings"); }}
-                                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                            <Settings className="w-4 h-4 mr-2" />
-                                            Settings
-                                        </button>
-                                        <button onClick={() => { handleClose(); handleSignOut(); }}
-                                            className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                            <LogOut className="w-4 h-4 mr-2" />
-                                            Sign Out
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="py-1">
-                                    <button onClick={() => { handleClose(); navigate("/UserRegister"); }}
-                                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                        <CircleUserRound className="w-4 h-4 mr-2" />
-                                        Sign In
+                                {user && (
+                                    <button
+                                        onClick={() => handleLaunchItemClick('pitch')}
+                                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                    >
+                                        <Video className="w-4 h-4 mr-2" />
+                                        Pitch
                                     </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
-        </header >
+                    {/* Coming Soon Mobile (New) */}
+                    <Link to="/coming-soon" className="text-gray-800 font-medium flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full hover:bg-gray-100 transition-colors">
+                        <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="text-sm sm:text-base">Soon</span>
+                    </Link>
+
+                    {/* Notifications Mobile */}
+                    {user && <NotificationBell />}
+
+                    {/* User Dropdown Mobile */}
+                    <div className="user-dropdown relative">
+                        <button className="p-2 sm:p-2.5 rounded-full hover:bg-white/20" onClick={handlepopover}>
+                            {user ? (
+                                <img
+                                    src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
+                                    alt="profile"
+                                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full"
+                                />
+                            ) : (
+                                <CircleUserRound className="w-6 h-6 sm:w-7 sm:h-7 text-black" />
+                            )}
+                        </button>
+                        {open && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[130]">
+                                {user ? (
+                                    <>
+                                        <div className="px-4 py-2 border-b border-gray-200">
+                                            <div className="flex items-center gap-3">
+                                                <img
+                                                    src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
+                                                    alt="profile"
+                                                    className="w-6 h-6 rounded-full"
+                                                />
+                                                <p className="text-sm font-semibold text-gray-700">
+                                                    {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
+                                                </p>
+                                            </div>
+                                            <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
+                                        </div>
+                                        <div className="py-1">
+                                            <button onClick={handleProfileClick}
+                                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <User className="w-4 h-4 mr-2" />
+                                                Profile
+                                            </button>
+                                            <button onClick={() => { handleClose(); navigate("/settings"); }}
+                                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <Settings className="w-4 h-4 mr-2" />
+                                                Settings
+                                            </button>
+                                            <button onClick={() => { handleClose(); handleSignOut(); }}
+                                                className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                                <LogOut className="w-4 h-4 mr-2" />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="py-1">
+                                        <button onClick={() => { handleClose(); navigate("/UserRegister"); }}
+                                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            <CircleUserRound className="w-4 h-4 mr-2" />
+                                            Sign In
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+            </header>
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+        </>
     );
 };
 
