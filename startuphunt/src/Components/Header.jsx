@@ -96,8 +96,8 @@ const Header = ({ onMenuClick }) => {
 
             setSearchSuggestions({
                 projects: projects || [],
-                users: [],
                 categories: [],
+                users: [],
                 tags: []
             });
         } catch (error) {
