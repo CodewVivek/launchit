@@ -254,7 +254,7 @@ app.post('/api/batch-embeddings', async (req, res) => {
     const { texts } = req.body;
 
     if (!texts || !Array.isArray(texts)) {
-      return res.status(400).json({ error: 'Texts array is required' });
+      return res.status(500).json({ error: 'Texts array is required' });
     }
 
     const embeddings = await Promise.all(
