@@ -32,7 +32,7 @@ async function generateEmbedding(text) {
         embeddingsCache.set(cacheKey, embedding);
         return embedding;
     } catch (error) {
-        // Error generating embedding
+        console.error('Error generating embedding:', error);
         throw new Error('Failed to generate embedding');
     }
 }
@@ -67,9 +67,10 @@ async function semanticSearch(query, projects, limit = 10) {
         const scoredProjects = projects.map(project => {
             let similarity = 0;
             const projectText = [
-                project.title || '',
+                project.name || '',
                 project.description || '',
-                project.category || '',
+                project.category_type || '',
+                project.tagline || '',
                 project.tags ? project.tags.join(' ') : ''
             ].join(' ').trim();
 
@@ -84,21 +85,58 @@ async function semanticSearch(query, projects, limit = 10) {
         return scoredProjects.slice(0, limit);
 
     } catch (error) {
-        // Error in semantic search
+        console.error('Error in semantic search:', error);
         throw new Error('Semantic search failed');
     }
 }
 
-// Content moderation removed for merge
+// Generate AI-powered project suggestions
+async function generateProjectSuggestions(projectData) {
+    try {
+        const client = await getOpenAIClient();
+        
+        const prompt = `Based on this startup project, suggest improvements and next steps:
+        
+Project: ${projectData.name}
+Description: ${projectData.description}
+Category: ${projectData.category_type}
+Tagline: ${projectData.tagline}
 
-// Content moderation functions removed for merge
+Please provide:
+1. 3 specific improvement suggestions
+2. 2 potential next steps
+3. 1 marketing tip
 
-// Content moderation functions removed for merge
+Format as JSON with keys: improvements, nextSteps, marketingTip`;
 
-// Content moderation functions removed for merge
+        const response = await client.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a startup advisor helping founders improve their projects. Provide practical, actionable advice."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            temperature: 0.7,
+            max_tokens: 500
+        });
+
+        const suggestions = response.choices[0].message.content;
+        return suggestions;
+    } catch (error) {
+        console.error('Error generating suggestions:', error);
+        throw new Error('Failed to generate project suggestions');
+    }
+}
 
 export {
     generateEmbedding,
     cosineSimilarity,
-    semanticSearch
+    semanticSearch,
+    generateProjectSuggestions,
+    getOpenAIClient
 };
