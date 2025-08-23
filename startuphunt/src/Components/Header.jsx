@@ -35,10 +35,25 @@ const Header = ({ onMenuClick }) => {
                 setUserRole(profile?.role);
             }
         };
+        
         getUser();
+        
+        // 🆕 ADD THIS: Listen for auth state changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                setUser(session?.user || null);
+                if (session?.user) {
+                    // Fetch profile data
+                    getUser();
+                }
+            }
+            if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setUserRole(null);
+            }
+        });
 
-        // Remove real-time auth subscription to reduce database load
-        // Auth state will be checked on-demand when needed
+        return () => subscription?.unsubscribe();
     }, []);
 
     const handlepopover = () => {
