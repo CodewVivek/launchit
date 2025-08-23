@@ -163,6 +163,10 @@ function App() {
         // Call auto username generation when user signs in
         await ensureAutoUsername();
       }
+      // Handle session restoration on page refresh
+      if (event === 'INITIAL_SESSION' && session?.user) {
+        await ensureAutoUsername();
+      }
     });
 
     return () => {

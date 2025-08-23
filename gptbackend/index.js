@@ -25,14 +25,14 @@ app.get('/api/health', (req, res) => {
 app.post('/generatelaunchdata', async (req, res) => {
   try {
     const { projectName, category, description, websiteUrl } = req.body;
-    
+
     if (!projectName) {
       return res.status(400).json({ error: 'Project name is required' });
     }
 
     // Generate AI-powered launch data with gpt-4o-mini
     const client = await getOpenAIClient();
-    
+
     const prompt = `Generate a complete structured JSON for a startup project launch:
 
 Project Name: ${projectName}
@@ -94,7 +94,7 @@ Make it compelling for startup investors and users.`;
     });
 
     const generatedData = response.choices[0].message.content;
-    
+
     // Try to parse the JSON to ensure it's valid
     let parsedData;
     try {
@@ -103,17 +103,17 @@ Make it compelling for startup investors and users.`;
       // If JSON parsing fails, return the raw text
       parsedData = { rawResponse: generatedData };
     }
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       data: parsedData,
       message: 'Launch data generated successfully with gpt-4o-mini'
     });
-    
+
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to generate launch data',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -122,7 +122,7 @@ Make it compelling for startup investors and users.`;
 app.post('/api/embeddings', async (req, res) => {
   try {
     const { text } = req.body;
-    
+
     if (!text) {
       return res.status(400).json({ error: 'Text is required' });
     }
@@ -138,7 +138,7 @@ app.post('/api/embeddings', async (req, res) => {
 app.post('/api/semantic-search', async (req, res) => {
   try {
     const { query, projects, limit = 10 } = req.body;
-    
+
     if (!query || !projects) {
       return res.status(400).json({ error: 'Query and projects are required' });
     }
