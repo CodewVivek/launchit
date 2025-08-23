@@ -32,7 +32,6 @@ async function generateEmbedding(text) {
         embeddingsCache.set(cacheKey, embedding);
         return embedding;
     } catch (error) {
-        console.error('Error generating embedding:', error);
         throw new Error('Failed to generate embedding');
     }
 }
@@ -85,7 +84,6 @@ async function semanticSearch(query, projects, limit = 10) {
         return scoredProjects.slice(0, limit);
 
     } catch (error) {
-        console.error('Error in semantic search:', error);
         throw new Error('Semantic search failed');
     }
 }
@@ -110,11 +108,11 @@ Please provide:
 Format as JSON with keys: improvements, nextSteps, marketingTip`;
 
         const response = await client.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4o-mini",
             messages: [
                 {
                     role: "system",
-                    content: "You are a startup advisor helping founders improve their projects. Provide practical, actionable advice."
+                    content: "You are a startup advisor helping founders improve their projects. Provide practical, actionable advice in valid JSON format."
                 },
                 {
                     role: "user",
@@ -128,7 +126,6 @@ Format as JSON with keys: improvements, nextSteps, marketingTip`;
         const suggestions = response.choices[0].message.content;
         return suggestions;
     } catch (error) {
-        console.error('Error generating suggestions:', error);
         throw new Error('Failed to generate project suggestions');
     }
 }

@@ -21,39 +21,54 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', service: 'LaunchIT AI Backend' });
 });
 
-// Generate launch data endpoint (for project creation)
-app.post('/generatelaunchdata', async (req, res) => {
+// Generate image suggestions for projects
+app.post('/api/generate-images', async (req, res) => {
   try {
-    const { projectName, category, description } = req.body;
+    const { projectName, category, description, tagline } = req.body;
 
     if (!projectName) {
       return res.status(400).json({ error: 'Project name is required' });
     }
 
-    // Generate AI-powered launch data
     const client = await getOpenAIClient();
 
-    const prompt = `Generate launch data for a startup project:
-    
-Project Name: ${projectName}
+    const prompt = `Generate visual content suggestions for a startup project:
+
+Project: ${projectName}
 Category: ${category || 'General'}
 Description: ${description || 'No description provided'}
+Tagline: ${tagline || 'No tagline provided'}
 
-Please generate:
-1. A compelling tagline (max 100 characters)
-2. A detailed description (max 500 characters)
-3. 5 relevant tags
-4. Suggested category if none provided
-5. Marketing tips
+Generate detailed descriptions for:
 
-Format as JSON with keys: tagline, description, tags, category, marketingTips`;
+1. Logo Design:
+   - Style, colors, symbols, typography
+   - Modern startup aesthetic
+   - Memorable and scalable
+
+2. Hero Image/Thumbnail:
+   - Composition, mood, colors
+   - Should represent the project's value
+   - Professional and engaging
+
+3. Brand Colors:
+   - Primary and secondary color palette
+   - Hex codes for implementation
+   - Psychology behind color choices
+
+4. Visual Style Guide:
+   - Overall aesthetic direction
+   - Typography suggestions
+   - Icon style recommendations
+
+Format as JSON with keys: logo, heroImage, brandColors, visualStyle`;
 
     const response = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "You are a startup expert helping founders create compelling launch materials. Provide practical, engaging content."
+          content: "You are a visual designer and branding expert. Provide detailed, actionable design suggestions in valid JSON format."
         },
         {
           role: "user",
@@ -66,14 +81,118 @@ Format as JSON with keys: tagline, description, tags, category, marketingTips`;
 
     const generatedData = response.choices[0].message.content;
 
+    // Try to parse the JSON
+    let parsedData;
+    try {
+      parsedData = JSON.parse(generatedData);
+    } catch (parseError) {
+      parsedData = { rawResponse: generatedData };
+    }
+
     res.json({
       success: true,
-      data: generatedData,
-      message: 'Launch data generated successfully'
+      data: parsedData,
+      message: 'Image suggestions generated successfully with gpt-4o-mini'
     });
 
   } catch (error) {
-    console.error('Launch data generation error:', error);
+    res.status(500).json({
+      error: 'Failed to generate image suggestions',
+      details: error.message
+    });
+  }
+});
+
+// Generate launch data endpoint (for project creation)
+app.post('/generatelaunchdata', async (req, res) => {
+  try {
+    const { projectName, category, description, websiteUrl } = req.body;
+
+    if (!projectName) {
+      return res.status(400).json({ error: 'Project name is required' });
+    }
+
+    // Generate AI-powered launch data with gpt-4o-mini
+    const client = await getOpenAIClient();
+
+    const prompt = `Generate a complete structured JSON for a startup project launch:
+
+Project Name: ${projectName}
+Category: ${category || 'General'}
+Description: ${description || 'No description provided'}
+Website URL: ${websiteUrl || 'No URL provided'}
+
+Generate a full structured JSON with:
+
+1. Basic info:
+   - launchName (compelling project name)
+   - websiteUrl (use provided or suggest one)
+   - tagline (max 100 characters, compelling)
+   - category (startup category)
+
+2. Content:
+   - description (short + long versions)
+   - tags (5-8 AI-generated SEO-style tags)
+
+3. Visuals:
+   - logo (suggest logo description for AI generation)
+   - thumbnail (hero-style screenshot description)
+
+4. Links:
+   - appLinks (suggest common startup links like Play Store, App Store, GitHub, etc.)
+
+Format as valid JSON with these exact keys:
+{
+  "launchName": "",
+  "websiteUrl": "",
+  "tagline": "",
+  "category": "",
+  "description": {
+    "short": "",
+    "long": ""
+  },
+  "tags": [],
+  "logo": "",
+  "thumbnail": "",
+  "appLinks": []
+}
+
+Make it compelling for startup investors and users.`;
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a startup expert helping founders create compelling launch materials. Generate practical, engaging content in valid JSON format. Always return valid JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const generatedData = response.choices[0].message.content;
+
+    // Try to parse the JSON to ensure it's valid
+    let parsedData;
+    try {
+      parsedData = JSON.parse(generatedData);
+    } catch (parseError) {
+      // If JSON parsing fails, return the raw text
+      parsedData = { rawResponse: generatedData };
+    }
+
+    res.json({
+      success: true,
+      data: parsedData,
+      message: 'Launch data generated successfully with gpt-4o-mini'
+    });
+
+  } catch (error) {
     res.status(500).json({
       error: 'Failed to generate launch data',
       details: error.message
@@ -93,7 +212,6 @@ app.post('/api/embeddings', async (req, res) => {
     const embedding = await generateEmbedding(text);
     res.json({ embedding, success: true });
   } catch (error) {
-    console.error('Embedding generation error:', error);
     res.status(500).json({ error: 'Failed to generate embedding' });
   }
 });
@@ -110,7 +228,6 @@ app.post('/api/semantic-search', async (req, res) => {
     const results = await semanticSearch(query, projects, limit);
     res.json({ results, success: true });
   } catch (error) {
-    console.error('Semantic search error:', error);
     res.status(500).json({ error: 'Semantic search failed' });
   }
 });
@@ -127,7 +244,6 @@ app.post('/api/project-suggestions', async (req, res) => {
     const suggestions = await generateProjectSuggestions(projectData);
     res.json({ suggestions, success: true });
   } catch (error) {
-    console.error('Project suggestions error:', error);
     res.status(500).json({ error: 'Failed to generate project suggestions' });
   }
 });
@@ -147,7 +263,6 @@ app.post('/api/batch-embeddings', async (req, res) => {
 
     res.json({ embeddings, success: true });
   } catch (error) {
-    console.error('Batch embeddings error:', error);
     res.status(500).json({ error: 'Failed to generate batch embeddings' });
   }
 });

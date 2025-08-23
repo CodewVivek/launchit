@@ -3,7 +3,7 @@
 
 const BASE_URL = 'http://localhost:3001'; // Change this to your Render URL when testing
 
-console.log('🚀 Testing LaunchIT AI Backend...\n');
+console.log('🚀 Testing LaunchIT AI Backend with gpt-4o-mini...\n');
 
 // Test 1: Health Check
 async function testHealth() {
@@ -40,16 +40,17 @@ async function testAIHealth() {
     }
 }
 
-// Test 3: Generate Launch Data (without OpenAI key)
+// Test 3: Generate Launch Data (with gpt-4o-mini)
 async function testLaunchData() {
     try {
         const response = await fetch(`${BASE_URL}/generatelaunchdata`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                projectName: "Test Project",
-                category: "Technology",
-                description: "A test project for backend testing"
+                projectName: "TaskMaster AI",
+                category: "Productivity",
+                description: "AI-powered task management platform",
+                websiteUrl: "https://taskmaster.ai"
             })
         });
 
@@ -57,7 +58,12 @@ async function testLaunchData() {
             console.log('⚠️  Launch Data: EXPECTED ERROR (no OpenAI key)');
             console.log('   This is normal if you haven\'t set OPENAI_API_KEY');
         } else if (response.ok) {
+            const result = await response.json();
             console.log('✅ Launch Data: PASSED');
+            console.log('   Using gpt-4o-mini model');
+            if (result.data && result.data.launchName) {
+                console.log(`   Generated: ${result.data.launchName}`);
+            }
         } else {
             console.log('❌ Launch Data: FAILED');
         }
@@ -66,7 +72,39 @@ async function testLaunchData() {
     }
 }
 
-// Test 4: Test CORS
+// Test 4: Generate Images (with gpt-4o-mini)
+async function testImageGeneration() {
+    try {
+        const response = await fetch(`${BASE_URL}/api/generate-images`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                projectName: "TaskMaster AI",
+                category: "Productivity",
+                description: "AI-powered task management platform",
+                tagline: "Supercharge your productivity with AI"
+            })
+        });
+
+        if (response.status === 500) {
+            console.log('⚠️  Image Generation: EXPECTED ERROR (no OpenAI key)');
+            console.log('   This is normal if you haven\'t set OPENAI_API_KEY');
+        } else if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Image Generation: PASSED');
+            console.log('   Using gpt-4o-mini model');
+            if (result.data && result.data.logo) {
+                console.log('   Generated logo and visual suggestions');
+            }
+        } else {
+            console.log('❌ Image Generation: FAILED');
+        }
+    } catch (error) {
+        console.log('❌ Image Generation: FAILED -', error.message);
+    }
+}
+
+// Test 5: Test CORS
 async function testCORS() {
     try {
         const response = await fetch(`${BASE_URL}/health`, {
@@ -86,7 +124,7 @@ async function testCORS() {
     }
 }
 
-// Test 5: Test Server Response Time
+// Test 6: Test Server Response Time
 async function testResponseTime() {
     try {
         const start = Date.now();
@@ -115,7 +153,7 @@ async function testResponseTime() {
 
 // Run all tests
 async function runAllTests() {
-    console.log('🔍 Starting Backend Tests...\n');
+    console.log('🔍 Starting Backend Tests with gpt-4o-mini...\n');
 
     await testHealth();
     console.log('');
@@ -126,6 +164,9 @@ async function runAllTests() {
     await testLaunchData();
     console.log('');
 
+    await testImageGeneration();
+    console.log('');
+
     await testCORS();
     console.log('');
 
@@ -134,7 +175,8 @@ async function runAllTests() {
 
     console.log('✨ Backend Testing Complete!');
     console.log('\n📝 Notes:');
-    console.log('   - If Launch Data shows "EXPECTED ERROR", that\'s normal without OpenAI key');
+    console.log('   - Using gpt-4o-mini model for AI generation');
+    console.log('   - If AI endpoints show "EXPECTED ERROR", that\'s normal without OpenAI key');
     console.log('   - All other endpoints should work fine');
     console.log('   - Make sure your backend is running on the correct port');
 }
