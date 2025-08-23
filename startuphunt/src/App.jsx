@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "./supabaseClient";
 import { markSubscriptionFixesApplied, logPageSpeedImprovements } from "./utils/performanceMonitor";
-import { ensureAutoUsername } from "./autoUsername";
+
 import Header from "./Components/Header";
 import Sidebar from "./Components/Sidebar";
 import Register from "./Pages/Register";
@@ -157,23 +157,9 @@ function App() {
 
     logPageSpeedImprovements();
 
-    // Set up auth state listener for auto username generation
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Call auto username generation when user signs in
-        await ensureAutoUsername();
-      }
-      // Handle session restoration on page refresh
-      if (event === 'INITIAL_SESSION' && session?.user) {
-        await ensureAutoUsername();
-      }
-    });
-
     return () => {
       // Clean up all channels when app unmounts
       supabase.removeAllChannels();
-      // Clean up auth subscription
-      subscription?.unsubscribe();
     };
   }, []);
 

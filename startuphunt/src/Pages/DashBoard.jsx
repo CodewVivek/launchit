@@ -16,35 +16,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchProjectsData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .neq("status", "draft");
+      if (error) {
 
-        // Add timeout to prevent infinite loading
-        const timeoutId = setTimeout(() => {
-          setLoading(false);
-          setError("Request timeout. Please refresh the page.");
-        }, 10000); // 10 seconds timeout
-
-        const { data, error } = await supabase
-          .from("projects")
-          .select("*")
-          .neq("status", "draft");
-
-        clearTimeout(timeoutId); // Clear timeout if successful
-
-        if (error) {
-          setError("Failed to load projects. Please try again.");
-        } else {
-          setProjects(data || []);
-        }
-      } catch (err) {
         setError("Failed to load projects. Please try again.");
-      } finally {
-        setLoading(false);
+      } else {
+        setProjects(data);
       }
+      setLoading(false);
     };
-
     fetchProjectsData();
   }, []);
 
