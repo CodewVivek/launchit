@@ -190,7 +190,7 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
       result = fallbackResult;
     }
 
-    
+
     const responseData = {
       name: result.name || "",
       website_url: url,
@@ -420,7 +420,7 @@ app.use((err, req, res, next) => {
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     error: true,
     message: 'Endpoint not found'
@@ -430,4 +430,4 @@ app.use('*', (req, res) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   // Server started successfully
-});
+}); 
