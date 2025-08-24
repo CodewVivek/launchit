@@ -1,272 +1,433 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { generateEmbedding, semanticSearch, generateProjectSuggestions, getOpenAIClient } from './utils/aiUtils.js';
+import express from "express";
+import dotenv from "dotenv";
+import { OpenAI } from "openai";
+import { createClient } from "@supabase/supabase-js";
+// fetch is built-in to Node.js 18+
+import cors from "cors";
+import { semanticSearch, generateEmbedding } from "./utils/aiUtils.js";
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+// Check for required environment variables
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'OPENAI_API_KEY'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
-app.use(cors());
-app.use(express.json());
+if (missingEnvVars.length > 0) {
+  process.exit(1);
+}
+
+const app = express();
+app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+  origin: [
+    'https://launchit.site',
+    'https://launchitsite.netlify.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
+  credentials: true
+}));
+
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Simple in-memory rate limiting
+const requestCounts = new Map();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_REQUESTS_PER_WINDOW = 50; // 50 requests per 15 minutes
+
+const rateLimitMiddleware = (req, res, next) => {
+  const clientId = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+
+  if (!requestCounts.has(clientId)) {
+    requestCounts.set(clientId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+  } else {
+    const clientData = requestCounts.get(clientId);
+    if (now > clientData.resetTime) {
+      clientData.count = 1;
+      clientData.resetTime = now + RATE_LIMIT_WINDOW;
+    } else if (clientData.count >= MAX_REQUESTS_PER_WINDOW) {
+      return res.status(429).json({
+        error: true,
+        message: 'Rate limit exceeded. Please try again later.'
+      });
+    } else {
+      clientData.count++;
+    }
+  }
+  next();
+};
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
+
+// Microlink.io API function to generate thumbnail and logo
+async function generateMicrolinkAssets(url) {
+  try {
+    // Generate thumbnail (16:9 aspect ratio - 1200x675)
+    const thumbnailResponse = await fetch(
+      `https://api.microlink.io?url=${encodeURIComponent(url)}&screenshot=true&width=1200&height=675&format=png&meta=false`
+    );
+
+    // Get metadata including logo
+    const metadataResponse = await fetch(
+      `https://api.microlink.io?url=${encodeURIComponent(url)}&meta=true`
+    );
+
+    const thumbnailData = await thumbnailResponse.json();
+    const metadataData = await metadataResponse.json();
+
+    // Extract logo URL from metadata
+    let logoUrl = "";
+    if (metadataData.data?.logo?.url) {
+      logoUrl = metadataData.data.logo.url;
+    } else if (metadataData.data?.image?.url) {
+      logoUrl = metadataData.data.image.url;
+    } else if (metadataData.data?.favicon?.url) {
+      // Only use favicon as last resort, and check if it's a proper image
+      const faviconUrl = metadataData.data.favicon.url;
+      if (faviconUrl && !faviconUrl.includes('favicon.ico')) {
+        logoUrl = faviconUrl;
+      }
+    }
+
+    return {
+      thumbnail_url: thumbnailData.data?.screenshot?.url || "",
+      logo_url: logoUrl
+    };
+  } catch (error) {
+    // Microlink.io error occurred
+    return {
+      thumbnail_url: "",
+      logo_url: ""
+    };
+  }
+}
+
+app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
+  const { url, user_id } = req.body;
+
+  if (!url || !url.startsWith("http")) {
+    return res.status(400).json({ error: "Invalid or missing URL" });
+  }
+
+  try {
+    const htmlResponse = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+    const html = await htmlResponse.text();
+
+    // Generate Microlink.io assets (thumbnail + logo)
+    const microlinkAssets = await generateMicrolinkAssets(url);
+
+    const prompt = `
+      You are a data extraction AI. Extract information from this website and return ONLY a valid JSON object with no additional text.
+      
+      Required JSON format:
+      {
+        "name": "company/product name",
+        "tagline": "short compelling tagline",
+        "description": "detailed description (2-3 sentences)",
+        "category": "detected category (saas, ai, fintech, ecommerce, etc.)",
+        "features": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+        "emails": ["email@example.com"],
+        "social_links": ["https://twitter.com/...", "https://linkedin.com/..."],
+        "other_links": ["https://app.example.com", "https://github.com/..."]
+      }
+      
+      Website HTML (first 7000 chars):
+      ${html.slice(0, 7000)}
+      
+      Return only the JSON object, no other text:
+    `;
+
+    let gptresponse;
+    try {
+      gptresponse = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0
+      });
+    } catch (openaiError) {
+      // OpenAI API error occurred
+      return res.status(500).json({
+        err: true,
+        message: "OpenAI API failed: " + openaiError.message
+      });
+    }
+
+    let result;
+    try {
+      const rawContent = gptresponse.choices[0].message.content.trim();
+      // Remove any markdown code blocks if present
+      const jsonContent = rawContent.replace(/```json\s*|\s*```/g, '').trim();
+      result = JSON.parse(jsonContent);
+    } catch (e) {
+      // GPT JSON parse error occurred
+
+      // Fallback: create basic data from URL
+      const fallbackResult = {
+        name: url.replace(/https?:\/\/(www\.)?/, '').split('/')[0].replace(/\./g, ' ').toUpperCase(),
+        tagline: "Innovative solution for modern needs",
+        description: "This product offers cutting-edge features designed to solve real-world problems and enhance user experience.",
+        category: "startup ecosystem",
+        features: ["User-friendly", "Scalable", "Secure"],
+        emails: [],
+        social_links: [],
+        other_links: []
+      };
+
+      result = fallbackResult;
+    }
+
+    
+    const responseData = {
+      name: result.name || "",
+      website_url: url,
+      tagline: result.tagline || "",
+      description: result.description || "",
+      category: result.category || "",
+      links: [...(result.social_links || []), ...(result.other_links || [])],
+      features: result.features || [],
+      logo_url: microlinkAssets.logo_url,
+      thumbnail_url: microlinkAssets.thumbnail_url,
+      success: true
+    };
+
+    res.json(responseData);
+
+  } catch (err) {
+    // Server error occurred
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ==================== AI FEATURES ENDPOINTS ====================
+
+// 2. SEMANTIC SEARCH ENDPOINT
+app.post('/api/search/semantic', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { query, limit = 10, filters = {} } = req.body;
+
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({
+        error: true,
+        message: 'Search query must be at least 2 characters long'
+      });
+    }
+
+    // Get all projects from database
+    let { data: projects, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('status', 'active');
+
+    if (fetchError) {
+      throw new Error('Failed to fetch projects: ' + fetchError.message);
+    }
+
+    if (!projects || projects.length === 0) {
+      return res.json({
+        success: true,
+        results: [],
+        total: 0,
+        query: query
+      });
+    }
+
+    // Generate embeddings for projects that don't have them
+    const projectsWithEmbeddings = await Promise.all(
+      projects.map(async (project) => {
+        if (!project.embedding) {
+          try {
+            const projectText = [
+              project.title || '',
+              project.description || '',
+              project.category || '',
+              project.tags ? project.tags.join(' ') : ''
+            ].join(' ').trim();
+
+            if (projectText) {
+              const embedding = await generateEmbedding(projectText);
+
+              // Store embedding in database
+              await supabase
+                .from('projects')
+                .update({ embedding: embedding })
+                .eq('id', project.id);
+
+              return { ...project, embedding };
+            }
+          } catch (error) {
+            // Silently continue if embedding generation fails
+          }
+        }
+        return project;
+      })
+    );
+
+    // Perform semantic search
+    const searchResults = await semanticSearch(query, projectsWithEmbeddings, limit);
+
+    // Apply additional filters if provided
+    let filteredResults = searchResults;
+
+    if (filters.category) {
+      filteredResults = filteredResults.filter(project =>
+        project.category === filters.category
+      );
+    }
+
+    if (filters.tags && filters.tags.length > 0) {
+      filteredResults = filteredResults.filter(project =>
+        project.tags && filters.tags.some(tag => project.tags.includes(tag))
+      );
+    }
+
+    res.json({
+      success: true,
+      results: filteredResults,
+      total: filteredResults.length,
+      query: query,
+      searchTime: new Date().toISOString()
+    });
+
+  } catch (error) {
+    // Semantic search error occurred
+    res.status(500).json({
+      error: true,
+      message: 'Semantic search failed: ' + error.message
+    });
+  }
+});
+
+// 3. GENERATE EMBEDDINGS FOR EXISTING PROJECTS
+app.post('/api/embeddings/generate', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { projectId, projectText } = req.body;
+
+    if (!projectId) {
+      return res.status(400).json({
+        error: true,
+        message: 'Project ID is required'
+      });
+    }
+
+    // Get project data
+    const { data: project, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
+
+    if (fetchError || !project) {
+      return res.status(404).json({
+        error: true,
+        message: 'Project not found'
+      });
+    }
+
+    // Use provided projectText or generate from project data
+    let textForEmbedding = projectText;
+    if (!textForEmbedding) {
+      textForEmbedding = [
+        project.name || '',
+        project.description || '',
+        project.tagline || '',
+        project.category_type || '',
+        project.tags ? project.tags.join(' ') : ''
+      ].filter(text => text.trim()).join(' ').trim();
+    }
+
+    if (!textForEmbedding) {
+      return res.status(400).json({
+        error: true,
+        message: 'Project has no text content for embedding'
+      });
+    }
+
+    const embedding = await generateEmbedding(textForEmbedding);
+
+    // Update project with embedding
+    const { error: updateError } = await supabase
+      .from('projects')
+      .update({ embedding: embedding })
+      .eq('id', projectId);
+
+    if (updateError) {
+      throw new Error('Failed to update project: ' + updateError.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Embedding generated successfully',
+      projectId: projectId,
+      projectName: project.name
+    });
+
+  } catch (error) {
+    // Embedding generation error occurred
+    res.status(500).json({
+      error: true,
+      message: 'Embedding generation failed: ' + error.message
+    });
+  }
+});
+
+// 4. GET MODERATION QUEUE (Admin only) - REMOVED FOR MERGE
+// app.get('/api/moderation/queue', rateLimitMiddleware, async (req, res) => { ... });
+
+// 5. UPDATE MODERATION STATUS (Admin only) - REMOVED FOR MERGE  
+// app.put('/api/moderation/status', rateLimitMiddleware, async (req, res) => { ... });
+
+// 6. GET USER NOTIFICATIONS (User only) - REMOVED FOR MERGE
+// app.get('/api/notifications/:userId', rateLimitMiddleware, async (req, res) => { ... });
+
+// 7. MARK NOTIFICATION AS READ (User only) - REMOVED FOR MERGE
+// app.put('/api/notifications/:notificationId/read', rateLimitMiddleware, async (req, res) => { ... });
+
+// 8. GET ADMIN NOTIFICATIONS (Admin only) - REMOVED FOR MERGE
+// app.get('/api/admin/notifications', rateLimitMiddleware, async (req, res) => { ... });
+
+// 9. GET MODERATION QUEUE WITH NOTIFICATIONS (Admin only) - REMOVED FOR MERGE
+// app.get('/api/admin/moderation/queue', rateLimitMiddleware, async (req, res) => { ... });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'LaunchIT Backend is running' });
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'launchit-ai-backend'
+  });
 });
 
-// Basic AI endpoints
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', service: 'LaunchIT AI Backend' });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  res.status(500).json({
+    error: true,
+    message: 'Internal server error'
+  });
 });
 
-// Generate image suggestions for projects
-app.post('/api/generate-images', async (req, res) => {
-  try {
-    const { projectName, category, description, tagline } = req.body;
-
-    if (!projectName) {
-      return res.status(400).json({ error: 'Project name is required' });
-    }
-
-    const client = await getOpenAIClient();
-
-    const prompt = `Generate visual content suggestions for a startup project:
-
-Project: ${projectName}
-Category: ${category || 'General'}
-Description: ${description || 'No description provided'}
-Tagline: ${tagline || 'No tagline provided'}
-
-Generate detailed descriptions for:
-
-1. Logo Design:
-   - Style, colors, symbols, typography
-   - Modern startup aesthetic
-   - Memorable and scalable
-
-2. Hero Image/Thumbnail:
-   - Composition, mood, colors
-   - Should represent the project's value
-   - Professional and engaging
-
-3. Brand Colors:
-   - Primary and secondary color palette
-   - Hex codes for implementation
-   - Psychology behind color choices
-
-4. Visual Style Guide:
-   - Overall aesthetic direction
-   - Typography suggestions
-   - Icon style recommendations
-
-Format as JSON with keys: logo, heroImage, brandColors, visualStyle`;
-
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a visual designer and branding expert. Provide detailed, actionable design suggestions in valid JSON format."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 800
-    });
-
-    const generatedData = response.choices[0].message.content;
-
-    // Try to parse the JSON
-    let parsedData;
-    try {
-      parsedData = JSON.parse(generatedData);
-    } catch (parseError) {
-      parsedData = { rawResponse: generatedData };
-    }
-
-    res.json({
-      success: true,
-      data: parsedData,
-      message: 'Image suggestions generated successfully with gpt-4o-mini'
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to generate image suggestions',
-      details: error.message
-    });
-  }
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: true,
+    message: 'Endpoint not found'
+  });
 });
 
-// Generate launch data endpoint (for project creation)
-app.post('/generatelaunchdata', async (req, res) => {
-  try {
-    const { projectName, category, description, websiteUrl } = req.body;
-
-    if (!projectName) {
-      return res.status(400).json({ error: 'Project name is required' });
-    }
-
-    // Generate AI-powered launch data with gpt-4o-mini
-    const client = await getOpenAIClient();
-
-    const prompt = `Generate a complete structured JSON for a startup project launch:
-
-Project Name: ${projectName}
-Category: ${category || 'General'}
-Description: ${description || 'No description provided'}
-Website URL: ${websiteUrl || 'No URL provided'}
-
-Generate a full structured JSON with:
-
-1. Basic info:
-   - launchName (compelling project name)
-   - websiteUrl (use provided or suggest one)
-   - tagline (max 100 characters, compelling)
-   - category (startup category)
-
-2. Content:
-   - description (short + long versions)
-   - tags (5-8 AI-generated SEO-style tags)
-
-3. Visuals:
-   - logo (suggest logo description for AI generation)
-   - thumbnail (hero-style screenshot description)
-
-4. Links:
-   - appLinks (suggest common startup links like Play Store, App Store, GitHub, etc.)
-
-Format as valid JSON with these exact keys:
-{
-  "launchName": "",
-  "websiteUrl": "",
-  "tagline": "",
-  "category": "",
-  "description": {
-    "short": "",
-    "long": ""
-  },
-  "tags": [],
-  "logo": "",
-  "thumbnail": "",
-  "appLinks": []
-}
-
-Make it compelling for startup investors and users.`;
-
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a startup expert helping founders create compelling launch materials. Generate practical, engaging content in valid JSON format. Always return valid JSON."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    });
-
-    const generatedData = response.choices[0].message.content;
-
-    // Try to parse the JSON to ensure it's valid
-    let parsedData;
-    try {
-      parsedData = JSON.parse(generatedData);
-    } catch (parseError) {
-      // If JSON parsing fails, return the raw text
-      parsedData = { rawResponse: generatedData };
-    }
-
-    res.json({
-      success: true,
-      data: parsedData,
-      message: 'Launch data generated successfully with gpt-4o-mini'
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to generate launch data',
-      details: error.message
-    });
-  }
-});
-
-// Generate embeddings for text
-app.post('/api/embeddings', async (req, res) => {
-  try {
-    const { text } = req.body;
-
-    if (!text) {
-      return res.status(400).json({ error: 'Text is required' });
-    }
-
-    const embedding = await generateEmbedding(text);
-    res.json({ embedding, success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to generate embedding' });
-  }
-});
-
-// Semantic search endpoint
-app.post('/api/semantic-search', async (req, res) => {
-  try {
-    const { query, projects, limit = 10 } = req.body;
-
-    if (!query || !projects) {
-      return res.status(400).json({ error: 'Query and projects are required' });
-    }
-
-    const results = await semanticSearch(query, projects, limit);
-    res.json({ results, success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Semantic search failed' });
-  }
-});
-
-// Generate project suggestions
-app.post('/api/project-suggestions', async (req, res) => {
-  try {
-    const { projectData } = req.body;
-
-    if (!projectData || !projectData.name) {
-      return res.status(400).json({ error: 'Project data is required' });
-    }
-
-    const suggestions = await generateProjectSuggestions(projectData);
-    res.json({ suggestions, success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to generate project suggestions' });
-  }
-});
-
-// Batch embeddings generation
-app.post('/api/batch-embeddings', async (req, res) => {
-  try {
-    const { texts } = req.body;
-
-    if (!texts || !Array.isArray(texts)) {
-      return res.status(500).json({ error: 'Texts array is required' });
-    }
-
-    const embeddings = await Promise.all(
-      texts.map(text => generateEmbedding(text))
-    );
-
-    res.json({ embeddings, success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to generate batch embeddings' });
-  }
-});
-
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`LaunchIT Backend running on port ${PORT}`);
-}); 
+  // Server started successfully
+});
