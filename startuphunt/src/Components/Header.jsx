@@ -63,7 +63,12 @@ const Header = ({ onMenuClick }) => {
         try {
             await supabase.auth.signOut();
             setSnackbar({ open: true, message: "Signed out successfully", severity: 'success' });
-            navigate("/");
+            
+            // Refresh window after successful sign out
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Wait 1 second for snackbar to show
+            
         } catch (error) {
             setSnackbar({ open: true, message: "Error signing out", severity: 'error' });
         }
