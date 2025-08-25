@@ -39,7 +39,6 @@ const Settings = () => {
   const handleDeleteAccount = async () => {
     try {
       if (!profile) return;
-
       // Call the database function to delete all user data
       const { error: deleteError } = await supabase.rpc("delete_user_account", {
         user_uuid: profile.id
@@ -64,7 +63,7 @@ const Settings = () => {
       // Error handled silently for production
       setSnackbar({
         open: true,
-        message: "Failed to delete account: " + (error.message || "Unknown error"),
+        message: "Failed to delete account: ",
         severity: "error",
       });
     }
@@ -123,7 +122,7 @@ const Settings = () => {
         linkedin: formData.linkedin,
         portfolio: formData.portfolio,
         youtube: formData.youtube,
-        avatar_url: avatarUrl, // Only if changed
+        avatar_url: avatarUrl, 
       })
       .eq("id", profile.id);
     setSaving(false);

@@ -40,7 +40,7 @@ const Header = ({ onMenuClick }) => {
 
         // Remove real-time auth subscription to reduce database load
         // Auth state will be checked on-demand when needed
-        
+
         // Cleanup function for search timeout
         return () => {
             if (searchTimeout.current) {
@@ -198,12 +198,12 @@ const Header = ({ onMenuClick }) => {
         try {
             const value = e?.target?.value || '';
             setSearch(value);
-            
+
             // Clear any existing timeout
             if (searchTimeout.current) {
                 clearTimeout(searchTimeout.current);
             }
-            
+
             if (value.trim()) {
                 setShowSearchSuggestions(true);
                 // Set new timeout for search
@@ -231,7 +231,7 @@ const Header = ({ onMenuClick }) => {
 
     const handleSearchBlur = () => {
         try {
-        
+
             setTimeout(() => {
                 setShowSearchSuggestions(false);
             }, 200);

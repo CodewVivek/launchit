@@ -39,13 +39,13 @@ const UserRegister = () => {
       clearTimeout(timeoutId);
 
       if (error) {
-        console.error('OAuth Error:', error);
+        
         setError("Failed to sign in. Please try again.");
         setLoading(false);
       }
     } catch (err) {
       clearTimeout(timeoutId);
-      console.error('Network/General Error:', err);
+              
       setError("Network error. Please check your connection and try again.");
       setLoading(false);
     }

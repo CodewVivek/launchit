@@ -46,7 +46,7 @@ export async function ensureAutoUsername() {
             .eq("id", user.id);
 
           if (error) {
-            console.error('Username update error:', error);
+            
           }
           return;
         }
@@ -67,10 +67,10 @@ export async function ensureAutoUsername() {
         .eq("id", user.id);
 
       if (error) {
-        console.error('Fallback username update error:', error);
+                    
       }
     }
   } catch (error) {
-    console.error('Auto username generation error:', error);
+            
   }
 }
