@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
     Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User, Menu, X, Video, Search, ChevronDown, Monitor, Tag
 } from "lucide-react";
@@ -19,6 +19,7 @@ const Header = ({ onMenuClick }) => {
     const [searchSuggestions, setSearchSuggestions] = useState({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
     const [isSearching, setIsSearching] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const searchTimeout = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -39,6 +40,13 @@ const Header = ({ onMenuClick }) => {
 
         // Remove real-time auth subscription to reduce database load
         // Auth state will be checked on-demand when needed
+        
+        // Cleanup function for search timeout
+        return () => {
+            if (searchTimeout.current) {
+                clearTimeout(searchTimeout.current);
+            }
+        };
     }, []);
 
     const handlepopover = () => {
@@ -190,13 +198,18 @@ const Header = ({ onMenuClick }) => {
         try {
             const value = e?.target?.value || '';
             setSearch(value);
+            
+            // Clear any existing timeout
+            if (searchTimeout.current) {
+                clearTimeout(searchTimeout.current);
+            }
+            
             if (value.trim()) {
                 setShowSearchSuggestions(true);
-                // Debounce the search to avoid too many API calls
-                const timeoutId = setTimeout(() => {
+                // Set new timeout for search
+                searchTimeout.current = setTimeout(() => {
                     performSearch(value);
                 }, 300);
-                return () => clearTimeout(timeoutId);
             } else {
                 setShowSearchSuggestions(false);
                 setSearchSuggestions({ projects: [], users: [], categories: [], tags: [], aiSuggestions: [] });
@@ -218,7 +231,7 @@ const Header = ({ onMenuClick }) => {
 
     const handleSearchBlur = () => {
         try {
-            // Delay hiding suggestions to allow clicking on them
+        
             setTimeout(() => {
                 setShowSearchSuggestions(false);
             }, 200);
@@ -306,16 +319,7 @@ const Header = ({ onMenuClick }) => {
                             <input
                                 type="text"
                                 value={search || ''}
-                                onChange={(e) => {
-                                    const value = e.target.value || '';
-                                    setSearch(value);
-                                    if (value.trim()) {
-                                        setShowSearchSuggestions(true);
-                                        performSearch(value);
-                                    } else {
-                                        setShowSearchSuggestions(false);
-                                    }
-                                }}
+                                onChange={handleSearchChange}
                                 onFocus={handleSearchFocus}
                                 onBlur={handleSearchBlur}
                                 placeholder="Search projects, users, categories..."
