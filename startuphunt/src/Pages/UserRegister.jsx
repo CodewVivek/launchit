@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ensureAutoUsername } from "../autoUsername";
 
 const UserRegister = () => {
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,8 @@ const UserRegister = () => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
+          // Generate username for new user
+          await ensureAutoUsername();
           navigate("/");
         }
       }
