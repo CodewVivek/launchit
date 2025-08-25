@@ -22,7 +22,7 @@ import {
   Image,
   Trash2,
   RefreshCw,
-  LogIn,
+  SignIn,
   LogOut,
   AlertCircle,
 } from "lucide-react";
@@ -101,7 +101,7 @@ const guideSections = [
   {
     heading: "What if I forget my password?",
     icon: <RefreshCw className="w-6 h-6 text-blue-400" />,
-    content: `Click "Forgot password?" on the login page. You'll receive an email with instructions to reset your password. If you use Google login, use your Google account to sign in.`,
+    content: `Click "Forgot password?" on the sign-in page. You'll receive an email with instructions to reset your password. If you use Google sign-in, use your Google account to sign in.`,
   },
   {
     heading: "How do I sign out?",
@@ -121,7 +121,7 @@ const guideSections = [
   {
     heading: "Troubleshooting & FAQ",
     icon: <AlertTriangle className="w-6 h-6 text-red-500" />,
-    content: `• Can't sign in? Try resetting your password or using Google login.\n• Project not showing? Make sure it's launched, not just saved as a draft.\n• Build errors? Check the Help Center or contact support.\n• Need more help? Reach out via the feedback link.`,
+    content: `• Can't sign in? Try resetting your password or using Google sign-in.\n• Project not showing? Make sure it's launched, not just saved as a draft.\n• Build errors? Check the Help Center or contact support.\n• Need more help? Reach out via the feedback link.`,
   },
   {
     heading: "Privacy & Safety",

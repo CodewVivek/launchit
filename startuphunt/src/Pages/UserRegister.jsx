@@ -40,13 +40,13 @@ const UserRegister = () => {
       clearTimeout(timeoutId);
 
       if (error) {
-        
+
         setError("Failed to sign in. Please try again.");
         setLoading(false);
       }
     } catch (err) {
       clearTimeout(timeoutId);
-              
+
       setError("Network error. Please check your connection and try again.");
       setLoading(false);
     }

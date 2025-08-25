@@ -43,7 +43,7 @@ const Sidebar = ({ isOpen }) => {
 
     const handleYouItemClick = async (route) => {
         if (!user) {
-            toast.error("Please login to access this feature");
+            toast.error("Please sign in to access this feature");
             navigate("/UserRegister");
             return;
         }
@@ -99,7 +99,7 @@ const Sidebar = ({ isOpen }) => {
                                     key={item.title}
                                     onClick={async () => {
                                         if (!user) {
-                                            toast.error("Please login to access your profile");
+                                            toast.error("Please sign in to access your profile");
                                             navigate("/UserRegister");
                                             return;
                                         }
@@ -156,7 +156,7 @@ const Sidebar = ({ isOpen }) => {
                                 key={item.title}
                                 onClick={async () => {
                                     if (!user) {
-                                        toast.error("Please login to access your profile");
+                                        toast.error("Please sign in to access your profile");
                                         navigate("/UserRegister");
                                         return;
                                     }
@@ -205,7 +205,7 @@ const Sidebar = ({ isOpen }) => {
                     <button
                         onClick={async () => {
                             if (!user) {
-                                toast.error("Please login to access your profile");
+                                toast.error("Please sign in to access your profile");
                                 navigate("/UserRegister");
                                 return;
                             }

@@ -355,7 +355,7 @@ const UserProfile = () => {
 
   // Follow functionality
   const handleFollow = async () => {
-    if (!currentUser) { toast.error("Please login to follow users"); return; }
+    if (!currentUser) { toast.error("Please sign in to follow users"); return; }
     if (!profile || currentUser.id === profile.id) { toast.error("Invalid action"); return; }
     setFollowLoading(true);
     try {

@@ -15,7 +15,7 @@ const UpvotedProjects = () => {
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                toast.error("Please login to view your upvoted projects");
+                toast.error("Please sign in to view your upvoted projects");
                 navigate("/UserRegister");
                 return;
             }
@@ -50,7 +50,7 @@ const UpvotedProjects = () => {
                 .order('id', { ascending: false });
 
             if (error) {
-                
+
                 setError('Failed to load your upvoted projects');
                 toast.error('Failed to load your upvoted projects');
             } else {
@@ -66,7 +66,7 @@ const UpvotedProjects = () => {
                 setUpvotedProjects(validProjects);
             }
         } catch (error) {
-            
+
             setError('An error occurred while loading your upvoted projects');
             toast.error('An error occurred while loading your upvoted projects');
         } finally {

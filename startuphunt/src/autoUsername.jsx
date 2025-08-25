@@ -46,7 +46,7 @@ export async function ensureAutoUsername() {
             .eq("id", user.id);
 
           if (error) {
-            
+            // Username update failed, but don't block the flow
           }
           return;
         }
@@ -67,10 +67,10 @@ export async function ensureAutoUsername() {
         .eq("id", user.id);
 
       if (error) {
-                    
+        // Fallback username update failed, but don't block the flow
       }
     }
   } catch (error) {
-            
+    // Error in autoUsername generation, but don't block the flow
   }
 }

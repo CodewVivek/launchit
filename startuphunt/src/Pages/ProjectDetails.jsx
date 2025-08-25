@@ -14,6 +14,7 @@ import TrendingProjects from '../Components/TrendingProjects';
 import PopularProjects from '../Components/PopularProjects';
 import toast from 'react-hot-toast';
 
+
 const NextArrow = ({ onClick, style, ...rest }) => (
   <button
     type="button"
@@ -87,9 +88,10 @@ const ProjectDetails = () => {
         .maybeSingle();
 
       if (error) {
-        
+
       } else {
         setProject(data);
+
 
 
         if (data && data.user_id) {
@@ -101,7 +103,7 @@ const ProjectDetails = () => {
             .maybeSingle();
 
           if (userError) {
-            
+
           } else {
 
             setCreator(userData);
@@ -214,7 +216,7 @@ const ProjectDetails = () => {
   // Follow functionality
   const handleFollow = async () => {
     if (!user) {
-      toast.error("Please login to follow users");
+      toast.error("Please sign in to follow users");
       return;
     }
 
@@ -255,7 +257,7 @@ const ProjectDetails = () => {
         toast.success(`Following ${creator.full_name || creator.username}`);
       }
     } catch (error) {
-      
+
       toast.error(isFollowing ? 'Failed to unfollow' : 'Failed to follow');
     } finally {
       setFollowLoading(false);
@@ -265,7 +267,7 @@ const ProjectDetails = () => {
   // Save functionality
   const handleSave = async () => {
     if (!user) {
-      toast.error("Please login to save projects");
+      toast.error("Please sign in to save projects");
       return;
     }
 
@@ -296,7 +298,7 @@ const ProjectDetails = () => {
         toast.success("Project saved!");
       }
     } catch (error) {
-      
+
       toast.error(isSaved ? 'Failed to remove from saved' : 'Failed to save project');
     } finally {
       setSaveLoading(false);

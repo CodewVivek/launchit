@@ -157,7 +157,7 @@ export default function PitchUpload() {
             setTimeout(() => navigate("/"), 2000);
         } catch (err) {
             setError("Error submitting pitch: " + err.message);
-            
+
         } finally {
             setSubmitting(false);
         }
@@ -173,7 +173,7 @@ export default function PitchUpload() {
                         href="/UserRegister"
                         className="inline-block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition"
                     >
-                        Login / Sign Up
+                        Sign In / Sign Up
                     </a>
                 </div>
             </div>

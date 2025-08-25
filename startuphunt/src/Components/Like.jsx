@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
 
+
 const Like = ({ projectId }) => {
   const [count, setCount] = useState(0);
   const [liked, setLiked] = useState(false);
@@ -70,6 +71,8 @@ const Like = ({ projectId }) => {
         if (error) throw error;
         setCount((prev) => Math.max(0, prev - 1));
         setLiked(false);
+
+        // Unlike successful
       } else {
         // Like
         const { error } = await supabase

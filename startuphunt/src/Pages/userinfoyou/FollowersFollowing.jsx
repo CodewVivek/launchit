@@ -17,7 +17,7 @@ const FollowersFollowing = () => {
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                toast.error("Please login to view your followers/following");
+                toast.error("Please sign in to view your followers/following");
                 navigate("/UserRegister");
                 return;
             }

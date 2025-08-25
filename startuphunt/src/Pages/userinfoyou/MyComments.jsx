@@ -15,7 +15,7 @@ const MyComments = () => {
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                toast.error("Please login to view your comments");
+                toast.error("Please sign in to view your comments");
                 navigate("/UserRegister");
                 return;
             }

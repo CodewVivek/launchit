@@ -38,11 +38,13 @@ import {
   Send,
   Users,
   User,
+  BarChart3,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 import SortByDateFilter from "../Components/SortByDateFilter";
 import PitchUpload from "./PitchUpload";
+import AdminAnalytics from "../Components/AdminAnalytics";
 
 function sortProjectsByDate(
   projects,
@@ -217,6 +219,13 @@ const AdminDashboard = () => {
       fetchUsers();
     }
   }, [activeTab]);
+
+  // Security check: Redirect non-admin users away from analytics tab
+  useEffect(() => {
+    if (activeTab === "analytics" && !isAdmin) {
+      setActiveTab("projects");
+    }
+  }, [activeTab, isAdmin]);
 
   // 🆕 NEW: useEffect to fetch moderation queue when moderation tab is selected
   // useEffect(() => {
@@ -1084,6 +1093,22 @@ const AdminDashboard = () => {
               <Bell className="w-4 h-4" /> Notifications ( {pitches.length})
             </div>
           </button>
+
+          {/* Analytics Tab - Only for Admins */}
+          {userRole === "admin" && (
+            <button
+              onClick={() => setActiveTab("analytics")}
+              className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
+                  activeTab==='analytics'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" /> Analytics
+              </div>
+            </button>
+          )}
           {/* Moderation Tab - REMOVED FOR MERGE */}
           {/* <button
             onClick={() => setActiveTab("moderation")}
@@ -1771,6 +1796,15 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+        {/* Analytics Tab - Only for Admins */}
+        {activeTab === "analytics" && userRole === "admin" && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="p-6">
+              <AdminAnalytics />
+            </div>
+          </div>
+        )}
+
         {/* Moderation Tab */}
         {activeTab === "moderation" && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

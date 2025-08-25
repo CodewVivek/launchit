@@ -72,6 +72,14 @@ const PrivacyPolicy = () => (
           <li><strong>Device Data:</strong> Browser type, operating system, and device information</li>
           <li><strong>Usage Analytics:</strong> Page visits, time spent, and feature usage patterns</li>
           <li><strong>Security Data:</strong> IP address, login attempts, and security events</li>
+          <li><strong>Network Information:</strong> Connection type, ISP, and general location data</li>
+        </ul>
+
+        <h3 className="text-xl font-medium mb-3 text-gray-700">3.5 Analytics and Tracking Data</h3>
+        <ul className="list-disc ml-6 text-gray-700 space-y-2">
+          <li><strong>Page Views:</strong> Every page you visit on our platform</li>
+          <li><strong>Navigation Patterns:</strong> How you move between different sections</li>
+          <li><strong>Session Data:</strong> Duration of visits and interaction patterns</li>
         </ul>
       </section>
 
@@ -92,9 +100,21 @@ const PrivacyPolicy = () => (
           <li>Developing new features based on user needs</li>
           <li>Optimizing platform performance and functionality</li>
           <li>Conducting research on startup trends and user behavior</li>
+          <li>Understanding user journey and navigation patterns</li>
+          <li>Identifying popular content and user preferences</li>
+          <li>Measuring feature adoption and engagement rates</li>
         </ul>
 
-        <h3 className="text-xl font-medium mb-3 text-gray-700">4.3 Communication</h3>
+        <h3 className="text-xl font-medium mb-3 text-gray-700">4.3 Analytics and Performance</h3>
+        <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
+          <li>Tracking platform performance and basic usage metrics</li>
+          <li>Understanding user navigation patterns for UX improvement</li>
+          <li>Monitoring page load times and technical performance</li>
+          <li>Generating insights for platform optimization</li>
+          <li>Identifying technical issues and optimizing user experience</li>
+        </ul>
+
+        <h3 className="text-xl font-medium mb-3 text-gray-700">4.4 Communication</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2">
           <li>Sending important platform updates and announcements</li>
           <li>Providing customer support and responding to inquiries</li>
@@ -121,12 +141,27 @@ const PrivacyPolicy = () => (
         <h3 className="text-xl font-medium mb-3 text-gray-700">5.2 Service Providers</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li><strong>Hosting Services:</strong> Supabase for database and authentication</li>
-          <li><strong>Analytics Tools:</strong> Google Analytics for platform insights</li>
+          <li><strong>Analytics Tools:</strong> Google Analytics for platform insights and user behavior tracking</li>
           <li><strong>File Storage:</strong> Secure cloud storage for media uploads</li>
           <li><strong>Email Services:</strong> For notifications and communications</li>
+          <li><strong>AI Services:</strong> OpenAI for AI-powered content generation and search</li>
         </ul>
 
-        <h3 className="text-xl font-medium mb-3 text-gray-700">5.3 Legal Requirements</h3>
+        <h3 className="text-xl font-medium mb-3 text-gray-700">5.3 Google Analytics and Third-Party Services</h3>
+        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+          <p className="text-yellow-800 text-sm mb-2">
+            <strong>Important:</strong> We use Google Analytics to understand how users interact with our platform.
+          </p>
+        </div>
+        <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
+          <li><strong>Google Analytics:</strong> Tracks only page views and basic navigation patterns</li>
+          <li><strong>Data Collected:</strong> Page visits, navigation patterns, and session duration</li>
+          <li><strong>Purpose:</strong> Platform improvement and user experience optimization</li>
+          <li><strong>Data Sharing:</strong> Google Analytics data is shared with Google as per their privacy policy</li>
+          <li><strong>Opt-out Options:</strong> Users can opt-out via browser settings or Google Analytics opt-out tools</li>
+        </ul>
+
+        <h3 className="text-xl font-medium mb-3 text-gray-700">5.4 Legal Requirements</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2">
           <li>Complying with applicable laws and regulations</li>
           <li>Responding to legal requests and court orders</li>
@@ -136,7 +171,27 @@ const PrivacyPolicy = () => (
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">6. Data Security and Protection</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">6. Data Retention and Analytics</h2>
+
+        <h3 className="text-xl font-medium mb-3 text-gray-700">6.1 Data Retention Periods</h3>
+        <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
+          <li><strong>Account Data:</strong> Retained while your account is active, deleted within 30 days of account deletion</li>
+          <li><strong>Content Data:</strong> Project submissions and comments retained for community integrity</li>
+          <li><strong>Analytics Data:</strong> Google Analytics data retained according to Google's policies (typically 26 months)</li>
+          <li><strong>Log Data:</strong> Security and access logs retained for 90 days for security purposes</li>
+        </ul>
+
+        <h3 className="text-xl font-medium mb-3 text-gray-700">6.2 Analytics Data Management</h3>
+        <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
+          <li><strong>Aggregated Data:</strong> Usage statistics are aggregated and anonymized for analysis</li>
+          <li><strong>Personal Data:</strong> Individual user behavior is not shared with third parties</li>
+          <li><strong>Data Export:</strong> Analytics data can be exported or deleted upon request</li>
+          <li><strong>Retention Control:</strong> Users can request deletion of their analytics data</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">7. Data Security and Protection</h2>
 
         <div className="bg-green-50 p-6 rounded-lg">
           <h3 className="text-xl font-medium mb-3 text-green-800">Security Measures We Implement:</h3>
@@ -151,9 +206,9 @@ const PrivacyPolicy = () => (
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">7. Your Rights and Choices</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">8. Your Rights and Choices</h2>
 
-        <h3 className="text-xl font-medium mb-3 text-gray-700">7.1 Account Management</h3>
+        <h3 className="text-xl font-medium mb-3 text-gray-700">8.1 Account Management</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Update your profile information at any time</li>
           <li>Control your privacy settings and visibility preferences</li>
@@ -161,7 +216,7 @@ const PrivacyPolicy = () => (
           <li>Download a copy of your data upon request</li>
         </ul>
 
-        <h3 className="text-xl font-medium mb-3 text-gray-700">7.2 Content Control</h3>
+        <h3 className="text-xl font-medium mb-3 text-gray-700">8.2 Content Control</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
           <li>Edit or remove your startup submissions</li>
           <li>Delete your comments and interactions</li>
@@ -169,7 +224,7 @@ const PrivacyPolicy = () => (
           <li>Request removal of content that violates our terms</li>
         </ul>
 
-        <h3 className="text-xl font-medium mb-3 text-gray-700">7.3 Account Deletion</h3>
+        <h3 className="text-xl font-medium mb-3 text-gray-700">8.3 Account Deletion</h3>
         <ul className="list-disc ml-6 text-gray-700 space-y-2">
           <li>Delete your account and remove all personal data</li>
           <li>Request data deletion within 30 days</li>
@@ -178,7 +233,7 @@ const PrivacyPolicy = () => (
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">8. Cookies and Tracking Technologies</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">9. Cookies and Tracking Technologies</h2>
 
         <p className="text-gray-700 mb-3">
           We use cookies and similar technologies to enhance your experience on launchit:
@@ -196,7 +251,7 @@ const PrivacyPolicy = () => (
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">9. Children's Privacy</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">10. Children's Privacy</h2>
         <p className="text-gray-700">
           launchit is not intended for children under 13 years of age. We do not knowingly collect personal information
           from children under 13. If you are a parent or guardian and believe your child has provided us with personal information,
@@ -205,7 +260,7 @@ const PrivacyPolicy = () => (
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">10. International Data Transfers</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">11. International Data Transfers</h2>
         <p className="text-gray-700">
           launchit operates globally, and your information may be transferred to and processed in countries other than your own.
           We ensure that all data transfers comply with applicable data protection laws and implement appropriate safeguards.
@@ -213,7 +268,7 @@ const PrivacyPolicy = () => (
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">11. Changes to This Privacy Policy</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">12. Changes to This Privacy Policy</h2>
         <p className="text-gray-700 mb-3">
           We may update this Privacy Policy from time to time to reflect changes in our practices or applicable laws.
           When we make significant changes, we will:
@@ -230,7 +285,7 @@ const PrivacyPolicy = () => (
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">12. Contact Information</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">13. Contact Information</h2>
 
         <div className="bg-blue-50 p-6 rounded-lg">
           <p className="text-gray-700 mb-3">

@@ -15,7 +15,7 @@ const MyLaunches = () => {
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                toast.error("Please login to view your launches");
+                toast.error("Please sign in to view your launches");
                 navigate("/UserRegister");
                 return;
             }

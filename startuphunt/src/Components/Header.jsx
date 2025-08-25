@@ -8,6 +8,7 @@ import { Alert, Snackbar } from "@mui/material";
 import NotificationBell from "./NotificationBell";
 
 
+
 const Header = ({ onMenuClick }) => {
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
@@ -185,6 +186,8 @@ const Header = ({ onMenuClick }) => {
                 categories: [...new Set(categories?.map(c => c.category_type).filter(Boolean) || [])],
                 tags: tagMatches
             });
+
+
         } catch (error) {
             setSnackbar({ open: true, message: "Error performing main search", severity: 'error' });
             // Try fallback search if main search fails

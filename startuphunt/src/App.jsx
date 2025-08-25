@@ -56,6 +56,15 @@ function AppRoutes() {
 
   const isProjectDetailsPage = location.pathname.startsWith("/launches/");
 
+  // Track page views when route changes
+  useEffect(() => {
+    if (window.gtag) {
+      window.gtag('config', 'G-8DJ5RD98ZL', {
+        page_path: location.pathname
+      });
+    }
+  }, [location.pathname]);
+
 
 
   // Auto-close sidebar on mobile when navigating to a new page
@@ -160,7 +169,14 @@ function App() {
       await ensureAutoUsername();
     };
     checkAndSetUsername();
-    
+
+    // Track initial page view
+    if (window.gtag) {
+      window.gtag('config', 'G-8DJ5RD98ZL', {
+        page_path: window.location.pathname
+      });
+    }
+
     return () => {
       // Clean up all channels when app unmounts
       supabase.removeAllChannels();

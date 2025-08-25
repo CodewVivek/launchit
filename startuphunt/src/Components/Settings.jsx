@@ -76,7 +76,7 @@ const Settings = () => {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/login");
+        navigate("/UserRegister");
         return;
       }
       const { data: profileData, error } = await supabase
