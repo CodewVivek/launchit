@@ -426,8 +426,14 @@ const UserProfile = () => {
                 {profile.full_name || profile.username || "Unnamed User"}
               </h1>
               <p className="text-gray-500 text-sm mb-3">
-                {profile.email || "No email provided"}
+                @{profile.username}
               </p>
+              {/* Email only visible to profile owner */}
+              {isOwner && (
+                <p className="text-gray-500 text-sm mb-3">
+                  {profile.email || "No email provided"}
+                </p>
+              )}
               <p className="text-gray-700 mb-4 max-w-xl mx-auto md:mx-0">
                 {profile.bio || "This user has not written a bio yet"}
               </p>
