@@ -80,7 +80,7 @@ export const validateImageDimensions = (file, type = 'thumbnail') => {
       resolve(true);
       return;
     }
-    
+
     const img = new Image();
     img.onload = () => {
       const maxDims = MAX_DIMENSIONS[type];

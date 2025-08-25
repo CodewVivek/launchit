@@ -13,7 +13,7 @@ export default function NotificationBell() {
         message: "",
         severity: "success",
     });
-    
+
     // Add ref for click outside detection
     const notificationRef = useRef(null);
 
@@ -100,7 +100,7 @@ export default function NotificationBell() {
             );
             setUnreadCount((prev) => Math.max(0, prev - 1));
         } catch (error) {
-            
+
             setSnackbar({
                 open: true,
                 message: "Error marking notification as read",
@@ -122,7 +122,7 @@ export default function NotificationBell() {
             );
             setUnreadCount(0);
         } catch (error) {
-            
+
             setSnackbar({
                 open: true,
                 message: "Error marking notifications as read",
@@ -140,7 +140,7 @@ export default function NotificationBell() {
                 .eq("id", notificationId);
 
             setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-            
+
             // Update unread count if deleted notification was unread
             const deletedNotification = notifications.find(n => n.id === notificationId);
             if (deletedNotification && !deletedNotification.read) {
@@ -153,7 +153,7 @@ export default function NotificationBell() {
                 severity: "success",
             });
         } catch (error) {
-            
+
             setSnackbar({
                 open: true,
                 message: "Error deleting notification",
@@ -179,7 +179,7 @@ export default function NotificationBell() {
                 severity: "success",
             });
         } catch (error) {
-            
+
             setSnackbar({
                 open: true,
                 message: "Error deleting all notifications",

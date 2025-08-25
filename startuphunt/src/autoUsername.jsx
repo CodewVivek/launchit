@@ -16,11 +16,7 @@ export async function ensureAutoUsername() {
 
     if (!profile) return;
 
-    let isNewUser = false;
-
     if (!profile.username) {
-      isNewUser = true;
-      
       // Generate a base username from full name
       let base = (profile.full_name || "user")
         .replace(/[^a-zA-Z\s]/g, "") // Remove special characters
@@ -52,7 +48,7 @@ export async function ensureAutoUsername() {
           if (error) {
             // Username update failed, but don't block the flow
           }
-          break;
+          return;
         }
 
         // Generate new username with better suffix
@@ -62,50 +58,19 @@ export async function ensureAutoUsername() {
       }
 
       // Fallback: use timestamp-based username
-      if (attempts >= maxAttempts) {
-        const timestamp = Date.now().toString().slice(-4);
-        username = `${base}${timestamp}`;
+      const timestamp = Date.now().toString().slice(-4);
+      username = `${base}${timestamp}`;
 
-        const { error } = await supabase
-          .from("profiles")
-          .update({ username })
-          .eq("id", user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username })
+        .eq("id", user.id);
 
-        if (error) {
-          // Fallback username update failed, but don't block the flow
-        }
+      if (error) {
+        // Fallback username update failed, but don't block the flow
       }
-    }
-
-    // Send welcome notification for new users
-    if (isNewUser) {
-      await sendWelcomeNotification(user.id, profile.full_name || username);
     }
   } catch (error) {
     // Error in autoUsername generation, but don't block the flow
-  }
-}
-
-// Function to send welcome notification to new users
-async function sendWelcomeNotification(userId, userName) {
-  try {
-    const welcomeNotification = {
-      user_id: userId,
-      type: "welcome",
-      title: "🎉 Welcome to Launchit!",
-      message: `Hi ${userName}! Welcome to Launchit - your gateway to discovering amazing startups and launching your own projects. We're excited to have you on board! 🚀`,
-      is_read: false,
-      created_at: new Date().toISOString()
-    };
-
-    const { error } = await supabase
-      .from("notifications")
-      .insert([welcomeNotification]);
-
-    if (error) {
-      // Notification failed, but don't block the flow
-    }
-  } catch (error) {
-    // Error sending notification, but don't block the flow
   }
 }

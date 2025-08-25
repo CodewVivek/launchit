@@ -138,14 +138,19 @@ const AdminDashboard = () => {
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, email")
           .eq("id", user.id)
           .maybeSingle();
+
+        // Debug: Log user info for troubleshooting
+        console.log("Current user:", user.email);
+        console.log("Profile role:", profile?.role);
+        console.log("Profile error:", profileError);
 
         if (profileError || profile?.role !== "admin") {
           setSnackbar({
             open: true,
-            message: "Access Denied: Admins Only",
+            message: `Access Denied: Current role is "${profile?.role || 'none'}"`,
             severity: "error",
           });
           return navigate("/");
