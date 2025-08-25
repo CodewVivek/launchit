@@ -142,10 +142,7 @@ const AdminDashboard = () => {
           .eq("id", user.id)
           .maybeSingle();
 
-        // Debug: Log user info for troubleshooting
-        console.log("Current user:", user.email);
-        console.log("Profile role:", profile?.role);
-        console.log("Profile error:", profileError);
+        // Debug info removed for production
 
         if (profileError || profile?.role !== "admin") {
           setSnackbar({

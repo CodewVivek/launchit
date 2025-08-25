@@ -127,7 +127,7 @@ const AdminAnalytics = () => {
             });
 
         } catch (error) {
-            console.error('Error fetching analytics:', error);
+            // Error fetching analytics
         } finally {
             setLoading(false);
         }
