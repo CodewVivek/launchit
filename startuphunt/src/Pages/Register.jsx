@@ -162,14 +162,7 @@ const Register = () => {
     const handleThumbnailChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            try {
-                // Optimize thumbnail image before setting
-                const optimizedFile = await optimizeImage(file, 'thumbnail');
-                setThumbnailFile(optimizedFile);
-            } catch (error) {
-                // Image optimization failed, fallback to original file
-                setThumbnailFile(file);
-            }
+            setThumbnailFile(file);
         }
     };
     const removeThumbnail = () => setThumbnailFile(null);
@@ -177,14 +170,7 @@ const Register = () => {
     const handleCoverChange = async (e, idx) => {
         const file = e.target.files[0];
         if (file) {
-            try {
-                // Optimize cover image before setting
-                const optimizedFile = await optimizeImage(file, 'cover');
-                setCoverFiles(prev => prev.map((f, i) => (i === idx ? optimizedFile : f)));
-            } catch (error) {
-                // Image optimization failed, fallback to original file
-                setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
-            }
+            setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
         }
     };
     const removeCover = (idx) => {
