@@ -808,7 +808,7 @@ const Register = () => {
 
             // Create AbortController for timeout handling
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout (reduced from 45)
+            const timeoutId = setTimeout(() => controller.abort(), 35000); // 25 second timeout (reduced from 45)
 
             const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {
                 method: "POST",

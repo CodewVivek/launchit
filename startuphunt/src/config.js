@@ -1,7 +1,7 @@
 // Configuration for the application
 export const config = {
     // AI Backend API URL - Update this to match your backend server
-    API_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+    API_URL: import.meta.env.VITE_API_URL || 'https://launchit-ai-backend.onrender.com',
 
     // Environment detection
     isDevelopment: import.meta.env.DEV,
@@ -17,11 +17,7 @@ export const config = {
             return import.meta.env.VITE_API_URL;
         }
 
-        // Fallback based on domain
-        if (window.location.hostname === 'localhost') {
-            return 'http://localhost:3001';
-        }
-
+        // Always use production backend
         return 'https://launchit-ai-backend.onrender.com';
     }
 };

@@ -1,7 +1,7 @@
 // Simple backend test script
 // Run with: node test-backend.js
 
-const BASE_URL = 'http://localhost:3001'; // Change this to your Render URL when testing
+const BASE_URL = 'https://launchit-ai-backend.onrender.com';
 
 console.log('🚀 Testing LaunchIT AI Backend with gpt-4o-mini...\n');
 
@@ -109,7 +109,7 @@ async function testCORS() {
     try {
         const response = await fetch(`${BASE_URL}/health`, {
             method: 'GET',
-            headers: { 'Origin': 'http://localhost:3000' }
+            headers: { 'Origin': 'https://launchit.site' }
         });
 
         const corsHeader = response.headers.get('access-control-allow-origin');

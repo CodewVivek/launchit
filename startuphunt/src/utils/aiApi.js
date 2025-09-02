@@ -1,8 +1,6 @@
 // AI API utility functions
-// Temporarily hardcode production backend for dev site
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3001'
-  : 'https://launchit-ai-backend.onrender.com';
+// Always use production backend
+const API_BASE_URL = 'https://launchit-ai-backend.onrender.com';
 
 // Semantic Search API
 export const semanticSearch = async (query, limit = 10, filters = {}) => {

@@ -66,6 +66,7 @@ const AdminDashboard = () => {
   const [loadingReports, setLoadingReports] = useState(true);
   const [deletingProject, setDeletingProject] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("projects");
   const [userCount, setUserCount] = useState(0);
@@ -153,6 +154,7 @@ const AdminDashboard = () => {
           return navigate("/");
         } else {
           setIsAdmin(true);
+          setUserRole(profile?.role);
           fetchProjects();
           fetchReports();
           fetchPitches();
@@ -306,9 +308,7 @@ const AdminDashboard = () => {
   // const updateModerationStatus = async (recordId, action) => {
   //   try {
   //     // Use the same API base URL as other functions
-  //     const API_BASE_URL = window.location.hostname === 'localhost'
-  //       ? 'http://localhost:3001'
-  //       : 'https://launchit-ai-backend.onrender.com';
+  //     const API_BASE_URL = 'https://launchit-ai-backend.onrender.com';
 
   //     const response = await fetch(`${API_BASE_URL}/api/moderation/status`, {
   //       method: 'PUT',
@@ -1807,155 +1807,14 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Moderation Tab */}
+        {/* Moderation Tab - Currently Disabled */}
         {activeTab === "moderation" && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Content Moderation Queue
-              </h2>
-              <div className="flex gap-2">
-                <Button
-                  variant="outlined"
-                  onClick={() => setModerationTab('pending_review')}
-                  className={`${moderationTab === 'pending_review' ? 'bg-blue-600 text-white' : ''}`}
-                >
-                  Pending Review ({moderationQueue.filter(item => item.status === 'pending_review').length})
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => setModerationTab('approved')}
-                  className={`${moderationTab === 'approved' ? 'bg-green-600 text-white' : ''}`}
-                >
-                  Approved ({moderationQueue.filter(item => item.status === 'approved').length})
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => setModerationTab('rejected')}
-                  className={`${moderationTab === 'rejected' ? 'bg-red-600 text-white' : ''}`}
-                >
-                  Rejected ({moderationQueue.filter(item => item.status === 'rejected').length})
-                </Button>
-              </div>
+            <div className="p-8 text-center text-gray-500">
+              <HelpCircle className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Moderation System</h3>
+              <p>Content moderation features are currently being developed and will be available soon.</p>
             </div>
-            {loadingModeration ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading moderation queue...</p>
-              </div>
-            ) : moderationQueue.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <HelpCircle className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>No items in the moderation queue.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Content
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {moderationQueue.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {item.id}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {item.content_type}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          <div className="max-w-xs truncate">
-                            {item.content && item.content.length > 100
-                              ? item.content.substring(0, 100) + '...'
-                              : item.content}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'pending_review' ? 'bg-yellow-100 text-yellow-800' :
-                              item.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                item.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
-                              }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {item.profiles ? (
-                            <div>
-                              <div className="font-medium">{item.profiles.full_name || 'Unknown User'}</div>
-                              <div className="text-xs text-gray-400">{item.profiles.email}</div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">User not found</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            {item.status === 'pending_review' && (
-                              <>
-                                <button
-                                  onClick={() => updateModerationStatus(item.id, 'approved')}
-                                  className="text-green-600 hover:text-green-800"
-                                  title="Approve"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => updateModerationStatus(item.id, 'rejected')}
-                                  className="text-red-600 hover:text-red-800"
-                                  title="Reject"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                            {item.status === 'approved' && (
-                              <button
-                                onClick={() => updateModerationStatus(item.id, 'rejected')}
-                                className="text-red-600 hover:text-red-800"
-                                title="Reject"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            )}
-                            {item.status === 'rejected' && (
-                              <button
-                                onClick={() => updateModerationStatus(item.id, 'approved')}
-                                className="text-green-600 hover:text-green-800"
-                                title="Approve"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </div>
         )}
       </div>

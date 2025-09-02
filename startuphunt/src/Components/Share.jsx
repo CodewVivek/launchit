@@ -58,7 +58,7 @@ const Share = ({ projectSlug, projectName = "this project", isProfile = false })
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      
+
     }
   };
 
@@ -121,8 +121,8 @@ const Share = ({ projectSlug, projectName = "this project", isProfile = false })
                   <button
                     onClick={handleCopyLink}
                     className={`flex items-center justify-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 flex-shrink-0 ${copied
-                        ? "bg-green-100 text-green-700 border border-green-200"
-                        : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border border-indigo-200"
+                      ? "bg-green-100 text-green-700 border border-green-200"
+                      : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border border-indigo-200"
                       }`}
                     title={copied ? "Link copied!" : "Copy link"}
                   >

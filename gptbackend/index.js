@@ -21,9 +21,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cors({
   origin: [
     'https://launchit.site',
-    'https://launchitsite.netlify.app',
-    'http://localhost:5173',
-    'http://localhost:3000'
+    'https://launchitsite.netlify.app'
   ],
   credentials: true
 }));

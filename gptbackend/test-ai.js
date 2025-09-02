@@ -1,7 +1,7 @@
 // Test file for AI endpoints
 // Run with: node test-ai.js
 
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = 'https://launchit-ai-backend.onrender.com';
 
 // Test data
 const testProject = {
@@ -36,7 +36,7 @@ async function testEmbeddings() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: "AI-powered startup platform" })
     });
-    
+
     const result = await response.json();
     console.log('✅ Embeddings test:', result.success ? 'PASSED' : 'FAILED');
     if (result.embedding) {
@@ -52,13 +52,13 @@ async function testSemanticSearch() {
     const response = await fetch(`${BASE_URL}/api/semantic-search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        query: "startup platform", 
-        projects: testProjects, 
-        limit: 5 
+      body: JSON.stringify({
+        query: "startup platform",
+        projects: testProjects,
+        limit: 5
       })
     });
-    
+
     const result = await response.json();
     console.log('✅ Semantic search test:', result.success ? 'PASSED' : 'FAILED');
     if (result.results) {
@@ -76,7 +76,7 @@ async function testProjectSuggestions() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ projectData: testProject })
     });
-    
+
     const result = await response.json();
     console.log('✅ Project suggestions test:', result.success ? 'PASSED' : 'FAILED');
     if (result.suggestions) {
@@ -92,7 +92,7 @@ async function testBatchEmbeddings() {
     const response = await fetch(`${BASE_URL}/api/batch-embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         texts: [
           "AI startup platform",
           "Productivity tools",
@@ -100,7 +100,7 @@ async function testBatchEmbeddings() {
         ]
       })
     });
-    
+
     const result = await response.json();
     console.log('✅ Batch embeddings test:', result.success ? 'PASSED' : 'FAILED');
     if (result.embeddings) {
@@ -114,12 +114,12 @@ async function testBatchEmbeddings() {
 // Run all tests
 async function runTests() {
   console.log('🚀 Testing LaunchIT AI Backend...\n');
-  
+
   await testEmbeddings();
   await testSemanticSearch();
   await testProjectSuggestions();
   await testBatchEmbeddings();
-  
+
   console.log('\n✨ Testing complete!');
 }
 
