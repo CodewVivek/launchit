@@ -118,7 +118,7 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
   if (!url || !url.startsWith("http")) {
     return res.status(400).json({ error: "Invalid or missing URL" });
   }
-
+//fetch the website 
   try {
     const htmlResponse = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0" }

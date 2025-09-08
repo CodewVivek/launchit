@@ -1,5 +1,5 @@
-// Cache for embeddings to reduce API calls
-const embeddingsCache = new Map();
+// Cachepreventduplicates for embeddings to reduce API calls//
+const embeddingsCache = new Map(); 
 
 // OpenAI client setup
 let openaiClient = null;
@@ -14,7 +14,7 @@ async function getOpenAIClient() {
     return openaiClient;
 }
 
-// Generate embeddings for text
+// Generate embeddings for text -caching to preventduplicates
 async function generateEmbedding(text) {
     try {
         const cacheKey = text.toLowerCase().trim();
@@ -42,20 +42,15 @@ function cosineSimilarity(vecA, vecB) {
     if (vecA.length !== vecB.length) {
         throw new Error('Vectors must have same length');
     }
-
     let dotProduct = 0, normA = 0, normB = 0;
-
     for (let i = 0; i < vecA.length; i++) {
         dotProduct += vecA[i] * vecB[i];
         normA += vecA[i] * vecA[i];
         normB += vecB[i] * vecB[i];
     }
-
     normA = Math.sqrt(normA);
     normB = Math.sqrt(normB);
-
     if (normA === 0 || normB === 0) return 0;
-
     return dotProduct / (normA * normB);
 }
 
@@ -82,7 +77,7 @@ async function semanticSearch(query, projects, limit = 10) {
 
         scoredProjects.sort((a, b) => b.similarity - a.similarity);
         return scoredProjects.slice(0, limit);
-
+//sort(return top n) and slice
     } catch (error) {
         // Error in semantic search
         throw new Error('Semantic search failed');

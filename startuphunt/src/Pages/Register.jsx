@@ -631,17 +631,6 @@ const Register = () => {
             submissionData.cover_urls = coverUrls;
 
 
-
-
-
-
-
-
-
-
-
-
-
             let finalSubmissionData;
             if (isEditing && editingProjectId) {
                 submissionData.status = 'launched';
@@ -723,49 +712,6 @@ const Register = () => {
         }
     };
 
-    const generateBasicPreview = async (url) => {
-        setIsGeneratingPreview(true);
-        try {
-            // Try to get basic metadata from the URL
-            const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&meta=true&screenshot=true&embed=screenshot.url`);
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                const preview = {
-                    title: data.data.title || 'Website Title',
-                    description: data.data.description || 'No description available',
-                    logo: data.data.logo?.url || null,
-                    screenshot: data.data.screenshot?.url || null,
-                    domain: new URL(url).hostname
-                };
-                setUrlPreview(preview);
-
-                // Auto-fill basic fields with preview data
-                setFormData(prev => ({
-                    ...prev,
-                    name: prev.name || preview.title,
-                    description: prev.description || preview.description
-                }));
-
-                if (preview.logo && !logoFile) {
-                    setLogoFile(preview.logo);
-                }
-
-                if (preview.screenshot && !thumbnailFile) {
-                    setThumbnailFile(preview.screenshot);
-                }
-
-                setSnackbar({
-                    open: true,
-                    message: `📱 Basic preview generated from ${preview.domain}`,
-                    severity: 'success'
-                });
-            }
-        } catch (error) {
-        } finally {
-            setIsGeneratingPreview(false);
-        }
-    };
 
     const handleGenerateLaunchData = async (isRetry = false) => {
         if (!formData.websiteUrl) {
@@ -781,46 +727,37 @@ const Register = () => {
             setRetryCount(0);
         }
 
-        const startTime = Date.now();
         const loadingMessage = isRetry
             ? 'Generating...'
-            : "🤖 AI is analyzing your website... This may take up to 25 seconds.";
+            : "🤖 AI is analyzing your website...";
 
         setSnackbar({ open: true, message: loadingMessage, severity: 'info' });
 
-        // Add progress updates
+        // Add progress updates (steady message without timer)
         const progressInterval = setInterval(() => {
             if (isAILoading || isRetrying) {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if (elapsed < 25) {
-                    setSnackbar({
-                        open: true,
-                        message: `🤖 AI is analyzing your website... (${elapsed}s/25s)`,
-                        severity: 'info'
-                    });
-                }
+                setSnackbar({
+                    open: true,
+                    message: '🤖 AI is analyzing your website...'
+                    ,
+                    severity: 'info'
+                });
             }
-        }, 2000);
+        }, 5000);
 
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
 
-            // Create AbortController for timeout handling
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 35000); // 25 second timeout (reduced from 45)
-
+            //fetch the website and get the html
             const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     url: formData.websiteUrl,
                     user_id,
-                }),
-                signal: controller.signal
+                })
             });
-
-            clearTimeout(timeoutId);
 
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -878,31 +815,25 @@ const Register = () => {
             setRetryCount(0);
         }
         catch (error) {
-
-
             let errorMessage = "AI failed to extract startup info...";
             let severity = 'error';
             let showRetry = false;
 
-            if (error.name === 'AbortError') {
-                errorMessage = "⏰ AI generation timed out. The website might be complex or slow.";
-                severity = 'warning';
-                showRetry = retryCount < 2; // Allow up to 2 retries
-            } else if (error.message && error.message.includes("Microlink")) {
+            if (error.message && error.message.includes("Microlink")) {
                 errorMessage = "🖼️ AI extracted text but failed to generate logo/thumbnail. You can upload them manually!";
                 severity = 'warning';
             } else if (error.message && error.message.includes("OpenAI")) {
                 errorMessage = "🤖 AI service temporarily unavailable. Please try again in a few minutes.";
                 severity = 'warning';
-                showRetry = retryCount < 1; // Allow 1 retry for service issues
+                showRetry = true;
             } else if (error.message && error.message.includes("HTTP")) {
                 errorMessage = "🌐 Backend service error. Please try again later.";
                 severity = 'error';
-                showRetry = retryCount < 1;
+                showRetry = true;
             } else if (error.message && error.message.includes("fetch")) {
                 errorMessage = "🌐 Network error. Please check your connection and try again.";
                 severity = 'error';
-                showRetry = retryCount < 2;
+                showRetry = true;
             }
 
             // Try to generate basic preview as fallback
@@ -910,19 +841,15 @@ const Register = () => {
                 generateBasicPreview(formData.websiteUrl);
             }
 
-            setSnackbar({
-                open: true,
-                message: errorMessage,
-                severity,
-                action: showRetry ? (
-                    <button
-                        onClick={() => handleGenerateLaunchData(true)}
-                        className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                        Retry
-                    </button>
-                ) : undefined
-            });
+            if (showRetry) {
+                // Auto-retry with exponential backoff capped at 30s
+                setIsRetrying(true);
+                const nextDelay = Math.min(30000, 2000 * (retryCount + 1));
+                setRetryCount(prev => prev + 1);
+                setTimeout(() => handleGenerateLaunchData(true), nextDelay);
+            } else {
+                setSnackbar({ open: true, message: errorMessage, severity });
+            }
         } finally {
             setIsAILoading(false);
             setIsRetrying(false);
@@ -1243,7 +1170,7 @@ const Register = () => {
 
     const handleImageUpload = async (file, type) => {
         try {
-            // Validate image quality first
+
             await validateImageQuality(file);
 
             // Preserve image quality
