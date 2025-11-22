@@ -15,10 +15,19 @@ if (gaId) {
   script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
   document.head.appendChild(script);
 
-  // Initialize GA config
-  if (window.gtag) {
-    window.gtag('config', gaId);
-  }
+  // Wait for script to load before initializing
+  script.onload = () => {
+    if (window.gtag) {
+      window.gtag('config', gaId, { debug_mode: true });
+    }
+  };
+
+  // Fallback: try after a short delay if onload doesn't fire
+  setTimeout(() => {
+    if (window.gtag) {
+      window.gtag('config', gaId, { debug_mode: true });
+    }
+  }, 100);
 }
 
 createRoot(document.getElementById("root")).render(
