@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "./supabaseClient";
 import { markSubscriptionFixesApplied, logPageSpeedImprovements } from "./utils/performanceMonitor";
 import { ensureAutoUsername } from "./autoUsername";
+import { config } from "./config";
+import { trackRealUser } from "./utils/analytics";
 import Header from "./Components/Header";
 import Sidebar from "./Components/Sidebar";
 import Register from "./Pages/Register";
@@ -59,7 +61,7 @@ function AppRoutes() {
   // Track page views when route changes
   useEffect(() => {
     if (window.gtag) {
-      window.gtag('config', 'G-8DJ5RD98ZL', {
+      window.gtag('config', config.GA_MEASUREMENT_ID, {
         page_path: location.pathname
       });
     }
@@ -75,8 +77,8 @@ function AppRoutes() {
     }
   }, [location.pathname]);
 
-  // The main content container will have a left margin ONLY IF the sidebar is open AND it's NOT the ProjectDetails page
-  const mainContentMargin = sidebarOpen && !isProjectDetailsPage ? 'lg:ml-60' : 'lg:ml-10';
+  // The main content container should always respect the sidebar width on desktop
+  const mainContentMargin = sidebarOpen ? 'lg:ml-60' : 'lg:ml-10';
 
   return (
     <>
@@ -172,10 +174,13 @@ function App() {
 
     // Track initial page view
     if (window.gtag) {
-      window.gtag('config', 'G-8DJ5RD98ZL', {
+      window.gtag('config', config.GA_MEASUREMENT_ID, {
         page_path: window.location.pathname
       });
     }
+
+    // Track real users (fires after 4 seconds to filter out bots)
+    trackRealUser();
 
     return () => {
       // Clean up all channels when app unmounts

@@ -3,6 +3,9 @@ export const config = {
     // AI Backend API URL - Update this to match your backend server
     API_URL: import.meta.env.VITE_API_URL || 'https://launchit-ai-backend.onrender.com',
 
+    // Google Analytics Measurement ID
+    GA_MEASUREMENT_ID: import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-8DJ5RD98ZL',
+
     // Environment detection
     isDevelopment: import.meta.env.DEV,
     isProduction: import.meta.env.PROD,
