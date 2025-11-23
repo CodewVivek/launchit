@@ -28,11 +28,12 @@ const UserRegister = () => {
         return;
       }
 
-      //google sign in with proper redirect
+      //google sign in with proper redirect - use current origin for dev/prod
+      const redirectUrl = `${window.location.origin}/`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://launchit.site/",
+          redirectTo: redirectUrl,
           queryParams: { access_type: "offline" },
         },
       });
