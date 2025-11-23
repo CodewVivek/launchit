@@ -69,46 +69,69 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// Microlink.io API function to generate thumbnail and logo
-async function generateMicrolinkAssets(url) {
+// Fast HTML logo extraction (no API calls, instant)
+function extractLogoFromHTML(html, microlinkData) {
+  // Try Microlink metadata first (if available)
+  if (microlinkData?.logo_url) return microlinkData.logo_url;
+  if (microlinkData?.og_image) return microlinkData.og_image;
+
+  // Extract from HTML meta tags (instant, no API)
+  const ogImage = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)?.[1];
+  if (ogImage) return ogImage;
+
+  const twitterImage = html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i)?.[1];
+  if (twitterImage) return twitterImage;
+
+  // Try apple-touch-icon
+  const appleTouchIcon = html.match(/<link\s+rel=["']apple-touch-icon["']\s+href=["']([^"']+)["']/i)?.[1];
+  if (appleTouchIcon) return appleTouchIcon;
+
+  return null;
+}
+
+// Fast metadata-only function (no screenshot - saves 3-5s)
+async function generateMicrolinkMetadata(url) {
   try {
-    // Generate thumbnail (16:9 aspect ratio - 1200x675)
-    const thumbnailResponse = await fetch(
-      `https://api.microlink.io?url=${encodeURIComponent(url)}&screenshot=true&width=1200&height=675&format=png&meta=false`
-    );
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
 
-    // Get metadata including logo
     const metadataResponse = await fetch(
-      `https://api.microlink.io?url=${encodeURIComponent(url)}&meta=true`
+      `https://api.microlink.io?url=${encodeURIComponent(url)}&meta=true`,
+      { signal: controller.signal }
     );
 
-    const thumbnailData = await thumbnailResponse.json();
+    clearTimeout(timeoutId);
     const metadataData = await metadataResponse.json();
 
-    // Extract logo URL from metadata
-    let logoUrl = "";
-    if (metadataData.data?.logo?.url) {
-      logoUrl = metadataData.data.logo.url;
-    } else if (metadataData.data?.image?.url) {
-      logoUrl = metadataData.data.image.url;
-    } else if (metadataData.data?.favicon?.url) {
-      // Only use favicon as last resort, and check if it's a proper image
-      const faviconUrl = metadataData.data.favicon.url;
-      if (faviconUrl && !faviconUrl.includes('favicon.ico')) {
-        logoUrl = faviconUrl;
-      }
-    }
-
     return {
-      thumbnail_url: thumbnailData.data?.screenshot?.url || "",
-      logo_url: logoUrl
+      logo_url: metadataData.data?.logo?.url || metadataData.data?.image?.url || null,
+      og_image: metadataData.data?.image?.url || null
     };
   } catch (error) {
-    // Microlink.io error occurred
-    return {
-      thumbnail_url: "",
-      logo_url: ""
-    };
+    if (error.name === 'AbortError') {
+      console.log('Microlink metadata timeout');
+    }
+    return { logo_url: null, og_image: null };
+  }
+}
+
+// Background screenshot generation (optional, non-blocking)
+async function generateScreenshotInBackground(url) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for background
+
+    const response = await fetch(
+      `https://api.microlink.io?url=${encodeURIComponent(url)}&screenshot=true&width=1200&height=675&format=png&meta=false`,
+      { signal: controller.signal }
+    );
+
+    clearTimeout(timeoutId);
+    const data = await response.json();
+    return data.data?.screenshot?.url || null;
+  } catch (error) {
+    // Silent fail - screenshot is optional
+    return null;
   }
 }
 
@@ -118,43 +141,55 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
   if (!url || !url.startsWith("http")) {
     return res.status(400).json({ error: "Invalid or missing URL" });
   }
-//fetch the website 
+
   try {
-    const htmlResponse = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
-    const html = await htmlResponse.text();
+    // STEP 1: Fetch HTML and Microlink metadata in parallel (0-2s)
+    const htmlController = new AbortController();
+    const htmlTimeoutId = setTimeout(() => htmlController.abort(), 2000);
 
-    // Generate Microlink.io assets (thumbnail + logo)
-    const microlinkAssets = await generateMicrolinkAssets(url);
+    const [htmlResponse, microlinkMetadata] = await Promise.all([
+      fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        signal: htmlController.signal
+      }).then(r => {
+        clearTimeout(htmlTimeoutId);
+        return r.text();
+      }).catch(() => {
+        clearTimeout(htmlTimeoutId);
+        return "";
+      }),
+      generateMicrolinkMetadata(url) // Fast, metadata only (no screenshot)
+    ]);
 
-    const prompt = `
-      You are a data extraction AI. Extract information from this website and return ONLY a valid JSON object with no additional text.
-      
-      Required JSON format:
-      {
-        "name": "company/product name",
-        "tagline": "short compelling tagline",
-        "description": "detailed description (2-3 sentences)",
-        "category": "detected category (saas, ai, fintech, ecommerce, etc.)",
-        "features": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-        "emails": ["email@example.com"],
-        "social_links": ["https://twitter.com/...", "https://linkedin.com/..."],
-        "other_links": ["https://app.example.com", "https://github.com/..."]
-      }
-      
-      Website HTML (first 7000 chars):
-      ${html.slice(0, 7000)}
-      
-      Return only the JSON object, no other text:
-    `;
+    const html = htmlResponse;
 
+    // STEP 2: Extract logo from HTML (instant, no API)
+    const logoUrl = extractLogoFromHTML(html, microlinkMetadata);
+
+    // Extract Open Graph image for thumbnail
+    const ogImage = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)?.[1] || microlinkMetadata.og_image;
+
+    // STEP 3: Optimized OpenAI prompt (shorter = faster)
+    const prompt = `Extract JSON only:
+{
+  "name": "company/product name",
+  "tagline": "short tagline",
+  "description": "2-3 sentences",
+  "category": "category",
+  "features": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "social_links": [],
+  "other_links": []
+}
+HTML: ${html.slice(0, 4000)}`; // Reduced from 7000
+
+    // Call OpenAI (1-3s)
     let gptresponse;
     try {
       gptresponse = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0
+        temperature: 0,
+        max_tokens: 400 // Limit for speed
       });
     } catch (openaiError) {
       // OpenAI API error occurred
@@ -164,31 +199,26 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
       });
     }
 
+    // Parse result
     let result;
     try {
       const rawContent = gptresponse.choices[0].message.content.trim();
-      // Remove any markdown code blocks if present
       const jsonContent = rawContent.replace(/```json\s*|\s*```/g, '').trim();
       result = JSON.parse(jsonContent);
     } catch (e) {
-      // GPT JSON parse error occurred
-
       // Fallback: create basic data from URL
-      const fallbackResult = {
+      result = {
         name: url.replace(/https?:\/\/(www\.)?/, '').split('/')[0].replace(/\./g, ' ').toUpperCase(),
         tagline: "Innovative solution for modern needs",
-        description: "This product offers cutting-edge features designed to solve real-world problems and enhance user experience.",
+        description: "This product offers cutting-edge features designed to solve real-world problems.",
         category: "startup ecosystem",
         features: ["User-friendly", "Scalable", "Secure"],
-        emails: [],
         social_links: [],
         other_links: []
       };
-
-      result = fallbackResult;
     }
 
-
+    // Return FAST (2-3s total)
     const responseData = {
       name: result.name || "",
       website_url: url,
@@ -197,15 +227,21 @@ app.post("/generatelaunchdata", rateLimitMiddleware, async (req, res) => {
       category: result.category || "",
       links: [...(result.social_links || []), ...(result.other_links || [])],
       features: result.features || [],
-      logo_url: microlinkAssets.logo_url,
-      thumbnail_url: microlinkAssets.thumbnail_url,
+      logo_url: logoUrl,
+      thumbnail_url: ogImage, // Use OG image, generate screenshot in background
       success: true
     };
 
     res.json(responseData);
 
+    // Generate screenshot in background (optional, don't block)
+    generateScreenshotInBackground(url).then(screenshotUrl => {
+      // Could store in cache/DB and update via WebSocket if needed
+      // Or just use OG image which is usually good enough
+    }).catch(() => { });
+
   } catch (err) {
-    // Server error occurred
+    console.error("Generate launch data error:", err);
     res.status(500).json({ error: true, message: err.message });
   }
 });

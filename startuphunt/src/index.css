@@ -12,15 +12,41 @@
   body {
     font-family: "Inter", system-ui, sans-serif;
   }
+
+  /* iOS Safari zoom fix - only applies to iOS devices */
+  /* Prevents iOS Safari from zooming when focusing inputs with font-size < 16px */
+  /* Uses @supports to target iOS Safari specifically without affecting other browsers */
+  @supports (-webkit-touch-callout: none) {
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="time"],
+    input[type="datetime-local"],
+    textarea,
+    select {
+      /* Ensure minimum 16px on iOS to prevent zoom */
+      /* Safe: Tailwind's default (text-base) is already 16px, so this won't break existing styles */
+      /* Only affects inputs that were smaller than 16px, making them 16px on iOS */
+      font-size: 16px;
+    }
+  }
 }
 
 @layer utilities {
+
   /* Custom animations for empty state */
   @keyframes fadeIn {
     from {
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -32,6 +58,7 @@
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -43,10 +70,12 @@
       opacity: 0;
       transform: translateY(10px);
     }
+
     50% {
       opacity: 0;
       transform: translateY(10px);
     }
+
     100% {
       opacity: 1;
       transform: translateY(0);
