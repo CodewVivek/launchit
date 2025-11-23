@@ -1,6 +1,8 @@
 // AI API utility functions
-// Always use production backend
-const API_BASE_URL = 'https://launchit-ai-backend.onrender.com';
+import { config } from '../config';
+
+// Use config to get backend URL (respects VITE_API_URL env var for branch-specific URLs)
+const API_BASE_URL = config.getBackendUrl();
 
 // Semantic Search API
 export const semanticSearch = async (query, limit = 10, filters = {}) => {
