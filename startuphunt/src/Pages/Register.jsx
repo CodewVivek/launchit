@@ -749,6 +749,9 @@ const Register = () => {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
 
+            // Track frontend timing
+            const frontendStart = Date.now();
+
             //fetch the website and get the html
             const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {
                 method: "POST",
@@ -759,11 +762,31 @@ const Register = () => {
                 })
             });
 
+            const frontendNetworkTime = Date.now() - frontendStart;
+
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             }
 
             const gptData = await res.json();
+            
+            // Log performance if timings are available
+            if (gptData._timings) {
+                const totalFrontendTime = Date.now() - frontendStart;
+                console.log('[PERF] Frontend timing:', {
+                    network: `${frontendNetworkTime}ms`,
+                    total: `${totalFrontendTime}ms (${(totalFrontendTime / 1000).toFixed(2)}s)`
+                });
+                console.log('[PERF] Backend timings:', gptData._timings);
+                console.log('[PERF] Breakdown:', {
+                    htmlFetch: `${gptData._timings.htmlFetch}ms`,
+                    microlink: `${gptData._timings.microlink}ms`,
+                    openai: `${gptData._timings.openai}ms`,
+                    logoExtraction: `${gptData._timings.logoExtraction}ms`,
+                    backendTotal: `${gptData._timings.total}ms`,
+                    frontendTotal: `${totalFrontendTime}ms`
+                });
+            }
 
             if (gptData.err || gptData.error) {
                 throw new Error(gptData.message || 'AI generation failed');
@@ -837,9 +860,10 @@ const Register = () => {
             }
 
             // Try to generate basic preview as fallback
-            if (!urlPreview && !isGeneratingPreview) {
-                generateBasicPreview(formData.websiteUrl);
-            }
+            // Note: generateBasicPreview function removed - can be re-added if needed
+            // if (!urlPreview && !isGeneratingPreview) {
+            //     generateBasicPreview(formData.websiteUrl);
+            // }
 
             if (showRetry) {
                 // Auto-retry with exponential backoff capped at 30s
@@ -1441,11 +1465,11 @@ const Register = () => {
                                                     )}
                                                 </button>
 
-                                                {/* Fallback basic preview button */}
-                                                {!urlPreview && !isGeneratingPreview && (
+                                                {/* Fallback basic preview button - disabled until function is implemented */}
+                                                {/* {!urlPreview && !isGeneratingPreview && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => generateBasicPreview(formData.websiteUrl)}
+                                                        onClick={() => {/* generateBasicPreview(formData.websiteUrl) */}}
                                                         disabled={isGeneratingPreview || !formData.websiteUrl}
                                                         className="btn-text-icon-secondary"
                                                         title="Generate basic preview if AI fails"
