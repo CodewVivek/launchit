@@ -13,6 +13,7 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import categoryOptions from '../Components/categoryOptions';
 import BuiltWithSelect from '../Components/BuiltWithSelect';
+import DraftSelectionScreen from '../Components/DraftSelectionScreen';
 import { config } from '../config';
 // Content moderation removed for merge
 import { optimizeImage, formatFileSize } from '../utils/imageOptimizer';
@@ -73,6 +74,19 @@ const sanitizeFileName = (fileName) => {
         .toLowerCase();
 };
 
+// Helper function to format time ago
+const formatTimeAgo = (date) => {
+    if (!date) return '';
+    const now = new Date();
+    const saved = new Date(date);
+    const diffSeconds = Math.floor((now - saved) / 1000);
+
+    if (diffSeconds < 60) return 'just now';
+    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
+    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
+    return `${Math.floor(diffSeconds / 86400)}d ago`;
+};
+
 const Register = () => {
     const [step, setStep] = useState(1);
     const navigate = useNavigate();
@@ -105,6 +119,17 @@ const Register = () => {
     // Add fallback URL preview functionality
     const [urlPreview, setUrlPreview] = useState(null);
     const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+
+    // Auto-save state
+    const [autoSaveDraftId, setAutoSaveDraftId] = useState(null);
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [lastSavedAt, setLastSavedAt] = useState(null);
+
+    // Draft selection screen state
+    const [showDraftSelection, setShowDraftSelection] = useState(false);
+    const [userDrafts, setUserDrafts] = useState([]);
+    const [loadingDrafts, setLoadingDrafts] = useState(false);
 
     const handleUrlBlur = (e) => {
         const { value } = e.target;
@@ -213,6 +238,55 @@ const Register = () => {
         checkUser();
     }, [navigate]);
 
+    // Fetch user drafts and show selection screen if needed
+    useEffect(() => {
+        const fetchUserDrafts = async () => {
+            if (!user) return;
+
+            // Check if we're editing a specific project (don't show draft selection)
+            const editId = searchParams.get('edit');
+            const draftId = searchParams.get('draft');
+            if (editId || draftId) {
+                return; // User is editing specific project, skip draft selection
+            }
+
+            setLoadingDrafts(true);
+            try {
+                const { data: drafts, error } = await supabase
+                    .from('projects')
+                    .select('id, name, website_url, tagline, description, category_type, created_at, updated_at, logo_url, thumbnail_url')
+                    .eq('user_id', user.id)
+                    .eq('status', 'draft')
+                    .order('updated_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error fetching drafts:', error);
+                    setUserDrafts([]);
+                } else {
+                    // Filter out empty drafts (drafts with no meaningful data)
+                    const meaningfulDrafts = (drafts || []).filter(draft =>
+                        draft.name || draft.website_url || draft.tagline || draft.description || draft.category_type
+                    );
+                    setUserDrafts(meaningfulDrafts);
+
+                    // Show draft selection if there are meaningful drafts
+                    if (meaningfulDrafts.length > 0) {
+                        setShowDraftSelection(true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching drafts:', error);
+                setUserDrafts([]);
+            } finally {
+                setLoadingDrafts(false);
+            }
+        };
+
+        if (user && !projectLoaded) {
+            fetchUserDrafts();
+        }
+    }, [user, projectLoaded, searchParams]);
+
     useEffect(() => {
         const loadProjectForEditing = async () => {
             const editId = searchParams.get('edit');
@@ -262,6 +336,12 @@ const Register = () => {
                         setLogoFile(project.logo_url || null);
                         setThumbnailFile(project.thumbnail_url || null);
                         setCoverFiles(project.cover_urls || [null, null, null, null]);
+
+                        // Set auto-save draft ID if it's a draft
+                        if (project.status === 'draft') {
+                            setAutoSaveDraftId(project.id);
+                            setHasUnsavedChanges(false); // No unsaved changes when loading existing draft
+                        }
                     }
                 } catch (error) {
 
@@ -298,7 +378,45 @@ const Register = () => {
             links,
         };
         localStorage.setItem('launch_draft', JSON.stringify(draft));
+
+        // Mark as having unsaved changes (if form has content)
+        if (!isFormEmpty() && !isEditing) {
+            setHasUnsavedChanges(true);
+        }
     }, [formData, selectedCategory, links]);
+
+    // Auto-save to database (debounced - saves after 3 seconds of inactivity)
+    useEffect(() => {
+        if (!user || isEditing || isFormEmpty() || !formData.name || isAutoSaving) {
+            return;
+        }
+
+        // Don't auto-save if user just loaded a draft (wait for them to make changes)
+        if (projectLoaded && !hasUnsavedChanges) {
+            return;
+        }
+
+        const autoSaveTimer = setTimeout(async () => {
+            await handleAutoSaveDraft();
+        }, 3000); // 3 seconds after user stops typing
+
+        return () => clearTimeout(autoSaveTimer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData, selectedCategory, links, tags, builtWith, user, isEditing, hasUnsavedChanges]);
+
+    // Warn before leaving if there are unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (hasUnsavedChanges && !isFormEmpty()) {
+                e.preventDefault();
+                e.returnValue = ''; // Chrome requires returnValue to be set
+                return ''; // For older browsers
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
 
     const isFormEmpty = () => {
         // Check if all required fields from Step 1 are empty
@@ -979,6 +1097,74 @@ const Register = () => {
         // URL preserved for user decision
     };
 
+    // Auto-save function (silent, no user notification)
+    const handleAutoSaveDraft = async () => {
+        if (!user || isEditing || isFormEmpty() || !formData.name || isAutoSaving) {
+            return;
+        }
+
+        setIsAutoSaving(true);
+        try {
+            let draftId = autoSaveDraftId || editingProjectId;
+
+            // Check if draft with same name exists
+            if (!draftId) {
+                const { data: existingDraft } = await supabase
+                    .from('projects')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('name', formData.name)
+                    .eq('status', 'draft')
+                    .maybeSingle();
+                if (existingDraft && existingDraft.id) {
+                    draftId = existingDraft.id;
+                    setAutoSaveDraftId(draftId);
+                }
+            }
+
+            const draftData = {
+                name: formData.name,
+                website_url: formData.websiteUrl || '',
+                tagline: formData.tagline || '',
+                description: formData.description || '',
+                category_type: selectedCategory?.value || '',
+                links: links.filter(link => link.trim() !== ''),
+                built_with: builtWith.map(item => item.value),
+                tags: tags,
+                updated_at: new Date().toISOString(),
+                user_id: user.id,
+                status: 'draft',
+                media_urls: [...existingMediaUrls],
+                logo_url: typeof logoFile === 'string' ? logoFile : null,
+                thumbnail_url: typeof thumbnailFile === 'string' ? thumbnailFile : null,
+                cover_urls: coverFiles.filter(f => typeof f === 'string'),
+            };
+
+            // Only set created_at and slug for new drafts
+            if (!draftId) {
+                draftData.created_at = new Date().toISOString();
+                draftData.slug = slugify(formData.name) + '-' + nanoid(6);
+            }
+
+            if (draftId) {
+                await supabase.from('projects').update(draftData).eq('id', draftId);
+            } else {
+                const { data: newDraft } = await supabase.from('projects').insert([draftData]).select('id').single();
+                if (newDraft) {
+                    setAutoSaveDraftId(newDraft.id);
+                }
+            }
+
+            setHasUnsavedChanges(false);
+            setLastSavedAt(new Date());
+        } catch (error) {
+            console.error('Auto-save failed:', error);
+            // Silent fail - don't show error to user
+        } finally {
+            setIsAutoSaving(false);
+        }
+    };
+
     const handleSaveDraft = async () => {
         if (!user) {
             setSnackbar({ open: true, message: 'Please sign in to save', severity: 'warning' });
@@ -997,8 +1183,8 @@ const Register = () => {
             setSnackbar({ open: true, message: 'Please enter a project name before saving.', severity: 'warning' });
             return;
         }
-        let draftId = editingProjectId;
-        if (!isEditing) {
+        let draftId = autoSaveDraftId || editingProjectId;
+        if (!isEditing && !draftId) {
             const { data: existingDraft } = await supabase
                 .from('projects')
                 .select('id')
@@ -1008,6 +1194,7 @@ const Register = () => {
                 .maybeSingle();
             if (existingDraft && existingDraft.id) {
                 draftId = existingDraft.id;
+                setAutoSaveDraftId(draftId);
             }
         }
         const draftData = {
@@ -1032,13 +1219,49 @@ const Register = () => {
             if (draftId) {
                 await supabase.from('projects').update(draftData).eq('id', draftId);
             } else {
-                await supabase.from('projects').insert([draftData]);
+                const { data: newDraft } = await supabase.from('projects').insert([draftData]).select('id').single();
+                if (newDraft) {
+                    setAutoSaveDraftId(newDraft.id);
+                }
             }
+            setHasUnsavedChanges(false);
+            setLastSavedAt(new Date());
             setSnackbar({ open: true, message: 'Launch saved!', severity: 'success' });
         } catch (error) {
             setSnackbar({ open: true, message: 'Failed to save draft. Please try again.', severity: 'error' });
 
         }
+    };
+
+    // Draft selection handlers
+    const handleContinueDraft = (draftId) => {
+        navigate(`/submit?draft=${draftId}`);
+        setShowDraftSelection(false);
+    };
+
+    const handleStartNew = () => {
+        // Clear localStorage draft
+        localStorage.removeItem('launch_draft');
+        // Clear form state
+        setFormData({
+            name: '',
+            websiteUrl: '',
+            description: '',
+            tagline: '',
+            categoryOptions: '',
+        });
+        setSelectedCategory(null);
+        setLinks(['']);
+        setTags([]);
+        setBuiltWith([]);
+        setLogoFile(null);
+        setThumbnailFile(null);
+        setCoverFiles([null, null, null, null]);
+        setUrlPreview(null);
+        setAutoSaveDraftId(null);
+        setHasUnsavedChanges(false);
+        setLastSavedAt(null);
+        setShowDraftSelection(false);
     };
 
     const handleRemoveExistingMedia = (url) => {
@@ -1202,11 +1425,25 @@ const Register = () => {
         }
     };
 
-    if (loadingProject) {
+    if (loadingProject || loadingDrafts) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">{loadingDrafts ? 'Loading your drafts...' : 'Loading...'}</p>
+                </div>
             </div>
+        );
+    }
+
+    // Show draft selection screen if user has drafts and not editing a specific one
+    if (showDraftSelection && userDrafts.length > 0 && !isEditing) {
+        return (
+            <DraftSelectionScreen
+                user={user}
+                onContinueDraft={handleContinueDraft}
+                onStartNew={handleStartNew}
+            />
         );
     }
 
@@ -1353,6 +1590,24 @@ const Register = () => {
                     <p className="text-gray-500 mt-2">
                         Get your product in front of the right audience. Be seen, gain traction, and grow with confidence!
                     </p>
+                    {/* Auto-save indicator */}
+                    {user && !isFormEmpty() && formData.name && (
+                        <div className="mt-3 flex items-center justify-center gap-2 text-sm">
+                            {isAutoSaving ? (
+                                <span className="text-blue-600 flex items-center gap-1">
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                                    Saving...
+                                </span>
+                            ) : lastSavedAt ? (
+                                <span className="text-green-600 flex items-center gap-1">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Auto-saved {formatTimeAgo(lastSavedAt)}
+                                </span>
+                            ) : hasUnsavedChanges ? (
+                                <span className="text-gray-500">Changes will be auto-saved...</span>
+                            ) : null}
+                        </div>
+                    )}
                 </header>
                 <div className="form-container">
                     {/* Tabs for Navigation */}
