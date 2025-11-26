@@ -7,7 +7,8 @@ import { supabase } from "../supabaseClient";
 import { Alert, Snackbar } from "@mui/material";
 import NotificationBell from "./NotificationBell";
 
-
+// Feature flag for pitch feature
+const SHOW_PITCH_FEATURE = false; // Set to true to re-enable pitch feature
 
 const Header = ({ onMenuClick }) => {
     const [user, setUser] = useState(null);
@@ -487,7 +488,7 @@ const Header = ({ onMenuClick }) => {
                                     <CirclePlus className="w-4 h-4 mr-2" />
                                     Submit
                                 </button>
-                                {user && (
+                                {SHOW_PITCH_FEATURE && user && (
                                     <button
                                         onClick={() => handleLaunchItemClick('pitch')}
                                         className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -596,7 +597,7 @@ const Header = ({ onMenuClick }) => {
                                     <CirclePlus className="w-4 h-4 mr-2" />
                                     Submit
                                 </button>
-                                {user && (
+                                {SHOW_PITCH_FEATURE && user && (
                                     <button
                                         onClick={() => handleLaunchItemClick('pitch')}
                                         className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

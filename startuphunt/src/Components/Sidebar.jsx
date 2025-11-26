@@ -7,6 +7,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
 
+// Feature flag for pitch feature
+const SHOW_PITCH_FEATURE = false; // Set to true to re-enable pitch feature
+
 const Sidebar = ({ isOpen }) => {
     const [user, setUser] = useState(null);
     const [categories, setCategories] = useState([]);
@@ -71,7 +74,7 @@ const Sidebar = ({ isOpen }) => {
 
     const mainItems = [
         { title: "Home", icon: Home, active: true, to: "/" },
-        { title: "pitch", icon: Scissors, to: "/approved-pitches" },
+        ...(SHOW_PITCH_FEATURE ? [{ title: "pitch", icon: Scissors, to: "/approved-pitches" }] : []),
         { title: "Community", icon: Users, to: "/launchit-community" },
         { title: "You", icon: User, isProfile: true },
     ];

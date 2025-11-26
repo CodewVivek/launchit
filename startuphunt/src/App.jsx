@@ -34,6 +34,9 @@ import SearchBar from "./Components/SearchBar.jsx";
 import ScrollToTop from "./Components/ScrollToTop";
 import ErrorBoundary from "./Components/ErrorBoundary";
 
+// Feature flag for pitch feature
+const SHOW_PITCH_FEATURE = false; // Set to true to re-enable pitch feature
+
 // Lazy load heavy components
 const LazyAdminDashboard = lazy(() => import("./Pages/AdminDashboard"));
 const LazyPitchUpload = lazy(() => import("./Pages/PitchUpload"));
@@ -109,13 +112,15 @@ function AppRoutes() {
                 <Route path="/aboutus" element={<PageFade><Aboutus /></PageFade>} />
                 <Route path="/suggestions" element={<PageFade><Suggestions /></PageFade>} />
                 <Route path="/launchitguide" element={<PageFade><LaunchItGuide /></PageFade>} />
-                <Route path="/upload-pitch" element={
-                  <PageFade>
-                    <Suspense fallback={<LoadingFallback />}>
-                      <LazyPitchUpload />
-                    </Suspense>
-                  </PageFade>
-                } />
+                {SHOW_PITCH_FEATURE && (
+                  <Route path="/upload-pitch" element={
+                    <PageFade>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <LazyPitchUpload />
+                      </Suspense>
+                    </PageFade>
+                  } />
+                )}
                 <Route path="/coming-soon" element={<PageFade><ComingSoon /></PageFade>} />
                 <Route path="/my-launches" element={<PageFade><MyLaunches /></PageFade>} />
                 <Route path="/saved-projects" element={<PageFade><SavedProjects /></PageFade>} />
@@ -125,13 +130,15 @@ function AppRoutes() {
                 <Route path="/my-comments" element={<PageFade><MyComments /></PageFade>} />
                 <Route path="/downloads" element={<PageFade><ComingSoon /></PageFade>} />
                 <Route path="/followers-following" element={<PageFade><FollowersFollowing /></PageFade>} />
-                <Route path="/approved-pitches" element={
-                  <PageFade>
-                    <Suspense fallback={<LoadingFallback />}>
-                      <LazyApprovedPitches />
-                    </Suspense>
-                  </PageFade>
-                } />
+                {SHOW_PITCH_FEATURE && (
+                  <Route path="/approved-pitches" element={
+                    <PageFade>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <LazyApprovedPitches />
+                      </Suspense>
+                    </PageFade>
+                  } />
+                )}
                 <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
                 <Route path="/launchit-community" element={<PageFade><Community /></PageFade>} />
                 <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />

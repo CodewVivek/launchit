@@ -44,6 +44,9 @@ import {
 import SortByDateFilter from "../Components/SortByDateFilter";
 import toast from "react-hot-toast";
 
+// Feature flag for pitch feature
+const SHOW_PITCH_FEATURE = false; // Set to true to re-enable pitch feature
+
 // Helper function to sort projects
 function sortProjectsByDate(projects, dateField = "created_at", order = "newest") {
   return [...projects].sort((a, b) => {
@@ -517,12 +520,14 @@ const UserProfile = () => {
           >
             Projects ({projects.length})
           </button>
-          <button
-            onClick={() => setActiveTab("pitches")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
-          >
-            Pitches ({userPitches.length})
-          </button>
+          {SHOW_PITCH_FEATURE && (
+            <button
+              onClick={() => setActiveTab("pitches")}
+              className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Pitches ({userPitches.length})
+            </button>
+          )}
           {/* Only show comments tab to profile owner */}
           {isOwner && (
             <button
@@ -659,7 +664,7 @@ const UserProfile = () => {
             )}
           </>
         )}
-        {activeTab === "pitches" && isOwner && (
+        {SHOW_PITCH_FEATURE && activeTab === "pitches" && isOwner && (
           <div className="bg-white rounded-lg shadow border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800">My Pitches</h2>
