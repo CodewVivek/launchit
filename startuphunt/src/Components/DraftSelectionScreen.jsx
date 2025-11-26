@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Clock, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, X, Clock, Trash2, ExternalLink, Rocket } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Snackbar from '@mui/material/Snackbar';
@@ -54,11 +54,11 @@ import Button from '@mui/material/Button';
  * └─────────────────────────────────────────────────────────┘
  */
 
-const DraftSelectionScreen = ({ 
-    user, 
-    onContinueDraft, 
-    onStartNew, 
-    onDismiss 
+const DraftSelectionScreen = ({
+    user,
+    onContinueDraft,
+    onStartNew,
+    onDismiss
 }) => {
     const [drafts, setDrafts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -74,7 +74,7 @@ const DraftSelectionScreen = ({
 
     const fetchDrafts = async () => {
         if (!user) return;
-        
+
         setLoading(true);
         try {
             const { data: draftsData, error } = await supabase
@@ -89,7 +89,7 @@ const DraftSelectionScreen = ({
                 setDrafts([]);
             } else {
                 // Filter out empty drafts (drafts with no meaningful data)
-                const meaningfulDrafts = (draftsData || []).filter(draft => 
+                const meaningfulDrafts = (draftsData || []).filter(draft =>
                     draft.name || draft.website_url || draft.tagline || draft.description || draft.category_type
                 );
                 setDrafts(meaningfulDrafts);
@@ -199,11 +199,11 @@ const DraftSelectionScreen = ({
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
                         Your existing in progress posts:
                     </h2>
-                    
+
                     <div className="space-y-4">
                         {drafts.map((draft) => (
-                            <div 
-                                key={draft.id} 
+                            <div
+                                key={draft.id}
                                 className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white"
                             >
                                 <div className="flex items-start justify-between gap-4">
@@ -212,9 +212,9 @@ const DraftSelectionScreen = ({
                                         <div className="flex items-start gap-3 mb-2">
                                             {/* Logo/Thumbnail */}
                                             {draft.logo_url || draft.thumbnail_url ? (
-                                                <img 
-                                                    src={draft.logo_url || draft.thumbnail_url} 
-                                                    alt={draft.name || 'Draft'} 
+                                                <img
+                                                    src={draft.logo_url || draft.thumbnail_url}
+                                                    alt={draft.name || 'Draft'}
                                                     className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                                                     onError={(e) => {
                                                         e.target.style.display = 'none';
@@ -225,7 +225,7 @@ const DraftSelectionScreen = ({
                                                     <Rocket className="w-6 h-6 text-gray-400" />
                                                 </div>
                                             )}
-                                            
+
                                             {/* Draft details */}
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="text-lg font-semibold text-gray-800 truncate">
@@ -239,19 +239,19 @@ const DraftSelectionScreen = ({
                                                 )}
                                             </div>
                                         </div>
-                                        
+
                                         {/* Tagline */}
                                         {draft.tagline && (
                                             <p className="text-gray-600 mb-2 text-sm">{draft.tagline}</p>
                                         )}
-                                        
+
                                         {/* Description preview */}
                                         {draft.description && (
                                             <p className="text-sm text-gray-500 line-clamp-2 mb-3">
                                                 {draft.description}
                                             </p>
                                         )}
-                                        
+
                                         {/* Meta info */}
                                         <div className="flex items-center gap-4 flex-wrap text-xs text-gray-400">
                                             {draft.category_type && (
@@ -265,7 +265,7 @@ const DraftSelectionScreen = ({
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Right side - Actions */}
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                         <button
