@@ -34,6 +34,7 @@ const Sidebar = ({ isOpen }) => {
             const { data, error } = await supabase
                 .from('projects')
                 .select('category_type')
+                .eq('status', 'launched')
                 .not('category_type', 'is', null);
 
             if (!error && data) {

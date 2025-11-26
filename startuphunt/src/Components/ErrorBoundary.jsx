@@ -18,7 +18,7 @@ class ErrorBoundary extends React.Component {
 
         // Log error in development mode
         if (import.meta.env.DEV) {
-            
+
         }
     }
 
