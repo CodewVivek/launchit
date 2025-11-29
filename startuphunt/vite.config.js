@@ -3,6 +3,12 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // Stub jquery for slick-carousel (react-slick doesn't actually need it)
+      jquery: 'node_modules/jquery/dist/jquery.slim.min.js',
+    },
+  },
   build: {
     rollupOptions: {
       external: [],
