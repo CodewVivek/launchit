@@ -1,12 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
       // Stub jquery for slick-carousel (react-slick doesn't actually need it)
-      jquery: 'node_modules/jquery/dist/jquery.slim.min.js',
+      jquery: path.resolve(__dirname, 'node_modules/jquery/dist/jquery.slim.min.js'),
     },
   },
   build: {
