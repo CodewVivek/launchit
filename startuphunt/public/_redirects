@@ -1,3 +1,7 @@
+# WWW Canonicalization - Redirect www to non-www
+https://www.launchitsite.netlify.app/*  https://launchitsite.netlify.app/:splat  301!
+https://www.launchit.site/*  https://launchit.site/:splat  301!
+
 # Handle client-side routing for React app
 /*    /index.html   200
 

@@ -2,6 +2,19 @@
   command = "cd startuphunt && npm install && npm run build"
   publish = "startuphunt/dist"
 
+# WWW Canonicalization
+[[redirects]]
+  from = "https://www.launchitsite.netlify.app/*"
+  to = "https://launchitsite.netlify.app/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.launchit.site/*"
+  to = "https://launchit.site/:splat"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

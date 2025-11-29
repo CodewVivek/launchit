@@ -49,6 +49,10 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
+        passes: 2, // Multiple passes for better minification
+      },
+      format: {
+        comments: false, // Remove all comments
       },
     },
     // Optimize chunk size warnings

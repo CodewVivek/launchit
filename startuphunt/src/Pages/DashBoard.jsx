@@ -152,8 +152,9 @@ const Dashboard = () => {
   return (
     <>
       <SEO
-        title="Discover Early-Stage Startups"
-        description="Launchit is the instant platform for startup founders who want to ship their products and get visibility — without gatekeeping or delays. Discover, launch, and connect."
+        title="Discover Early-Stage Startups & Launch Your Project"
+        description="Discover early-stage startups and launch your project on Launchit. The instant platform for startup founders to ship products, get visibility, and discover innovative projects — without gatekeeping or delays."
+        keywords="early-stage startups, launch startup, discover startups, startup platform, launch project, startup discovery"
         url="https://launchit.site/"
         structuredData={{
           "@context": "https://schema.org",
@@ -178,13 +179,11 @@ const Dashboard = () => {
             </div>
 
             <h1 className="text-6xl md:text-7xl font-bold text-black mb-6 leading-tight">
-              Where Builders
-              <br />
-              <span className="text-gray-400">Launch Projects.</span>
+              Discover Early-Stage Startups & Launch Your Project
             </h1>
 
             <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Publish your startup, get seen, and discover what others are building — all without waiting or approval.
+              Publish your startup, get seen, and discover early-stage startups others are building — all without waiting or approval. <a href="/submit" className="text-blue-600 hover:underline font-semibold">Launch your project</a> or <a href="#projects-section" className="text-blue-600 hover:underline font-semibold">browse latest launches</a>.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -227,6 +226,9 @@ const Dashboard = () => {
 
         {/* Existing projects list */}
         <div id="projects-section">
+          <h2 className="text-3xl sm:text-4xl font-bold my-8 sm:my-10 mx-3 sm:mx-4 lg:mx-10 text-gray-900 text-center">
+            Latest Startup Launches
+          </h2>
           {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
             <div key={dateLabel}>
               <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-3 sm:mx-4 lg:mx-10 text-gray-800">
