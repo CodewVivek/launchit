@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { ExternalLink, Tag, Search } from "lucide-react";
+import { ExternalLink, Tag, Search, Rocket, Zap, ArrowRight, Check } from "lucide-react";
 import Like from "../Components/Like";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isYesterday } from "date-fns";
@@ -150,6 +150,58 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen pt-4 overflow-x-hidden">
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-6">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full border border-gray-200 mb-6">
+            <Zap className="w-4 h-4 text-black" />
+            <span className="text-sm font-medium text-gray-700">No Waiting. No Approval. Launch Now.</span>
+          </div>
+
+          <h1 className="text-6xl md:text-7xl font-bold text-black mb-6 leading-tight">
+            Launch Fast.
+            <br />
+            <span className="text-gray-400">Get Discovered.</span>
+          </h1>
+
+          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+            The instant platform for startup founders who want to ship their products and get visibility — without gatekeeping or delays.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button
+              onClick={() => navigate("/submit")}
+              className="px-8 py-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-all font-semibold text-lg flex items-center gap-2 group"
+            >
+              Submit Your Startup
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="px-8 py-4 bg-white text-black border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors font-semibold text-lg"
+            >
+              Browse Launches
+            </button>
+          </div>
+
+          <div className="mt-16 flex flex-wrap justify-center gap-8 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>No waiting period</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>No moderator approval</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Instant visibility</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Existing projects list */}
       {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
         <div key={dateLabel}>
           <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-3 sm:mx-4 lg:mx-10 text-gray-800">
