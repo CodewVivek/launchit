@@ -7,10 +7,11 @@ export const useDraftSelection = (user, projectLoaded, searchParams) => {
     const [loadingDrafts, setLoadingDrafts] = useState(false);
 
     useEffect(() => {
+        const editId = searchParams.get('edit');
+        const draftId = searchParams.get('draft');
+
         const fetchUserDrafts = async () => {
             if (!user) return;
-            const editId = searchParams.get('edit');
-            const draftId = searchParams.get('draft');
             if (editId || draftId) return;
 
             setLoadingDrafts(true);

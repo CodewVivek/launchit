@@ -27,15 +27,35 @@ const Header = ({ onMenuClick }) => {
 
     useEffect(() => {
         const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-            if (user) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', user.id)
-                    .maybeSingle();
-                setUserRole(profile?.role);
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    console.error('Error fetching auth user in Header:', error);
+                    setUser(null);
+                    setUserRole(null);
+                    return;
+                }
+                const currentUser = data?.user || null;
+                setUser(currentUser);
+                if (currentUser) {
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', currentUser.id)
+                        .maybeSingle();
+                    if (profileError) {
+                        console.error('Error fetching user profile in Header:', profileError);
+                        setUserRole(null);
+                    } else {
+                        setUserRole(profile?.role);
+                    }
+                } else {
+                    setUserRole(null);
+                }
+            } catch (err) {
+                console.error('Unexpected auth error in Header:', err);
+                setUser(null);
+                setUserRole(null);
             }
         };
         getUser();

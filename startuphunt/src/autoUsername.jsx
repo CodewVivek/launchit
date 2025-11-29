@@ -2,9 +2,12 @@ import { supabase } from "./supabaseClient";
 
 export async function ensureAutoUsername() {
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error("Error fetching auth user in ensureAutoUsername:", error);
+      return;
+    }
+    const user = data?.user;
     if (!user) return;
 
     // Fetch profile

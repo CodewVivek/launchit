@@ -13,14 +13,26 @@ const MyComments = () => {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    console.error("Error fetching auth user in MyComments:", error);
+                    toast.error("Authentication error. Please refresh and try again.");
+                    return;
+                }
+                const currentUser = data?.user || null;
+                if (!currentUser) {
+                    toast.error("Please sign in to view your comments");
+                    navigate("/UserRegister");
+                    return;
+                }
+                setUser(currentUser);
+                fetchUserComments(currentUser.id);
+            } catch (err) {
+                console.error("Unexpected auth error in MyComments:", err);
                 toast.error("Please sign in to view your comments");
                 navigate("/UserRegister");
-                return;
             }
-            setUser(user);
-            fetchUserComments(user.id);
         };
 
         checkAuth();

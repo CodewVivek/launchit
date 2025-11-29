@@ -193,10 +193,14 @@ const UserProfile = () => {
 
         setProfile(profileData);
 
-        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+        const { data, error: authError } = await supabase.auth.getUser();
+        if (authError) {
+          console.error("Error fetching auth user in UserProfile:", authError);
+        }
+        const loggedInUser = data?.user || null;
         setCurrentUser(loggedInUser);
 
-        const isProfileOwner = loggedInUser && loggedInUser.id === profileData.id;
+        const isProfileOwner = !!(loggedInUser && loggedInUser.id === profileData.id);
         setIsOwner(isProfileOwner);
 
         // If user is viewing comments tab but they're not the owner, reset to projects

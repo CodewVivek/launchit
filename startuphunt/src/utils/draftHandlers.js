@@ -18,8 +18,6 @@ export const handleStartNew = ({
     setLastSavedAt,
     setShowDraftSelection,
 }) => {
-    // Clear localStorage draft
-    localStorage.removeItem('launch_draft');
     // Clear form state
     setFormData({
         name: '',

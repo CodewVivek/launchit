@@ -11,10 +11,11 @@ export const useProjectData = (user, searchParams, projectLoaded, setSnackbar) =
     const [existingMediaUrls, setExistingMediaUrls] = useState([]);
     const [existingLogoUrl, setExistingLogoUrl] = useState('');
 
+    const editParam = searchParams.get('edit');
+    const draftParam = searchParams.get('draft');
+
     useEffect(() => {
-        const editId = searchParams.get('edit');
-        const draftId = searchParams.get('draft');
-        const projectId = editId || draftId;
+        const projectId = editParam || draftParam;
         if (user && !projectLoaded && projectId) {
             loadProjectForEditing({
                 projectId,
@@ -24,23 +25,23 @@ export const useProjectData = (user, searchParams, projectLoaded, setSnackbar) =
                 setIsEditing,
                 setEditingProjectId,
                 setEditingLaunched,
-                setFormData: (data) => {}, // Will be set by parent
-                setSelectedCategory: (cat) => {}, // Will be set by parent
-                setLinks: (links) => {}, // Will be set by parent
-                setBuiltWith: (built) => {}, // Will be set by parent
-                setTags: (tags) => {}, // Will be set by parent
+                setFormData: (data) => { }, // Will be set by parent
+                setSelectedCategory: (cat) => { }, // Will be set by parent
+                setLinks: (links) => { }, // Will be set by parent
+                setBuiltWith: (built) => { }, // Will be set by parent
+                setTags: (tags) => { }, // Will be set by parent
                 setExistingMediaUrls,
                 setExistingLogoUrl,
-                setLogoFile: (file) => {}, // Will be set by parent
-                setThumbnailFile: (file) => {}, // Will be set by parent
-                setCoverFiles: (files) => {}, // Will be set by parent
-                setAutoSaveDraftId: (id) => {}, // Will be set by parent
-                setHasUnsavedChanges: (val) => {}, // Will be set by parent
-                setProjectLoaded: (val) => {}, // Will be set by parent
+                setLogoFile: (file) => { }, // Will be set by parent
+                setThumbnailFile: (file) => { }, // Will be set by parent
+                setCoverFiles: (files) => { }, // Will be set by parent
+                setAutoSaveDraftId: (id) => { }, // Will be set by parent
+                setHasUnsavedChanges: (val) => { }, // Will be set by parent
+                setProjectLoaded: (val) => { }, // Will be set by parent
                 setSnackbar,
             });
         }
-    }, [user, projectLoaded, searchParams]);
+    }, [user, projectLoaded, editParam, draftParam, supabase, setSnackbar]);
 
     return {
         isEditing,

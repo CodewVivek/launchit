@@ -6,13 +6,32 @@ export const useUserAuth = (navigate, setSnackbar) => {
 
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'warning' });
-                navigate('/UserRegister');
-                return;
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    console.error('Error fetching auth user:', error);
+                    setSnackbar({
+                        open: true,
+                        message: 'Authentication error. Please refresh and try again.',
+                        severity: 'error',
+                    });
+                    return;
+                }
+                const currentUser = data?.user || null;
+                if (!currentUser) {
+                    setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'warning' });
+                    navigate('/UserRegister');
+                    return;
+                }
+                setUser(currentUser);
+            } catch (error) {
+                console.error('Unexpected error fetching auth user:', error);
+                setSnackbar({
+                    open: true,
+                    message: 'Authentication error. Please refresh and try again.',
+                    severity: 'error',
+                });
             }
-            setUser(user);
         };
         checkUser();
     }, [navigate, setSnackbar]);

@@ -49,8 +49,17 @@ export const generateLaunchData = async ({
     }, 5000);
 
     try {
-        const { data: userData } = await supabase.auth.getUser();
-        const user_id = userData?.user?.id;
+        let user_id = null;
+        try {
+            const { data, error } = await supabase.auth.getUser();
+            if (error) {
+                console.error('Error fetching auth user for AI generation:', error);
+            } else {
+                user_id = data?.user?.id || null;
+            }
+        } catch (authError) {
+            console.error('Unexpected auth error for AI generation:', authError);
+        }
 
         //fetch the website and get the html
         const res = await fetch(config.getBackendUrl() + "/generatelaunchdata", {

@@ -13,14 +13,26 @@ const UpvotedProjects = () => {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    console.error("Error fetching auth user in UpvotedProjects:", error);
+                    toast.error("Authentication error. Please refresh and try again.");
+                    return;
+                }
+                const currentUser = data?.user || null;
+                if (!currentUser) {
+                    toast.error("Please sign in to view your upvoted projects");
+                    navigate("/UserRegister");
+                    return;
+                }
+                setUser(currentUser);
+                fetchUpvotedProjects(currentUser.id);
+            } catch (err) {
+                console.error("Unexpected auth error in UpvotedProjects:", err);
                 toast.error("Please sign in to view your upvoted projects");
                 navigate("/UserRegister");
-                return;
             }
-            setUser(user);
-            fetchUpvotedProjects(user.id);
         };
 
         checkAuth();

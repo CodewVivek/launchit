@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/Register.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
@@ -30,41 +31,12 @@ const Register = () => {
     const [step, setStep] = useState(1);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+
+    // Auth & user
     const [user, setUser] = useState(null);
+
+    // Form state
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
-    const [urlError, setUrlError] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
-    const [editingProjectId, setEditingProjectId] = useState(null);
-    const [loadingProject, setLoadingProject] = useState(false);
-    const [existingMediaUrls, setExistingMediaUrls] = useState([]);
-    const [existingLogoUrl, setExistingLogoUrl] = useState('');
-    const [editingLaunched, setEditingLaunched] = useState(false);
-    const [projectLoaded, setProjectLoaded] = useState(false);
-    const [builtWith, setBuiltWith] = useState([]);
-    const [tags, setTags] = useState([]);
-    const [dynamicCategoryOptions, setDynamicCategoryOptions] = useState(categoryOptions);
-
-    const [showSmartFillDialog, setShowSmartFillDialog] = useState(false);
-    const [pendingAIData, setPendingAIData] = useState(null);
-    const [isAILoading, setIsAILoading] = useState(false);
-    const [retryCount, setRetryCount] = useState(0);
-    const [isRetrying, setIsRetrying] = useState(false);
-    const [urlPreview, setUrlPreview] = useState(null);
-    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-
-    // Auto-save state
-    const [autoSaveDraftId, setAutoSaveDraftId] = useState(null);
-    const [isAutoSaving, setIsAutoSaving] = useState(false);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [lastSavedAt, setLastSavedAt] = useState(null);
-
-    // Draft selection screen state
-    const [showDraftSelection, setShowDraftSelection] = useState(false);
-    const [userDrafts, setUserDrafts] = useState([]);
-    const [loadingDrafts, setLoadingDrafts] = useState(false);
-
-    const [links, setLinks] = useState(['']);
     const [formData, setFormData] = useState({
         name: '',
         websiteUrl: '',
@@ -72,89 +44,273 @@ const Register = () => {
         tagline: '',
         categoryOptions: '',
     });
+    const [links, setLinks] = useState(['']);
+    const [builtWith, setBuiltWith] = useState([]);
+    const [tags, setTags] = useState([]);
     const [logoFile, setLogoFile] = useState(null);
     const [thumbnailFile, setThumbnailFile] = useState(null);
     const [coverFiles, setCoverFiles] = useState([null, null, null, null]);
+
+    const [dynamicCategoryOptions, setDynamicCategoryOptions] = useState(categoryOptions);
+
+    // UI / helper state
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+    const [urlError, setUrlError] = useState('');
     const [descriptionWordCount, setDescriptionWordCount] = useState(0);
     const [taglineCharCount, setTaglineCharCount] = useState(0);
     const DESCRIPTION_WORD_LIMIT = 260;
 
+    // Editing / project load
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingProjectId, setEditingProjectId] = useState(null);
+    const [editingLaunched, setEditingLaunched] = useState(false);
+    const [projectLoaded, setProjectLoaded] = useState(false);
+    const [loadingProject, setLoadingProject] = useState(false);
+
+    const [existingMediaUrls, setExistingMediaUrls] = useState([]);
+    const [existingLogoUrl, setExistingLogoUrl] = useState('');
+
+    // Draft selection state (parent owns drafts)
+    const [showDraftSelection, setShowDraftSelection] = useState(false);
+    const [userDrafts, setUserDrafts] = useState([]);
+    const [loadingDrafts, setLoadingDrafts] = useState(false);
+
+    // Auto-save state
+    const [autoSaveDraftId, setAutoSaveDraftId] = useState(null);
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [lastSavedAt, setLastSavedAt] = useState(null);
+
+    // AI / smart-fill state
+    const [showSmartFillDialog, setShowSmartFillDialog] = useState(false);
+    const [pendingAIData, setPendingAIData] = useState(null);
+    const [isAILoading, setIsAILoading] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
+    const [isRetrying, setIsRetrying] = useState(false);
+
+    // URL preview
+    const [urlPreview, setUrlPreview] = useState(null);
+    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+
+    // Misc refs
+    const mountedRef = useRef(true);
+    const autoSaveTimerRef = useRef(null);
+
+    // derive primitive params (avoid URLSearchParams identity change)
+    const editParam = searchParams.get('edit');
+    const draftParam = searchParams.get('draft');
+
+    //
+    // ------------- Auth check (safe) -------------
+    //
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+        const checkUser = async () => {
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    console.error('Error fetching auth user:', error);
+                    if (!isMounted) return;
+                    setSnackbar({ open: true, message: 'Authentication error. Please refresh and try again.', severity: 'error' });
+                    return;
+                }
+                const currentUser = data?.user || null;
+                if (!isMounted) return;
+                if (!currentUser) {
+                    setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'warning' });
+                    navigate('/UserRegister');
+                    return;
+                }
+                setUser(currentUser);
+            } catch (err) {
+                console.error('Unexpected error fetching auth user:', err);
+                if (!isMounted) return;
+                setSnackbar({ open: true, message: 'Authentication error. Please refresh and try again.', severity: 'error' });
+            }
+        };
+        checkUser();
+        return () => { isMounted = false; };
+    }, [navigate]);
+
+    //
+    // ------------- Draft fetching (parent) -------------
+    //
+    useEffect(() => {
+        let isMounted = true;
+        const fetchUserDrafts = async () => {
+            if (!user) return;
+            // if editing or explicit draft param present, don't show the draft-selection prompt
+            if (editParam || draftParam) return;
+
+            setLoadingDrafts(true);
+            try {
+                const { data: drafts, error } = await supabase
+                    .from('projects')
+                    .select('id, name, website_url, tagline, description, category_type, created_at, updated_at, logo_url, thumbnail_url')
+                    .eq('user_id', user.id)
+                    .eq('status', 'draft')
+                    .order('updated_at', { ascending: false });
+
+                if (!isMounted) return;
+
+                if (error) {
+                    console.error('Error fetching drafts:', error);
+                    setUserDrafts([]);
+                } else {
+                    const meaningfulDrafts = (drafts || []).filter(draft =>
+                        draft.name || draft.website_url || draft.tagline || draft.description || draft.category_type
+                    );
+                    setUserDrafts(meaningfulDrafts);
+                    if (meaningfulDrafts.length > 0) {
+                        setShowDraftSelection(true);
+                    }
+                }
+            } catch (err) {
+                if (!isMounted) return;
+                console.error('Error fetching drafts (catch):', err);
+                setUserDrafts([]);
+            } finally {
+                if (!isMounted) return;
+                setLoadingDrafts(false);
+            }
+        };
+
+        if (user && !projectLoaded) {
+            fetchUserDrafts();
+        }
+
+        return () => { isMounted = false; };
+    }, [user, projectLoaded, editParam, draftParam]);
+
+    //
+    // ------------- Load project for editing -------------
+    //
+    useEffect(() => {
+        let isMounted = true;
+        const projectId = editParam || draftParam;
+        if (!projectId || !user || projectLoaded) return;
+
+        const load = async () => {
+            try {
+                setLoadingProject(true);
+                await loadProjectForEditing({
+                    projectId,
+                    user,
+                    supabase,
+                    setLoadingProject,
+                    setIsEditing,
+                    setEditingProjectId,
+                    setEditingLaunched,
+                    setFormData,
+                    setSelectedCategory,
+                    setLinks,
+                    setBuiltWith,
+                    setTags,
+                    setExistingMediaUrls,
+                    setExistingLogoUrl,
+                    setLogoFile,
+                    setThumbnailFile,
+                    setCoverFiles,
+                    setAutoSaveDraftId,
+                    setHasUnsavedChanges,
+                    setProjectLoaded,
+                    setSnackbar,
+                });
+            } catch (err) {
+                if (!isMounted) return;
+                console.error('Failed to load project for editing:', err);
+            } finally {
+                if (!isMounted) return;
+                setLoadingProject(false);
+            }
+        };
+
+        load();
+        return () => { isMounted = false; };
+    }, [user, projectLoaded, editParam, draftParam]);
+
+    //
+    // ------------- Form helpers -------------
+    //
     const handleUrlBlur = (e) => {
         const { value } = e.target;
-        if (value && !isValidUrl(value)) {
-            setUrlError('Please enter a valid URL (e.g., https://example.com)');
-        } else {
-            setUrlError('');
-        }
+        if (value && !isValidUrl(value)) setUrlError('Please enter a valid URL (e.g., https://example.com)');
+        else setUrlError('');
     };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData({
-            ...formData,
-            [name]: type === 'checkbox' ? checked : value,
-        });
+        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        if (projectLoaded) setHasUnsavedChanges(true);
     };
 
     const handleDescriptionChange = (e) => {
         const value = e.target.value;
         const words = value.trim().split(/\s+/).filter(Boolean);
         if (words.length <= DESCRIPTION_WORD_LIMIT) {
-            setFormData({ ...formData, description: value });
+            setFormData(prev => ({ ...prev, description: value }));
             setDescriptionWordCount(words.length);
         } else {
             const limited = words.slice(0, DESCRIPTION_WORD_LIMIT).join(' ');
-            setFormData({ ...formData, description: limited });
+            setFormData(prev => ({ ...prev, description: limited }));
             setDescriptionWordCount(DESCRIPTION_WORD_LIMIT);
         }
+        if (projectLoaded) setHasUnsavedChanges(true);
     };
 
     const handleTaglineChange = (e) => {
-        setFormData({ ...formData, tagline: e.target.value.slice(0, 60) });
-        setTaglineCharCount(e.target.value.length > 60 ? 60 : e.target.value.length);
+        const val = e.target.value.slice(0, 60);
+        setFormData(prev => ({ ...prev, tagline: val }));
+        setTaglineCharCount(val.length);
+        if (projectLoaded) setHasUnsavedChanges(true);
     };
 
-    const addLink = () => setLinks([...links, '']);
+    const addLink = () => {
+        setLinks(prev => ([...prev, '']));
+        if (projectLoaded) setHasUnsavedChanges(true);
+    };
     const updateLink = (index, value) => {
-        const newLinks = [...links];
-        newLinks[index] = value;
-        setLinks(newLinks);
+        setLinks(prev => prev.map((l, i) => (i === index ? value : l)));
+        if (projectLoaded) setHasUnsavedChanges(true);
     };
     const removeLink = (index) => {
-        setLinks(links.filter((_, i) => i !== index));
+        setLinks(prev => prev.filter((_, i) => i !== index));
+        if (projectLoaded) setHasUnsavedChanges(true);
     };
 
     const handleLogoChange = async (e) => {
-        const file = e.target.files[0];
+        const file = e.target.files?.[0];
         if (file) {
             try {
                 const optimizedFile = await optimizeImage(file, 'logo');
                 setLogoFile(optimizedFile);
-            } catch (error) {
+            } catch {
                 setLogoFile(file);
             }
         }
     };
     const removeLogo = () => setLogoFile(null);
 
-    const handleThumbnailChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setThumbnailFile(file);
-        }
+    const handleThumbnailChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) setThumbnailFile(file);
     };
     const removeThumbnail = () => setThumbnailFile(null);
 
-    const handleCoverChange = async (e, idx) => {
-        const file = e.target.files[0];
-        if (file) {
-            setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
-        }
+    const handleCoverChange = (e, idx) => {
+        const file = e.target.files?.[0];
+        if (file) setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
     };
-    const removeCover = (idx) => {
-        setCoverFiles(prev => prev.map((f, i) => (i === idx ? null : f)));
-    };
+    const removeCover = (idx) => setCoverFiles(prev => prev.map((f, i) => (i === idx ? null : f)));
 
+    //
+    // ------------- AI / Smart Fill -------------
+    //
     const handleGenerateLaunchData = async (isRetry = false) => {
         await generateLaunchData({
             websiteUrl: formData.websiteUrl,
@@ -192,6 +348,9 @@ const Register = () => {
         });
     };
 
+    //
+    // ------------- Submit & Save -------------
+    //
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm(formData, selectedCategory, coverFiles, logoFile, thumbnailFile, urlPreview, setSnackbar)) return;
@@ -200,6 +359,7 @@ const Register = () => {
             navigate('/UserRegister');
             return;
         }
+
         await handleFormSubmission({
             formData,
             selectedCategory,
@@ -261,121 +421,76 @@ const Register = () => {
         });
     };
 
-    useEffect(() => {
-        const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'warning' });
-                navigate('/UserRegister');
-                return;
-            }
-            setUser(user);
-        };
-        checkUser();
-    }, [navigate]);
+    //
+    // ------------- Parent-owned delete (safe) -------------
+    //
+    const handleDeleteDraft = async (draftId) => {
+        if (!draftId || !user) return;
+        setLoadingDrafts(true);
+        try {
+            const { error } = await supabase
+                .from('projects')
+                .delete()
+                .eq('id', draftId)
+                .eq('user_id', user.id)
+                .eq('status', 'draft');
 
-    useEffect(() => {
-        const fetchUserDrafts = async () => {
-            if (!user) return;
-            const editId = searchParams.get('edit');
-            const draftId = searchParams.get('draft');
-            if (editId || draftId) return;
+            if (error) throw error;
 
-            setLoadingDrafts(true);
-            try {
-                const { data: drafts, error } = await supabase
-                    .from('projects')
-                    .select('id, name, website_url, tagline, description, category_type, created_at, updated_at, logo_url, thumbnail_url')
-                    .eq('user_id', user.id)
-                    .eq('status', 'draft')
-                    .order('updated_at', { ascending: false });
-
-                if (error) {
-                    console.error('Error fetching drafts:', error);
-                    setUserDrafts([]);
-                } else {
-                    const meaningfulDrafts = (drafts || []).filter(draft =>
-                        draft.name || draft.website_url || draft.tagline || draft.description || draft.category_type
-                    );
-                    setUserDrafts(meaningfulDrafts);
-                    if (meaningfulDrafts.length > 0) {
-                        setShowDraftSelection(true);
-                    }
+            setUserDrafts(prev => {
+                const next = prev.filter(d => d.id !== draftId);
+                if (next.length === 0) {
+                    // close draft selection and open blank submit page
+                    setShowDraftSelection(false);
+                    navigate('/submit');
                 }
-            } catch (error) {
-                console.error('Error fetching drafts:', error);
-                setUserDrafts([]);
-            } finally {
-                setLoadingDrafts(false);
-            }
-        };
-
-        if (user && !projectLoaded) {
-            fetchUserDrafts();
-        }
-    }, [user, projectLoaded, searchParams]);
-
-    useEffect(() => {
-        const editId = searchParams.get('edit');
-        const draftId = searchParams.get('draft');
-        const projectId = editId || draftId;
-        if (user && !projectLoaded && projectId) {
-            loadProjectForEditing({
-                projectId,
-                user,
-                supabase,
-                setLoadingProject,
-                setIsEditing,
-                setEditingProjectId,
-                setEditingLaunched,
-                setFormData,
-                setSelectedCategory,
-                setLinks,
-                setBuiltWith,
-                setTags,
-                setExistingMediaUrls,
-                setExistingLogoUrl,
-                setLogoFile,
-                setThumbnailFile,
-                setCoverFiles,
-                setAutoSaveDraftId,
-                setHasUnsavedChanges,
-                setProjectLoaded,
-                setSnackbar,
+                return next;
             });
+
+            setSnackbar({ open: true, message: 'Draft deleted successfully', severity: 'success' });
+        } catch (err) {
+            console.error('Failed to delete draft:', err);
+            setSnackbar({ open: true, message: 'Failed to delete draft', severity: 'error' });
+        } finally {
+            setLoadingDrafts(false);
         }
-    }, [user, projectLoaded, searchParams]);
+    };
+
+    //
+    // ------------- Autosave (debounced + mounted guard) -------------
+    //
+    // Compact form trigger — include only meaningful fields to avoid over-triggering
+    const formTrigger = [
+        formData?.name,
+        formData?.websiteUrl,
+        formData?.tagline,
+        formData?.description?.slice(0, 200),
+        selectedCategory?.value,
+        links.length,
+        builtWith.length,
+        tags.length,
+        existingMediaUrls.length,
+        Boolean(logoFile),
+        Boolean(thumbnailFile),
+        coverFiles.length,
+        hasUnsavedChanges,
+        isEditing,
+        projectLoaded,
+    ].join('|');
 
     useEffect(() => {
-        if (!isEditing) {
-            const savedDraft = localStorage.getItem('launch_draft');
-            if (savedDraft) {
-                try {
-                    const draft = JSON.parse(savedDraft);
-                    setFormData(draft.formData || {});
-                    setSelectedCategory(draft.selectedCategory || null);
-                    setLinks(draft.links || ['']);
-                } catch { }
-            }
-        }
-    }, [isEditing]);
+        if (!mountedRef.current) return;
+        // guards
+        if (!user || isEditing || isAutoSaving) return;
+        if (!formData?.name) return;
+        if (isFormEmpty(formData, selectedCategory)) return;
+        if (projectLoaded && !hasUnsavedChanges) return;
 
-    useEffect(() => {
-        const draft = { formData, selectedCategory, links };
-        localStorage.setItem('launch_draft', JSON.stringify(draft));
-        if (!isFormEmpty(formData, selectedCategory) && !isEditing) {
-            setHasUnsavedChanges(true);
-        }
-    }, [formData, selectedCategory, links]);
+        // clear previous timer
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
 
-    useEffect(() => {
-        if (!user || isEditing || isFormEmpty(formData, selectedCategory) || !formData.name || isAutoSaving) {
-            return;
-        }
-        if (projectLoaded && !hasUnsavedChanges) {
-            return;
-        }
-        const autoSaveTimer = setTimeout(async () => {
+        autoSaveTimerRef.current = setTimeout(async () => {
+            if (!mountedRef.current) return;
             await handleAutoSaveDraft({
                 user,
                 isEditing,
@@ -398,10 +513,20 @@ const Register = () => {
                 setHasUnsavedChanges,
                 setLastSavedAt,
             });
-        }, 3000);
-        return () => clearTimeout(autoSaveTimer);
-    }, [formData, selectedCategory, links, tags, builtWith, user, isEditing, hasUnsavedChanges]);
+        }, 1500);
 
+        return () => {
+            if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+                autoSaveTimerRef.current = null;
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formTrigger, user, isAutoSaving, autoSaveDraftId, editingProjectId, supabase]);
+
+    //
+    // ------------- Before unload handler -------------
+    //
     useEffect(() => {
         const handleBeforeUnload = (e) => {
             if (hasUnsavedChanges && !isFormEmpty(formData, selectedCategory)) {
@@ -414,21 +539,29 @@ const Register = () => {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [hasUnsavedChanges, formData, selectedCategory]);
 
+    //
+    // ------------- Loading state UI -------------
+    //
     if (loadingProject || loadingDrafts) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
                     <p className="text-gray-600">{loadingDrafts ? 'Loading your drafts...' : 'Loading...'}</p>
                 </div>
             </div>
         );
     }
 
+    //
+    // ------------- Draft selection screen -------------
+    //
     if (showDraftSelection && userDrafts.length > 0 && !isEditing) {
         return (
             <DraftSelectionScreen
                 user={user}
+                drafts={userDrafts}
+                loading={loadingDrafts}
                 onContinueDraft={(draftId) => handleContinueDraft(draftId, navigate, setShowDraftSelection)}
                 onStartNew={() => handleStartNew({
                     setFormData,
@@ -445,10 +578,15 @@ const Register = () => {
                     setLastSavedAt,
                     setShowDraftSelection,
                 })}
+                onDismiss={() => setShowDraftSelection(false)}
+                onDeleteDraft={(id) => handleDeleteDraft(id)} // child should call this on confirm
             />
         );
     }
 
+    //
+    // ------------- Main form UI -------------
+    //
     return (
         <div className="min-h-screen font-sans antialiased text-gray-800 pb-20">
             <div className="max-w-4xl mx-auto px-4 lg:px-0">
@@ -473,7 +611,10 @@ const Register = () => {
                                 descriptionWordCount={descriptionWordCount}
                                 DESCRIPTION_WORD_LIMIT={DESCRIPTION_WORD_LIMIT}
                                 selectedCategory={selectedCategory}
-                                setSelectedCategory={setSelectedCategory}
+                                setSelectedCategory={(value) => {
+                                    setSelectedCategory(value);
+                                    if (projectLoaded) setHasUnsavedChanges(true);
+                                }}
                                 dynamicCategoryOptions={dynamicCategoryOptions}
                                 urlError={urlError}
                                 handleUrlBlur={handleUrlBlur}
@@ -510,9 +651,15 @@ const Register = () => {
                                 addLink={addLink}
                                 removeLink={removeLink}
                                 builtWith={builtWith}
-                                setBuiltWith={setBuiltWith}
+                                setBuiltWith={(value) => {
+                                    setBuiltWith(value);
+                                    if (projectLoaded) setHasUnsavedChanges(true);
+                                }}
                                 tags={tags}
-                                setTags={setTags}
+                                setTags={(value) => {
+                                    setTags(value);
+                                    if (projectLoaded) setHasUnsavedChanges(true);
+                                }}
                             />
                         )}
                     </form>

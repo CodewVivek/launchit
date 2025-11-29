@@ -20,8 +20,18 @@ const Sidebar = ({ isOpen }) => {
 
     useEffect(() => {
         const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    console.error('Error fetching auth user in Sidebar:', error);
+                    setUser(null);
+                    return;
+                }
+                setUser(data?.user || null);
+            } catch (err) {
+                console.error('Unexpected auth error in Sidebar:', err);
+                setUser(null);
+            }
         };
         getUser();
 

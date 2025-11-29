@@ -15,14 +15,26 @@ const FollowersFollowing = () => {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) {
+                    console.error("Error fetching auth user in FollowersFollowing:", error);
+                    toast.error("Authentication error. Please refresh and try again.");
+                    return;
+                }
+                const currentUser = data?.user || null;
+                if (!currentUser) {
+                    toast.error("Please sign in to view your followers/following");
+                    navigate("/UserRegister");
+                    return;
+                }
+                setUser(currentUser);
+                fetchFollowingData(currentUser.id);
+            } catch (err) {
+                console.error("Unexpected auth error in FollowersFollowing:", err);
                 toast.error("Please sign in to view your followers/following");
                 navigate("/UserRegister");
-                return;
             }
-            setUser(user);
-            fetchFollowingData(user.id);
         };
 
         checkAuth();
