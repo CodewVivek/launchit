@@ -2,7 +2,7 @@ import { slugify } from './registerUtils';
 import { nanoid } from 'nanoid';
 
 /**
- * Auto-save a draft (silent, non-blocking).
+ * Auto-save a draft (silent, non-blocking) with retry mechanism.
  * Returns true on success, false on failure (useful if caller wants to know).
  */
 export const handleAutoSaveDraft = async ({
@@ -26,11 +26,14 @@ export const handleAutoSaveDraft = async ({
   setIsAutoSaving,
   setHasUnsavedChanges,
   setLastSavedAt,
-}) => {
+}, retryCount = 0) => {
   // guard conditions
   if (!user || isEditing || isFormEmpty?.() || !formData?.name || isAutoSaving) {
     return false;
   }
+
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [2000, 5000, 10000]; // 2s, 5s, 10s
 
   setIsAutoSaving(true);
   try {
@@ -93,7 +96,7 @@ export const handleAutoSaveDraft = async ({
 
       if (updateErr) {
         console.error('Auto-save update error:', updateErr);
-        return false;
+        throw updateErr;
       }
     } else {
       const { data: newDraft, error: insertErr } = await supabase
@@ -104,7 +107,7 @@ export const handleAutoSaveDraft = async ({
 
       if (insertErr) {
         console.error('Auto-save insert error:', insertErr);
-        return false;
+        throw insertErr;
       }
       if (newDraft?.id && typeof setAutoSaveDraftId === 'function') {
         setAutoSaveDraftId(newDraft.id);
@@ -116,6 +119,41 @@ export const handleAutoSaveDraft = async ({
     return true;
   } catch (err) {
     console.error('Auto-save exception:', err);
+    
+    // Retry logic with exponential backoff
+    if (retryCount < MAX_RETRIES) {
+      const delay = RETRY_DELAYS[retryCount] || 10000;
+      console.log(`Auto-save failed, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Retry with incremented count
+      return handleAutoSaveDraft({
+        user,
+        isEditing,
+        isFormEmpty,
+        formData,
+        isAutoSaving: false, // Reset flag for retry
+        autoSaveDraftId,
+        editingProjectId,
+        selectedCategory,
+        links,
+        builtWith,
+        tags,
+        existingMediaUrls,
+        logoFile,
+        thumbnailFile,
+        coverFiles,
+        supabase,
+        setAutoSaveDraftId,
+        setIsAutoSaving,
+        setHasUnsavedChanges,
+        setLastSavedAt,
+      }, retryCount + 1);
+    }
+    
+    // All retries exhausted
     return false;
   } finally {
     if (typeof setIsAutoSaving === 'function') setIsAutoSaving(false);

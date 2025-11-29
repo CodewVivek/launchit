@@ -80,6 +80,8 @@ const Register = () => {
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastSavedAt, setLastSavedAt] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [autoSaveError, setAutoSaveError] = useState(null);
 
     // AI / smart-fill state
     const [showSmartFillDialog, setShowSmartFillDialog] = useState(false);
@@ -109,18 +111,18 @@ const Register = () => {
     }, []);
 
     useEffect(() => {
-        let isMounted = true;
         const checkUser = async () => {
             try {
                 const { data, error } = await supabase.auth.getUser();
+                if (!mountedRef.current) return;
                 if (error) {
                     console.error('Error fetching auth user:', error);
-                    if (!isMounted) return;
                     setSnackbar({ open: true, message: 'Authentication error. Please refresh and try again.', severity: 'error' });
+                    navigate('/UserRegister');
                     return;
                 }
                 const currentUser = data?.user || null;
-                if (!isMounted) return;
+                if (!mountedRef.current) return;
                 if (!currentUser) {
                     setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'warning' });
                     navigate('/UserRegister');
@@ -128,20 +130,19 @@ const Register = () => {
                 }
                 setUser(currentUser);
             } catch (err) {
+                if (!mountedRef.current) return;
                 console.error('Unexpected error fetching auth user:', err);
-                if (!isMounted) return;
                 setSnackbar({ open: true, message: 'Authentication error. Please refresh and try again.', severity: 'error' });
+                navigate('/UserRegister');
             }
         };
         checkUser();
-        return () => { isMounted = false; };
-    }, [navigate]);
+    }, [navigate, supabase]);
 
     //
     // ------------- Draft fetching (parent) -------------
     //
     useEffect(() => {
-        let isMounted = true;
         const fetchUserDrafts = async () => {
             if (!user) return;
             // if editing or explicit draft param present, don't show the draft-selection prompt
@@ -156,7 +157,7 @@ const Register = () => {
                     .eq('status', 'draft')
                     .order('updated_at', { ascending: false });
 
-                if (!isMounted) return;
+                if (!mountedRef.current) return;
 
                 if (error) {
                     console.error('Error fetching drafts:', error);
@@ -165,33 +166,32 @@ const Register = () => {
                     const meaningfulDrafts = (drafts || []).filter(draft =>
                         draft.name || draft.website_url || draft.tagline || draft.description || draft.category_type
                     );
+                    if (!mountedRef.current) return;
                     setUserDrafts(meaningfulDrafts);
                     if (meaningfulDrafts.length > 0) {
                         setShowDraftSelection(true);
                     }
                 }
             } catch (err) {
-                if (!isMounted) return;
+                if (!mountedRef.current) return;
                 console.error('Error fetching drafts (catch):', err);
                 setUserDrafts([]);
             } finally {
-                if (!isMounted) return;
-                setLoadingDrafts(false);
+                if (mountedRef.current) {
+                    setLoadingDrafts(false);
+                }
             }
         };
 
         if (user && !projectLoaded) {
             fetchUserDrafts();
         }
-
-        return () => { isMounted = false; };
-    }, [user, projectLoaded, editParam, draftParam]);
+    }, [user, projectLoaded, editParam, draftParam, supabase]);
 
     //
     // ------------- Load project for editing -------------
     //
     useEffect(() => {
-        let isMounted = true;
         const projectId = editParam || draftParam;
         if (!projectId || !user || projectLoaded) return;
 
@@ -222,17 +222,16 @@ const Register = () => {
                     setSnackbar,
                 });
             } catch (err) {
-                if (!isMounted) return;
+                if (!mountedRef.current) return;
                 console.error('Failed to load project for editing:', err);
             } finally {
-                if (!isMounted) return;
+                if (!mountedRef.current) return;
                 setLoadingProject(false);
             }
         };
 
         load();
-        return () => { isMounted = false; };
-    }, [user, projectLoaded, editParam, draftParam]);
+    }, [user, projectLoaded, editParam, draftParam, supabase]);
 
     //
     // ------------- Form helpers -------------
@@ -286,27 +285,65 @@ const Register = () => {
     const handleLogoChange = async (e) => {
         const file = e.target.files?.[0];
         if (file) {
+            setIsUploading(true);
             try {
                 const optimizedFile = await optimizeImage(file, 'logo');
                 setLogoFile(optimizedFile);
+                if (projectLoaded) setHasUnsavedChanges(true);
             } catch {
                 setLogoFile(file);
+                if (projectLoaded) setHasUnsavedChanges(true);
+            } finally {
+                setIsUploading(false);
             }
         }
     };
-    const removeLogo = () => setLogoFile(null);
-
-    const handleThumbnailChange = (e) => {
-        const file = e.target.files?.[0];
-        if (file) setThumbnailFile(file);
+    const removeLogo = () => {
+        setLogoFile(null);
+        if (projectLoaded) setHasUnsavedChanges(true);
     };
-    const removeThumbnail = () => setThumbnailFile(null);
 
-    const handleCoverChange = (e, idx) => {
+    const handleThumbnailChange = async (e) => {
         const file = e.target.files?.[0];
-        if (file) setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
+        if (file) {
+            setIsUploading(true);
+            try {
+                const optimizedFile = await optimizeImage(file, 'thumbnail');
+                setThumbnailFile(optimizedFile);
+                if (projectLoaded) setHasUnsavedChanges(true);
+            } catch {
+                setThumbnailFile(file);
+                if (projectLoaded) setHasUnsavedChanges(true);
+            } finally {
+                setIsUploading(false);
+            }
+        }
     };
-    const removeCover = (idx) => setCoverFiles(prev => prev.map((f, i) => (i === idx ? null : f)));
+    const removeThumbnail = () => {
+        setThumbnailFile(null);
+        if (projectLoaded) setHasUnsavedChanges(true);
+    };
+
+    const handleCoverChange = async (e, idx) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setIsUploading(true);
+            try {
+                const optimizedFile = await optimizeImage(file, 'cover');
+                setCoverFiles(prev => prev.map((f, i) => (i === idx ? optimizedFile : f)));
+                if (projectLoaded) setHasUnsavedChanges(true);
+            } catch {
+                setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
+                if (projectLoaded) setHasUnsavedChanges(true);
+            } finally {
+                setIsUploading(false);
+            }
+        }
+    };
+    const removeCover = (idx) => {
+        setCoverFiles(prev => prev.map((f, i) => (i === idx ? null : f)));
+        if (projectLoaded) setHasUnsavedChanges(true);
+    };
 
     //
     // ------------- AI / Smart Fill -------------
@@ -484,6 +521,12 @@ const Register = () => {
         if (!user || isEditing || isAutoSaving) return;
         if (!formData?.name) return;
         if (isFormEmpty(formData, selectedCategory)) return;
+        if (isUploading) return; // Don't autosave while files are uploading
+
+        // CRITICAL: Only autosave when there are actual unsaved changes
+        if (!hasUnsavedChanges) return;
+
+        // Skip if project was loaded and no changes detected
         if (projectLoaded && !hasUnsavedChanges) return;
 
         // clear previous timer
@@ -491,7 +534,7 @@ const Register = () => {
 
         autoSaveTimerRef.current = setTimeout(async () => {
             if (!mountedRef.current) return;
-            await handleAutoSaveDraft({
+            const success = await handleAutoSaveDraft({
                 user,
                 isEditing,
                 isFormEmpty: () => isFormEmpty(formData, selectedCategory),
@@ -513,7 +556,13 @@ const Register = () => {
                 setHasUnsavedChanges,
                 setLastSavedAt,
             });
-        }, 1500);
+            if (!mountedRef.current) return;
+            if (!success) {
+                setAutoSaveError('Auto-save failed. Click to retry.');
+            } else {
+                setAutoSaveError(null);
+            }
+        }, 5000); // Changed to 5 seconds as requested
 
         return () => {
             if (autoSaveTimerRef.current) {
@@ -521,8 +570,7 @@ const Register = () => {
                 autoSaveTimerRef.current = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [formTrigger, user, isAutoSaving, autoSaveDraftId, editingProjectId, supabase]);
+    }, [formTrigger, user, isAutoSaving, isUploading, autoSaveDraftId, editingProjectId, supabase, hasUnsavedChanges, projectLoaded]);
 
     //
     // ------------- Before unload handler -------------
@@ -597,6 +645,37 @@ const Register = () => {
                     isAutoSaving={isAutoSaving}
                     lastSavedAt={lastSavedAt}
                     hasUnsavedChanges={hasUnsavedChanges}
+                    autoSaveError={autoSaveError}
+                    onRetryAutosave={async () => {
+                        setAutoSaveError(null);
+                        if (hasUnsavedChanges && formData.name && !isFormEmpty(formData, selectedCategory)) {
+                            const success = await handleAutoSaveDraft({
+                                user,
+                                isEditing,
+                                isFormEmpty: () => isFormEmpty(formData, selectedCategory),
+                                formData,
+                                isAutoSaving: false,
+                                autoSaveDraftId,
+                                editingProjectId,
+                                selectedCategory,
+                                links,
+                                builtWith,
+                                tags,
+                                existingMediaUrls,
+                                logoFile,
+                                thumbnailFile,
+                                coverFiles,
+                                supabase,
+                                setAutoSaveDraftId,
+                                setIsAutoSaving,
+                                setHasUnsavedChanges,
+                                setLastSavedAt,
+                            });
+                            if (!success) {
+                                setAutoSaveError('Auto-save failed. Please try again.');
+                            }
+                        }
+                    }}
                 />
                 <div className="form-container">
                     <FormTabs step={step} setStep={setStep} />
