@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { SEO } from "./SEO";
 import {
   AlertTriangle,
   X,
@@ -368,7 +369,9 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 transition-colors duration-300">
+    <>
+      <SEO noindex={true} />
+      <div className="min-h-screen bg-gray-50 transition-colors duration-300">
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -489,6 +492,7 @@ const Settings = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

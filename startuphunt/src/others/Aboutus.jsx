@@ -1,8 +1,15 @@
 import React from "react";
+import { SEO } from "../Components/SEO";
 
 const Aboutus = () => {
     return (
-        <div className="min-h-screen bg-white pt-16">
+        <>
+            <SEO
+                title="About Us"
+                description="Learn about Launchit - the instant platform for startup founders who want to ship their products and get visibility."
+                url="https://launchit.site/aboutus"
+            />
+            <div className="min-h-screen bg-white pt-16">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold text-gray-900 mb-6">
@@ -167,6 +174,7 @@ const Aboutus = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

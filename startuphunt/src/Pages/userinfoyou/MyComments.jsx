@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { ArrowLeft, MessageSquare, ExternalLink, Calendar, Tag, Loader2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { SEO } from '../../Components/SEO';
 
 const MyComments = () => {
     const [user, setUser] = useState(null);
@@ -156,7 +157,9 @@ const MyComments = () => {
     }
 
     return (
-        <div className="min-h-screen">
+        <>
+            <SEO noindex={true} />
+            <div className="min-h-screen">
             <div className="max-w-4xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -266,6 +269,7 @@ const MyComments = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

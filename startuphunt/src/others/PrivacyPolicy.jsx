@@ -1,7 +1,14 @@
 import React from "react";
+import { SEO } from "../Components/SEO";
 
 const PrivacyPolicy = () => (
-  <div className="max-w-4xl mx-auto py-12 px-4">
+  <>
+    <SEO
+      title="Privacy Policy"
+      description="Read Launchit's Privacy Policy to understand how we collect, use, and protect your personal information."
+      url="https://launchit.site/privacy"
+    />
+    <div className="max-w-4xl mx-auto py-12 px-4">
     <h1 className="text-4xl font-bold mb-8 text-center">Privacy Policy</h1>
 
     <div className="bg-blue-50 p-6 rounded-lg mb-8">
@@ -323,6 +330,7 @@ const PrivacyPolicy = () => (
       </div>
     </div>
   </div>
+  </>
 );
 
 export default PrivacyPolicy;

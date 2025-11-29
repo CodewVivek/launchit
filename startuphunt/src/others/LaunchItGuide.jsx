@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SEO } from "../Components/SEO";
 import {
   Search,
   ChevronDown,
@@ -145,7 +146,13 @@ const LaunchItGuide = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pb-16">
+    <>
+      <SEO
+        title="Launchit Guide"
+        description="Learn how to use Launchit to launch your startup, get visibility, and discover innovative projects."
+        url="https://launchit.site/launchitguide"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pb-16">
       <div className="max-w-3xl mx-auto px-4 pt-10">
         <div className="sticky top-20 z-10 bg-white/80 backdrop-blur rounded-xl shadow-md flex items-center gap-2 px-4 py-3 mb-8 border border-blue-100">
           <Search className="w-5 h-5 text-blue-500" />
@@ -210,6 +217,7 @@ const LaunchItGuide = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

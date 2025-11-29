@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { ArrowLeft, Rocket, ExternalLink, Calendar, Tag, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { SEO } from '../../Components/SEO';
 
 const MyLaunches = () => {
     const [user, setUser] = useState(null);
@@ -118,7 +119,9 @@ const MyLaunches = () => {
     }
 
     return (
-        <div className="min-h-screen">
+        <>
+            <SEO noindex={true} />
+            <div className="min-h-screen">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -240,6 +243,7 @@ const MyLaunches = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

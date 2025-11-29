@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import Share from "../Components/Share";
+import { SEO } from "../Components/SEO";
 import {
   ExternalLink,
   Calendar,
@@ -413,7 +414,9 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="flex bg-white min-h-screen font-sans transition-colors duration-300 pt-4">
+    <>
+      <SEO noindex={true} />
+      <div className="flex bg-white min-h-screen font-sans transition-colors duration-300 pt-4">
       {/* Main Content */}
       <main className="w-full flex-1 p-4 sm:p-6 md:p-8">
         {/* Profile Info */}
@@ -867,6 +870,7 @@ const UserProfile = () => {
         <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
       </Snackbar>
     </div>
+    </>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { HelmetProvider } from "react-helmet-async";
 import { supabase } from "./supabaseClient";
 import { markSubscriptionFixesApplied, logPageSpeedImprovements } from "./utils/performanceMonitor";
 import { ensureAutoUsername } from "./autoUsername";
@@ -33,6 +34,7 @@ import Community from "./Pages/Community.jsx";
 import SearchBar from "./Components/SearchBar.jsx";
 import ScrollToTop from "./Components/ScrollToTop";
 import ErrorBoundary from "./Components/ErrorBoundary";
+import NotFound from "./Pages/NotFound";
 
 // Feature flag for pitch feature
 const SHOW_PITCH_FEATURE = false; // Set to true to re-enable pitch feature
@@ -142,6 +144,7 @@ function AppRoutes() {
                 <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
                 <Route path="/launchit-community" element={<PageFade><Community /></PageFade>} />
                 <Route path="/search" element={<PageFade><SearchBar /></PageFade>} />
+                <Route path="*" element={<PageFade><NotFound /></PageFade>} />
 
               </Routes>
             </AnimatePresence>
@@ -196,12 +199,14 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
-        <ScrollToTop />
-        <AppRoutes />
-      </ErrorBoundary>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <ScrollToTop />
+          <AppRoutes />
+        </ErrorBoundary>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }
 

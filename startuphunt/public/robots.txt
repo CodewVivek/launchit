@@ -1,4 +1,18 @@
 User-agent: *
 Allow: /
+Allow: /launches/
+Allow: /category/
+Disallow: /profile/
+Disallow: /my-*
+Disallow: /saved-*
+Disallow: /upvoted-*
+Disallow: /my-comments
+Disallow: /followers-following
+Disallow: /settings
+Disallow: /admin
+Disallow: /UserRegister
+Disallow: /submit
+Disallow: /viewed-history
+Disallow: /downloads
 
 Sitemap: https://launchit.site/sitemap.xml

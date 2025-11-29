@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { ArrowLeft, UserPlus, UserCheck, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { SEO } from '../../Components/SEO';
 
 const FollowersFollowing = () => {
     const [user, setUser] = useState(null);
@@ -162,7 +163,9 @@ const FollowersFollowing = () => {
     }
 
     return (
-        <div className="min-h-screen">
+        <>
+            <SEO noindex={true} />
+            <div className="min-h-screen">
             <div className="max-w-4xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -313,6 +316,7 @@ const FollowersFollowing = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

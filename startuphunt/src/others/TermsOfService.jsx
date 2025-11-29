@@ -1,7 +1,14 @@
 import React from "react";
+import { SEO } from "../Components/SEO";
 
 const TermsOfService = () => (
-  <div className="max-w-4xl mx-auto py-12 px-4">
+  <>
+    <SEO
+      title="Terms of Service"
+      description="Read Launchit's Terms of Service to understand the rules and guidelines for using our platform."
+      url="https://launchit.site/terms"
+    />
+    <div className="max-w-4xl mx-auto py-12 px-4">
     <h1 className="text-4xl font-bold mb-8 text-center">Terms of Service</h1>
 
     <div className="bg-blue-50 p-6 rounded-lg mb-8">
@@ -354,6 +361,7 @@ const TermsOfService = () => (
       </div>
     </div>
   </div>
+  </>
 );
 
 export default TermsOfService;

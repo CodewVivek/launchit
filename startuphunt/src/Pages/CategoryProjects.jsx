@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { ArrowLeft, Rocket, ExternalLink, Calendar, Tag, Loader2, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { SEO } from '../Components/SEO';
 
 const CategoryProjects = () => {
     const { category } = useParams();
@@ -96,7 +97,21 @@ const CategoryProjects = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-16">
+        <>
+            <SEO
+                title={`${category} Startups`}
+                description={`Discover ${category} startups and projects on Launchit. Browse innovative ${category} projects and get inspired.`}
+                url={`https://launchit.site/category/${category}`}
+                keywords={`${category}, startups, projects, ${category} tools`}
+                structuredData={{
+                    "@context": "https://schema.org",
+                    "@type": "CollectionPage",
+                    "name": `${category} Startups`,
+                    "description": `Browse ${category} startups and projects on Launchit`,
+                    "url": `https://launchit.site/category/${category}`
+                }}
+            />
+            <div className="min-h-screen bg-gray-50 pt-16">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -229,6 +244,7 @@ const CategoryProjects = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

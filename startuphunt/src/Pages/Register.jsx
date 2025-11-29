@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SEO } from '../Components/SEO';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import categoryOptions from '../Components/categoryOptions';
@@ -636,181 +637,184 @@ const Register = () => {
     // ------------- Main form UI -------------
     //
     return (
-        <div className="min-h-screen font-sans antialiased text-gray-800 pb-20">
-            <div className="max-w-4xl mx-auto px-4 lg:px-0">
-                <FormHeader
-                    user={user}
-                    isFormEmpty={() => isFormEmpty(formData, selectedCategory)}
-                    formData={formData}
-                    isAutoSaving={isAutoSaving}
-                    lastSavedAt={lastSavedAt}
-                    hasUnsavedChanges={hasUnsavedChanges}
-                    autoSaveError={autoSaveError}
-                    onRetryAutosave={async () => {
-                        setAutoSaveError(null);
-                        if (hasUnsavedChanges && formData.name && !isFormEmpty(formData, selectedCategory)) {
-                            const success = await handleAutoSaveDraft({
-                                user,
-                                isEditing,
-                                isFormEmpty: () => isFormEmpty(formData, selectedCategory),
-                                formData,
-                                isAutoSaving: false,
-                                autoSaveDraftId,
-                                editingProjectId,
-                                selectedCategory,
-                                links,
-                                builtWith,
-                                tags,
-                                existingMediaUrls,
-                                logoFile,
-                                thumbnailFile,
-                                coverFiles,
-                                supabase,
-                                setAutoSaveDraftId,
-                                setIsAutoSaving,
-                                setHasUnsavedChanges,
-                                setLastSavedAt,
-                            });
-                            if (!success) {
-                                setAutoSaveError('Auto-save failed. Please try again.');
+        <>
+            <SEO noindex={true} />
+            <div className="min-h-screen font-sans antialiased text-gray-800 pb-20">
+                <div className="max-w-4xl mx-auto px-4 lg:px-0">
+                    <FormHeader
+                        user={user}
+                        isFormEmpty={() => isFormEmpty(formData, selectedCategory)}
+                        formData={formData}
+                        isAutoSaving={isAutoSaving}
+                        lastSavedAt={lastSavedAt}
+                        hasUnsavedChanges={hasUnsavedChanges}
+                        autoSaveError={autoSaveError}
+                        onRetryAutosave={async () => {
+                            setAutoSaveError(null);
+                            if (hasUnsavedChanges && formData.name && !isFormEmpty(formData, selectedCategory)) {
+                                const success = await handleAutoSaveDraft({
+                                    user,
+                                    isEditing,
+                                    isFormEmpty: () => isFormEmpty(formData, selectedCategory),
+                                    formData,
+                                    isAutoSaving: false,
+                                    autoSaveDraftId,
+                                    editingProjectId,
+                                    selectedCategory,
+                                    links,
+                                    builtWith,
+                                    tags,
+                                    existingMediaUrls,
+                                    logoFile,
+                                    thumbnailFile,
+                                    coverFiles,
+                                    supabase,
+                                    setAutoSaveDraftId,
+                                    setIsAutoSaving,
+                                    setHasUnsavedChanges,
+                                    setLastSavedAt,
+                                });
+                                if (!success) {
+                                    setAutoSaveError('Auto-save failed. Please try again.');
+                                }
                             }
-                        }
-                    }}
-                />
-                <div className="form-container">
-                    <FormTabs step={step} setStep={setStep} />
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {step === 1 && (
-                            <BasicInfoStep
-                                formData={formData}
-                                handleInputChange={handleInputChange}
-                                handleTaglineChange={handleTaglineChange}
-                                handleDescriptionChange={handleDescriptionChange}
-                                taglineCharCount={taglineCharCount}
-                                descriptionWordCount={descriptionWordCount}
-                                DESCRIPTION_WORD_LIMIT={DESCRIPTION_WORD_LIMIT}
-                                selectedCategory={selectedCategory}
-                                setSelectedCategory={(value) => {
-                                    setSelectedCategory(value);
-                                    if (projectLoaded) setHasUnsavedChanges(true);
-                                }}
-                                dynamicCategoryOptions={dynamicCategoryOptions}
-                                urlError={urlError}
-                                handleUrlBlur={handleUrlBlur}
-                                editingLaunched={editingLaunched}
-                                handleGenerateLaunchData={() => handleGenerateLaunchData(false)}
-                                isAILoading={isAILoading}
-                                isRetrying={isRetrying}
-                                generateBasicPreview={(url) => generateBasicPreview(url, setUrlPreview, setIsGeneratingPreview, setSnackbar)}
-                                urlPreview={urlPreview}
-                                isGeneratingPreview={isGeneratingPreview}
-                            />
-                        )}
-                        {step === 2 && (
-                            <MediaStep
-                                logoFile={logoFile}
-                                handleLogoChange={handleLogoChange}
-                                removeLogo={removeLogo}
-                                handleImageError={(e, type) => handleImageError(e, type, setSnackbar)}
-                                viewAIImage={(imageUrl, type) => viewAIImage(imageUrl, type, setSnackbar)}
-                                isAILoading={isAILoading}
-                                urlPreview={urlPreview}
-                                thumbnailFile={thumbnailFile}
-                                handleThumbnailChange={handleThumbnailChange}
-                                removeThumbnail={removeThumbnail}
-                                coverFiles={coverFiles}
-                                handleCoverChange={handleCoverChange}
-                                removeCover={removeCover}
-                            />
-                        )}
-                        {step === 3 && (
-                            <AdditionalDetailsStep
-                                links={links}
-                                updateLink={updateLink}
-                                addLink={addLink}
-                                removeLink={removeLink}
-                                builtWith={builtWith}
-                                setBuiltWith={(value) => {
-                                    setBuiltWith(value);
-                                    if (projectLoaded) setHasUnsavedChanges(true);
-                                }}
-                                tags={tags}
-                                setTags={(value) => {
-                                    setTags(value);
-                                    if (projectLoaded) setHasUnsavedChanges(true);
-                                }}
-                            />
-                        )}
-                    </form>
-                    <FormActions
-                        step={step}
-                        setStep={setStep}
-                        handleSaveDraft={handleSaveDraftClick}
-                        handleSubmit={handleSubmit}
+                        }}
                     />
+                    <div className="form-container">
+                        <FormTabs step={step} setStep={setStep} />
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {step === 1 && (
+                                <BasicInfoStep
+                                    formData={formData}
+                                    handleInputChange={handleInputChange}
+                                    handleTaglineChange={handleTaglineChange}
+                                    handleDescriptionChange={handleDescriptionChange}
+                                    taglineCharCount={taglineCharCount}
+                                    descriptionWordCount={descriptionWordCount}
+                                    DESCRIPTION_WORD_LIMIT={DESCRIPTION_WORD_LIMIT}
+                                    selectedCategory={selectedCategory}
+                                    setSelectedCategory={(value) => {
+                                        setSelectedCategory(value);
+                                        if (projectLoaded) setHasUnsavedChanges(true);
+                                    }}
+                                    dynamicCategoryOptions={dynamicCategoryOptions}
+                                    urlError={urlError}
+                                    handleUrlBlur={handleUrlBlur}
+                                    editingLaunched={editingLaunched}
+                                    handleGenerateLaunchData={() => handleGenerateLaunchData(false)}
+                                    isAILoading={isAILoading}
+                                    isRetrying={isRetrying}
+                                    generateBasicPreview={(url) => generateBasicPreview(url, setUrlPreview, setIsGeneratingPreview, setSnackbar)}
+                                    urlPreview={urlPreview}
+                                    isGeneratingPreview={isGeneratingPreview}
+                                />
+                            )}
+                            {step === 2 && (
+                                <MediaStep
+                                    logoFile={logoFile}
+                                    handleLogoChange={handleLogoChange}
+                                    removeLogo={removeLogo}
+                                    handleImageError={(e, type) => handleImageError(e, type, setSnackbar)}
+                                    viewAIImage={(imageUrl, type) => viewAIImage(imageUrl, type, setSnackbar)}
+                                    isAILoading={isAILoading}
+                                    urlPreview={urlPreview}
+                                    thumbnailFile={thumbnailFile}
+                                    handleThumbnailChange={handleThumbnailChange}
+                                    removeThumbnail={removeThumbnail}
+                                    coverFiles={coverFiles}
+                                    handleCoverChange={handleCoverChange}
+                                    removeCover={removeCover}
+                                />
+                            )}
+                            {step === 3 && (
+                                <AdditionalDetailsStep
+                                    links={links}
+                                    updateLink={updateLink}
+                                    addLink={addLink}
+                                    removeLink={removeLink}
+                                    builtWith={builtWith}
+                                    setBuiltWith={(value) => {
+                                        setBuiltWith(value);
+                                        if (projectLoaded) setHasUnsavedChanges(true);
+                                    }}
+                                    tags={tags}
+                                    setTags={(value) => {
+                                        setTags(value);
+                                        if (projectLoaded) setHasUnsavedChanges(true);
+                                    }}
+                                />
+                            )}
+                        </form>
+                        <FormActions
+                            step={step}
+                            setStep={setStep}
+                            handleSaveDraft={handleSaveDraftClick}
+                            handleSubmit={handleSubmit}
+                        />
+                    </div>
                 </div>
-            </div>
 
-            <SmartFillDialog
-                open={showSmartFillDialog}
-                pendingAIData={pendingAIData}
-                onCancel={() => handleSmartFillCancel(setShowSmartFillDialog, setPendingAIData)}
-                onFillAll={() => handleSmartFillAll({
-                    pendingAIData,
-                    setFormData,
-                    setLinks,
-                    links,
-                    setLogoFile,
-                    logoFile,
-                    setThumbnailFile,
-                    thumbnailFile,
-                    setTags,
-                    tags,
-                    setSelectedCategory,
-                    selectedCategory,
-                    dynamicCategoryOptions,
-                    setDynamicCategoryOptions,
-                    setShowSmartFillDialog,
-                    setPendingAIData,
-                    setSnackbar,
-                })}
-                onFillEmpty={() => handleSmartFillEmpty({
-                    pendingAIData,
-                    setFormData,
-                    setLinks,
-                    links,
-                    setLogoFile,
-                    logoFile,
-                    setThumbnailFile,
-                    thumbnailFile,
-                    setTags,
-                    tags,
-                    setSelectedCategory,
-                    selectedCategory,
-                    dynamicCategoryOptions,
-                    setDynamicCategoryOptions,
-                    setShowSmartFillDialog,
-                    setPendingAIData,
-                    setSnackbar,
-                })}
-            />
+                <SmartFillDialog
+                    open={showSmartFillDialog}
+                    pendingAIData={pendingAIData}
+                    onCancel={() => handleSmartFillCancel(setShowSmartFillDialog, setPendingAIData)}
+                    onFillAll={() => handleSmartFillAll({
+                        pendingAIData,
+                        setFormData,
+                        setLinks,
+                        links,
+                        setLogoFile,
+                        logoFile,
+                        setThumbnailFile,
+                        thumbnailFile,
+                        setTags,
+                        tags,
+                        setSelectedCategory,
+                        selectedCategory,
+                        dynamicCategoryOptions,
+                        setDynamicCategoryOptions,
+                        setShowSmartFillDialog,
+                        setPendingAIData,
+                        setSnackbar,
+                    })}
+                    onFillEmpty={() => handleSmartFillEmpty({
+                        pendingAIData,
+                        setFormData,
+                        setLinks,
+                        links,
+                        setLogoFile,
+                        logoFile,
+                        setThumbnailFile,
+                        thumbnailFile,
+                        setTags,
+                        tags,
+                        setSelectedCategory,
+                        selectedCategory,
+                        dynamicCategoryOptions,
+                        setDynamicCategoryOptions,
+                        setShowSmartFillDialog,
+                        setPendingAIData,
+                        setSnackbar,
+                    })}
+                />
 
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={4000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                sx={{ mt: '70px' }}
-            >
-                <Alert
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={4000}
                     onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: '100%' }}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    sx={{ mt: '70px' }}
                 >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </div>
+                    <Alert
+                        onClose={() => setSnackbar({ ...snackbar, open: false })}
+                        severity={snackbar.severity}
+                        sx={{ width: '100%' }}
+                    >
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
+            </div>
+        </>
     );
 };
 
