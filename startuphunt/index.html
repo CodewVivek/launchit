@@ -10,40 +10,17 @@
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob: https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://*.onrender.com https://*.railway.app https://api.microlink.io wss://*.supabase.co https://launchit-ai-backend.onrender.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com; frame-src 'self' https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 
-  <!-- Title -->
-  <title>Launchit - Decode Limitless Growth</title>
+  <!-- Title - Fallback only, will be overwritten by SEO.jsx component -->
+  <title>Launchit - Where Builders Launch Projects</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/images/r6_circle.png" />
   <link rel="apple-touch-icon" href="/images/r6_circle.png" />
 
-  <!-- SEO Meta Tags -->
-  <meta name="description"
-    content="Discover early-stage startups and launch your project on Launchit. The instant platform for startup founders to ship products, get visibility, and discover innovative projects — without gatekeeping or delays." />
-  <meta name="keywords"
-    content="early-stage startups, launch startup, discover startups, startup platform, launch project, startup discovery, startups, early-stage, launch platform, side projects, beta startups, projects, innovation, entrepreneurship" />
+  <!-- SEO Meta Tags - Removed duplicates, handled by SEO.jsx component -->
+  <!-- Only keeping basic meta tags that don't conflict with dynamic SEO -->
   <meta name="author" content="Launchit Team" />
-  <meta name="robots" content="index, follow" />
   <meta name="language" content="English" />
-  <!-- Canonical URL (fallback for SSR) -->
-  <link rel="canonical" href="https://launchit.site/" />
-
-  <!-- Open Graph / Facebook -->
-  <meta property="og:title" content="Launchit - Decode Limitless Growth" />
-  <meta property="og:description"
-    content="Launchit is a platform to discover and launch early-stage startups, projects and much more. Find the next big idea before anyone else." />
-  <meta property="og:image" content="https://launchit.site/images/r6_circle_optimized.png" />
-  <meta property="og:url" content="https://launchit.site/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Launchit" />
-
-  <!-- Twitter Meta -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="LaunchIT - Decode Limitless Growth" />
-  <meta name="twitter:description"
-    content="Launchit is a platform to discover and launch early-stage startups, projects and much more. Find the next big idea before anyone else." />
-  <meta name="twitter:image" content="https://launchit.site/images/r6_circle_optimized.png" />
-  <meta name="twitter:site" content="@launchit" />
 
   <!-- Performance Optimizations -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -63,6 +40,25 @@
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#3B82F6" />
 
+  <!-- Static Schema.org for crawlers (fallback if JS doesn't execute) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Launchit",
+    "url": "https://launchit.site",
+    "description": "The instant platform for startup founders who want to ship products and get visibility",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://launchit.site/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Launchit"
+    }
+  }
+  </script>
 
 </head>
 

@@ -1,7 +1,8 @@
 User-agent: *
-Allow: /
+# Allow public pages explicitly
 Allow: /launches/
 Allow: /category/
+# Disallow private/user pages
 Disallow: /profile/
 Disallow: /my-*
 Disallow: /saved-*

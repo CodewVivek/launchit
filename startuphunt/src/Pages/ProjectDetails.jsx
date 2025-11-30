@@ -445,7 +445,7 @@ const ProjectDetails = () => {
                     >
                       <img
                         src={url}
-                        alt={`Cover ${idx + 1}`}
+                        alt={`${project.name} - Screenshot ${idx + 1} of ${project.cover_urls?.length}`}
                         className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                         width={800}
                         height={450}
@@ -484,7 +484,7 @@ const ProjectDetails = () => {
                     {/* Image */}
                     <img
                       src={project.cover_urls[modalIndex]}
-                      alt={`Cover ${modalIndex + 1}`}
+                      alt={`${project.name} - Screenshot ${modalIndex + 1} of ${project.cover_urls.length}`}
                       className="max-h-[85vh] max-w-[95vw] rounded-xl shadow-2xl object-contain bg-gray-200 transition duration-300"
                     />
 

@@ -598,7 +598,7 @@ const UserProfile = () => {
                         {project.logo_url ? (
                           <img
                             src={project.logo_url}
-                            alt="Logo"
+                            alt={`${project.name} logo`}
                             className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
                             loading="lazy"
                           />

@@ -332,7 +332,7 @@ const Header = ({ onMenuClick }) => {
                     </button>
                     <Link to="/" className="flex items-center space-x-2 sm:space-x-2 group">
                         <div className="rounded flex items-center justify-center">
-                            <img className="w-8 h-8 sm:w-9 sm:h-9 text-white" src="/images/r6_circle_optimized.png" alt="L" />
+                            <img className="w-8 h-8 sm:w-9 sm:h-9 text-white" src="/images/r6_circle_optimized.png" alt="Launchit Logo" />
                         </div>
                         <span className="text-lg sm:text-xl font-bold tracking-wide hidden sm:block">
                             <span className="text-gray-800">launchit</span>
@@ -538,7 +538,7 @@ const Header = ({ onMenuClick }) => {
                             {user ? (
                                 <img
                                     src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
-                                    alt="profile"
+                                    alt={`${user?.user_metadata?.full_name || user?.email || 'User'} profile picture`}
                                     className="w-6 h-6 rounded-full"
                                 />
                             ) : (
@@ -554,7 +554,7 @@ const Header = ({ onMenuClick }) => {
                                             <div className="flex items-center gap-3">
                                                 <img
                                                     src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
-                                                    alt="profile"
+                                                    alt={`${user?.user_metadata?.full_name || user?.email || 'User'} profile picture`}
                                                     className="w-6 h-6 rounded-full"
                                                 />
                                                 <p className="text-sm font-semibold text-gray-700">
@@ -645,7 +645,7 @@ const Header = ({ onMenuClick }) => {
                             {user ? (
                                 <img
                                     src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
-                                    alt="profile"
+                                    alt={`${user?.user_metadata?.full_name || user?.email || 'User'} profile picture`}
                                     className="w-6 h-6 sm:w-7 sm:h-7 rounded-full"
                                 />
                             ) : (
@@ -660,7 +660,7 @@ const Header = ({ onMenuClick }) => {
                                             <div className="flex items-center gap-3">
                                                 <img
                                                     src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
-                                                    alt="profile"
+                                                    alt={`${user?.user_metadata?.full_name || user?.email || 'User'} profile picture`}
                                                     className="w-6 h-6 rounded-full"
                                                 />
                                                 <p className="text-sm font-semibold text-gray-700">

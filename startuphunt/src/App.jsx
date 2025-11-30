@@ -22,6 +22,8 @@ import Settings from "./Components/Settings";
 import TermsOfService from "./others/TermsOfService.jsx";
 import PrivacyPolicy from "./others/PrivacyPolicy.jsx";
 import Aboutus from "./others/Aboutus.jsx";
+import HowItWorks from "./others/HowItWorks.jsx";
+import FAQ from "./others/FAQ.jsx";
 import Suggestions from "./others/Suggestions.jsx";
 import ApprovedPitches from "./Pages/ApprovedPitchesGallery.jsx";
 import MyLaunches from "./Pages/userinfoyou/MyLaunches.jsx";
@@ -114,6 +116,8 @@ function AppRoutes() {
                 <Route path="/aboutus" element={<PageFade><Aboutus /></PageFade>} />
                 <Route path="/suggestions" element={<PageFade><Suggestions /></PageFade>} />
                 <Route path="/launchitguide" element={<PageFade><LaunchItGuide /></PageFade>} />
+                <Route path="/how-it-works" element={<PageFade><HowItWorks /></PageFade>} />
+                <Route path="/faq" element={<PageFade><FAQ /></PageFade>} />
                 {SHOW_PITCH_FEATURE && (
                   <Route path="/upload-pitch" element={
                     <PageFade>

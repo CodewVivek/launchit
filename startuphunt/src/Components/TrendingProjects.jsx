@@ -105,7 +105,7 @@ const TrendingProjects = ({ limit = 5, by = "trending" }) => {
             {project.logo_url ? (
               <img
                 src={project.logo_url}
-                alt="Logo"
+                alt={`${project.name} logo`}
                 className="w-12 h-12 object-contain rounded-lg border bg-gray-50"
               />
             ) : (

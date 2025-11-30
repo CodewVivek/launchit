@@ -152,16 +152,40 @@ const Dashboard = () => {
   return (
     <>
       <SEO
-        title="Discover Early-Stage Startups & Launch Your Project"
-        description="Discover early-stage startups and launch your project on Launchit. The instant platform for startup founders to ship products, get visibility, and discover innovative projects — without gatekeeping or delays."
-        keywords="early-stage startups, launch startup, discover startups, startup platform, launch project, startup discovery"
+        title="Launchit — Discover Early-Stage Startups & Launch Yours"
+        description="Discover and launch early-stage startups on Launchit — ship products faster, get visibility, and reach makers without gatekeeping."
+        keywords="early-stage startups, launch startup, startup discovery, product launch, founders"
         url="https://launchit.site/"
+        canonical="https://launchit.site/"
+        openGraph={{
+          title: "Launchit — Discover Early-Stage Startups & Launch Yours",
+          description: "Discover and launch early-stage startups on Launchit — ship products faster, get visibility, and reach makers without gatekeeping.",
+          url: "https://launchit.site/",
+          site_name: "Launchit",
+          images: [
+            {
+              url: "https://launchit.site/og-image.png", // add your real OG image
+              width: 1200,
+              height: 630,
+              alt: "Launchit — Discover and launch startups"
+            }
+          ],
+          type: "website"
+        }}
         structuredData={{
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "Launchit",
-          "url": "https://launchit.site",
-          "description": "The instant platform for startup founders who want to ship their products and get visibility",
+          "url": "https://launchit.site/",
+          "description": "The instant platform for startup founders who want to ship products and get visibility.",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Launchit",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://launchit.site/logo.png"
+            }
+          },
           "potentialAction": {
             "@type": "SearchAction",
             "target": "https://launchit.site/search?q={search_term_string}",
@@ -169,6 +193,7 @@ const Dashboard = () => {
           }
         }}
       />
+
       <div className="min-h-screen pt-4 overflow-x-hidden">
         {/* Hero Section */}
         <section className="pt-20 pb-20 px-6">
@@ -179,11 +204,13 @@ const Dashboard = () => {
             </div>
 
             <h1 className="text-6xl md:text-7xl font-bold text-black mb-6 leading-tight">
-              Discover Early-Stage Startups & Launch Your Project
+              Where Builders
+              <br />
+              <span className="text-gray-400">Launch Projects.</span>
             </h1>
-
+            
             <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Publish your startup, get seen, and discover early-stage startups others are building — all without waiting or approval. <a href="/submit" className="text-blue-600 hover:underline font-semibold">Launch your project</a> or <a href="#projects-section" className="text-blue-600 hover:underline font-semibold">browse latest launches</a>.
+              Publish your startup, get seen, and discover early-stage startups others are building — all without waiting or approval.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
